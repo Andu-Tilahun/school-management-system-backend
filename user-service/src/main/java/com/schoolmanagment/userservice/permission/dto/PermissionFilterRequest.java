@@ -1,0 +1,27 @@
+package com.schoolmanagment.userservice.permission.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.util.UUID;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PermissionFilterRequest {
+
+    private String searchText;
+
+    private UUID resourceId;
+
+    private String sortBy;
+
+    private String sortDirection = "ASC";
+
+    private int page = 0;
+
+    private int size = 10;
+}

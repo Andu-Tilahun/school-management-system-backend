@@ -1,6 +1,6 @@
 package com.schoolmanagment.commonsecurity.util;
 
-import com.example.commonsecurity.PolicyNames;
+import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.auth.JwtAuthDetails;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

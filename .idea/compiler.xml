@@ -2,17 +2,20 @@
 <project version="4">
   <component name="CompilerConfiguration">
     <annotationProcessing>
+      <profile default="true" name="Default" enabled="true" />
       <profile name="Maven default annotation processors profile" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="common-application" />
+        <module name="api-gateway" />
         <module name="common-security" />
         <module name="user-service" />
         <module name="school-management-system-backend" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="api-gateway" target="17" />
       <module name="common-application" target="17" />
       <module name="common-security" target="17" />
       <module name="school-management-system-backend" target="17" />
@@ -21,6 +24,7 @@
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="api-gateway" options="-parameters" />
       <module name="common-application" options="-parameters" />
       <module name="common-security" options="-parameters" />
       <module name="school-management-system-backend" options="-parameters" />

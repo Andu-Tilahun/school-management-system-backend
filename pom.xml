@@ -29,6 +29,7 @@
         <module>common/common-security</module>
         <module>api-gateway</module>
         <module>user-service</module>
+        <module>core-service</module>
     </modules>
 
 </project>

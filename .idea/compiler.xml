@@ -11,14 +11,13 @@
         <module name="api-gateway" />
         <module name="common-security" />
         <module name="user-service" />
-        <module name="school-management-system-backend" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="api-gateway" target="17" />
       <module name="common-application" target="17" />
       <module name="common-security" target="17" />
-      <module name="school-management-system-backend" target="17" />
+      <module name="school-management-system-backend" target="1.5" />
       <module name="user-service" target="17" />
     </bytecodeTargetLevel>
   </component>
@@ -27,7 +26,7 @@
       <module name="api-gateway" options="-parameters" />
       <module name="common-application" options="-parameters" />
       <module name="common-security" options="-parameters" />
-      <module name="school-management-system-backend" options="-parameters" />
+      <module name="school-management-system-backend" options="" />
       <module name="user-service" options="-parameters" />
     </option>
   </component>

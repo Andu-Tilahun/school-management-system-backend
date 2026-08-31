@@ -13,6 +13,7 @@
     <groupId>com.schoolmanagment</groupId>
     <artifactId>common-security</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
     <name>common-security</name>
     <description>common-security</description>
 

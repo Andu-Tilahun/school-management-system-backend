@@ -2,13 +2,14 @@ package com.schoolmanagment.userservice.user.controller;
 
 import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.commonsecurity.checker.RequiresPermission;
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.userservice.menu.dto.NavigationMenuItemDto;
+import com.schoolmanagment.userservice.menu.service.NavigationMenuService;
+import com.schoolmanagment.userservice.user.dto.UserDto;
+import com.schoolmanagment.userservice.user.dto.UserFilterRequest;
 import com.schoolmanagment.userservice.user.dto.UserRegisterRequest;
 import com.schoolmanagment.userservice.user.dto.UserUpdateRequest;
-import com.schoolmanagment.userservice.user.dto.UserDto;
-import com.schoolmanagment.userservice.menu.service.NavigationMenuService;
 import com.schoolmanagment.userservice.user.service.UserService;
-import com.schoolmanagment.userservice.user.dto.UserFilterRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -39,6 +40,8 @@ public class UserController {
     private final UserService userService;
     private final NavigationMenuService navigationMenuService;
 
+    private final UserContext userContext;
+
     @PostMapping("/register")
     @RequiresPermission(resource = "USERS", scope = "CREATE")
     public ResponseEntity<ApiResponse> register(@Valid @RequestBody UserRegisterRequest request) {
@@ -57,9 +60,8 @@ public class UserController {
 
     @GetMapping("/navigation-menu")
     public ResponseEntity<ApiResponse<List<NavigationMenuItemDto>>> getNavigationMenu(
-            Authentication authentication
     ) {
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = userContext.getCurrentUserId();
         List<NavigationMenuItemDto> menu = navigationMenuService.buildMenuForUser(userId);
         ApiResponse<List<NavigationMenuItemDto>> response = ApiResponse.<List<NavigationMenuItemDto>>builder()
                 .success(true)
@@ -76,9 +78,8 @@ public class UserController {
      */
     @GetMapping("/me/ui-actions")
     public ResponseEntity<ApiResponse<Map<String, List<String>>>> getGrantedScopesForCurrentUser(
-            Authentication authentication
     ) {
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = userContext.getCurrentUserId();
         Map<String, List<String>> scopes = navigationMenuService.buildGrantedScopesByResourceForUser(userId);
         ApiResponse<Map<String, List<String>>> response =
                 ApiResponse.<Map<String, List<String>>>builder()
@@ -174,10 +175,9 @@ public class UserController {
     @PutMapping("/profile")
     @RequiresPermission(resource = "USERS", scope = "UPDATE")
     public ResponseEntity<ApiResponse> updateProfile(
-            Authentication authentication,
             @Valid @RequestBody UserUpdateRequest request
     ) {
-        UUID userId = UUID.fromString(authentication.getName());
+        UUID userId = userContext.getCurrentUserId();
         UserDto user = userService.updateUser(userId, request);
         ApiResponse response = ApiResponse.builder()
                 .success(true)

@@ -14,10 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.UUID;
 
@@ -54,14 +52,10 @@ public class AuthController {
                     .user(userDto)
                     .build();
 
-            ApiResponse response = ApiResponse.builder()
-                    .success(true)
-                    .message("Login successful")
-                    .data(authResponse)
-                    .timestamp(LocalDateTime.now())
-                    .build();
+            return ResponseEntity.ok(
+                    ApiResponse.success(authResponse, "Login successful")
+            );
 
-            return ResponseEntity.ok(response);
         } catch (AuthenticationException e) {
             throw new BadRequestException("Invalid username or password");
         }
@@ -124,13 +118,9 @@ public class AuthController {
             // Blacklist the token
             tokenBlacklistService.blacklistToken(token, expirationTime);
 
-            ApiResponse response = ApiResponse.builder()
-                    .success(true)
-                    .message("Logged out successfully")
-                    .timestamp(LocalDateTime.now())
-                    .build();
-
-            return ResponseEntity.ok(response);
+            return ResponseEntity.ok(
+                    ApiResponse.success("Logged out successfully")
+            );
         }
         throw new BadRequestException("Invalid token");
     }
@@ -140,13 +130,9 @@ public class AuthController {
 
         userService.createPasswordResetToken(request.getEmail());
 
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .message("Password reset link sent to your email")
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success("Password reset link sent to your email")
+        );
     }
 
     @PostMapping("/reset-password")
@@ -154,13 +140,9 @@ public class AuthController {
 
         userService.resetPassword(request.getToken(), request.getNewPassword());
 
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .message("Password reset successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success("Password reset successfully")
+        );
     }
 
     @GetMapping("/validate")
@@ -175,14 +157,9 @@ public class AuthController {
             if (!jwtService.isTokenExpired(token)) {
                 String userId = jwtService.extractUserId(token);
                 UserDto user = userService.getUserById(UUID.fromString(userId));
-                ApiResponse response = ApiResponse.builder()
-                        .success(true)
-                        .data(user)
-                        .message("Token is valid")
-                        .timestamp(LocalDateTime.now())
-                        .build();
-
-                return ResponseEntity.ok(response);
+                return ResponseEntity.ok(
+                        ApiResponse.success(user, "Token is valid")
+                );
             }
         }
         throw new BadRequestException("Invalid token");

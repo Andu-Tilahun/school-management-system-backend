@@ -16,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -30,13 +29,12 @@ public class ScopeController {
     @RequiresPermission(resource = "SCOPES", scope = "CREATE")
     public ResponseEntity<ApiResponse> create(@Valid @RequestBody ScopeRequest request) {
         ScopeDto scope = scopeService.create(request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(scope)
-                .message("Scope created successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        ApiResponse<ScopeDto> response =
+                ApiResponse.success(scope, "Scope created successfully");
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
     @GetMapping
@@ -50,50 +48,35 @@ public class ScopeController {
         Sort sort = sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<ScopeDto> scopes = scopeService.getAll(pageable);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(scopes)
-                .message("Scopes retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(scopes, "Scopes retrieved successfully")
+        );
     }
 
     @GetMapping("/{id}")
     @RequiresPermission(resource = "SCOPES", scope = "READ")
     public ResponseEntity<ApiResponse> getById(@PathVariable UUID id) {
         ScopeDto scope = scopeService.getById(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(scope)
-                .message("Scope retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(scope, "Scope retrieved successfully")
+        );
     }
 
     @PutMapping("/{id}")
     @RequiresPermission(resource = "SCOPES", scope = "UPDATE")
     public ResponseEntity<ApiResponse> update(@PathVariable UUID id, @Valid @RequestBody ScopeRequest request) {
         ScopeDto scope = scopeService.update(id, request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(scope)
-                .message("Scope updated successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(scope, "Scope updated successfully")
+        );
     }
 
     @DeleteMapping("/{id}")
     @RequiresPermission(resource = "SCOPES", scope = "DELETE")
     public ResponseEntity<ApiResponse> delete(@PathVariable UUID id) {
         scopeService.delete(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .message("Scope deleted successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success("Scope deleted successfully")
+        );
     }
 }

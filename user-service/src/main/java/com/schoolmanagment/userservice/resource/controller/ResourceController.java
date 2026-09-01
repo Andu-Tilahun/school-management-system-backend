@@ -16,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -30,13 +29,12 @@ public class ResourceController {
     @RequiresPermission(resource = "RBAC_RESOURCES", scope = "CREATE")
     public ResponseEntity<ApiResponse> create(@Valid @RequestBody ResourceRequest request) {
         ResourceDto resource = resourceService.create(request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(resource)
-                .message("Resource created successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        ApiResponse<ResourceDto> response =
+                ApiResponse.success(resource, "Resource created successfully");
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
     @GetMapping
@@ -50,50 +48,35 @@ public class ResourceController {
         Sort sort = sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<ResourceDto> resources = resourceService.getAll(pageable);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(resources)
-                .message("Resources retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(resources, "Resources retrieved successfully")
+        );
     }
 
     @GetMapping("/{id}")
     @RequiresPermission(resource = "RBAC_RESOURCES", scope = "READ")
     public ResponseEntity<ApiResponse> getById(@PathVariable UUID id) {
         ResourceDto resource = resourceService.getById(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(resource)
-                .message("Resource retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(resource, "Resource retrieved successfully")
+        );
     }
 
     @PutMapping("/{id}")
     @RequiresPermission(resource = "RBAC_RESOURCES", scope = "UPDATE")
     public ResponseEntity<ApiResponse> update(@PathVariable UUID id, @Valid @RequestBody ResourceRequest request) {
         ResourceDto resource = resourceService.update(id, request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(resource)
-                .message("Resource updated successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(resource, "Resource updated successfully")
+        );
     }
 
     @DeleteMapping("/{id}")
     @RequiresPermission(resource = "RBAC_RESOURCES", scope = "DELETE")
     public ResponseEntity<ApiResponse> delete(@PathVariable UUID id) {
         resourceService.delete(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .message("Resource deleted successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success("Resource deleted successfully")
+        );
     }
 }

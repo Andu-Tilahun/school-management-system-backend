@@ -16,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -30,13 +29,13 @@ public class PolicyController {
     @RequiresPermission(resource = "POLICIES", scope = "CREATE")
     public ResponseEntity<ApiResponse> create(@Valid @RequestBody PolicyRequest request) {
         PolicyDto policy = policyService.create(request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(policy)
-                .message("Policy created successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        ApiResponse<PolicyDto> response =
+                ApiResponse.success(policy, "Policy created successfully");
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
     @GetMapping
@@ -50,50 +49,35 @@ public class PolicyController {
         Sort sort = sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
         Pageable pageable = PageRequest.of(page, size, sort);
         Page<PolicyDto> policies = policyService.getAll(pageable);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(policies)
-                .message("Policies retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(policies, "Policies retrieved successfully")
+        );
     }
 
     @GetMapping("/{id}")
     @RequiresPermission(resource = "POLICIES", scope = "READ")
     public ResponseEntity<ApiResponse> getById(@PathVariable UUID id) {
         PolicyDto policy = policyService.getById(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(policy)
-                .message("Policy retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(policy, "Policy retrieved successfully")
+        );
     }
 
     @PutMapping("/{id}")
     @RequiresPermission(resource = "POLICIES", scope = "UPDATE")
     public ResponseEntity<ApiResponse> update(@PathVariable UUID id, @Valid @RequestBody PolicyRequest request) {
         PolicyDto policy = policyService.update(id, request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(policy)
-                .message("Policy updated successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(policy, "Policy updated successfully")
+        );
     }
 
     @DeleteMapping("/{id}")
     @RequiresPermission(resource = "POLICIES", scope = "DELETE")
     public ResponseEntity<ApiResponse> delete(@PathVariable UUID id) {
         policyService.delete(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .message("Policy deleted successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success("Policy deleted successfully")
+        );
     }
 }

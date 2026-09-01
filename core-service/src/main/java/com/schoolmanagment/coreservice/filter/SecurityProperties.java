@@ -1,4 +1,4 @@
-package com.schoolmanagment.coreservice.filter;//package com.example.commonsecurity.filter;
+package com.schoolmanagment.coreservice.filter;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

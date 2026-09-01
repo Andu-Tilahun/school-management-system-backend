@@ -20,13 +20,12 @@ public class ApiResponse<T> {
     private String message;
     private T data;
     private ErrorDetails error;
-    private List validationErrors;
+    private List<?> validationErrors;
     private String correlationId;
     private LocalDateTime timestamp;
 
-    // Success response with data
-    public ApiResponse success(T data, String message) {
-        return ApiResponse.builder()
+    public static <T> ApiResponse<T> success(T data, String message) {
+        return ApiResponse.<T>builder()
                 .success(true)
                 .message(message)
                 .data(data)
@@ -34,18 +33,19 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    // Success response without data
-    public static ApiResponse success(String message) {
-        return ApiResponse.builder()
+    public static <T> ApiResponse<T> success(String message) {
+        return ApiResponse.<T>builder()
                 .success(true)
                 .message(message)
                 .timestamp(LocalDateTime.now())
                 .build();
     }
 
-    // Error response
-    public static ApiResponse error(String message, ErrorDetails error) {
-        return ApiResponse.builder()
+    public static <T> ApiResponse<T> error(
+            String message,
+            ErrorDetails error
+    ) {
+        return ApiResponse.<T>builder()
                 .success(false)
                 .message(message)
                 .error(error)
@@ -53,9 +53,11 @@ public class ApiResponse<T> {
                 .build();
     }
 
-    // Validation error response
-    public static ApiResponse validationError(String message, List errors) {
-        return ApiResponse.builder()
+    public static <T> ApiResponse<T> validationError(
+            String message,
+            List<?> errors
+    ) {
+        return ApiResponse.<T>builder()
                 .success(false)
                 .message(message)
                 .validationErrors(errors)

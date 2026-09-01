@@ -19,10 +19,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -48,14 +46,12 @@ public class UserController {
 
         UserDto user = userService.registerUser(request);
 
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .message("User registered successfully")
-                .data(user)
-                .timestamp(LocalDateTime.now())
-                .build();
+        ApiResponse<UserDto> response =
+                ApiResponse.success(user, "User created successfully");
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
     @GetMapping("/navigation-menu")
@@ -63,13 +59,9 @@ public class UserController {
     ) {
         UUID userId = userContext.getCurrentUserId();
         List<NavigationMenuItemDto> menu = navigationMenuService.buildMenuForUser(userId);
-        ApiResponse<List<NavigationMenuItemDto>> response = ApiResponse.<List<NavigationMenuItemDto>>builder()
-                .success(true)
-                .data(menu)
-                .message("Navigation menu retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(menu, "Navigation menu retrieved successfully")
+        );
     }
 
     /**
@@ -81,14 +73,9 @@ public class UserController {
     ) {
         UUID userId = userContext.getCurrentUserId();
         Map<String, List<String>> scopes = navigationMenuService.buildGrantedScopesByResourceForUser(userId);
-        ApiResponse<Map<String, List<String>>> response =
-                ApiResponse.<Map<String, List<String>>>builder()
-                        .success(true)
-                        .data(scopes)
-                        .message("Granted scopes retrieved successfully")
-                        .timestamp(LocalDateTime.now())
-                        .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(scopes, "Granted scopes retrieved successfully")
+        );
     }
 
     @GetMapping
@@ -105,14 +92,9 @@ public class UserController {
 
         Page<UserDto> users = userService.getAllUsers(pageable);
 
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(users)
-                .message("Users retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(users, "Users retrieved successfully")
+        );
     }
 
 
@@ -120,27 +102,18 @@ public class UserController {
     @RequiresPermission(resource = "USERS", scope = "READ")
     public ResponseEntity<ApiResponse<Page>> filterUsers(@RequestBody UserFilterRequest request) {
         Page<UserDto> users = userService.filterUsers(request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(users)
-                .message("Users retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(users, "Users retrieved successfully")
+        );
     }
 
     @GetMapping("/{id}")
     @RequiresPermission(resource = "USERS", scope = "READ")
     public ResponseEntity<ApiResponse> getUserById(@PathVariable UUID id) {
         UserDto user = userService.getUserById(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(user)
-                .message("User retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(user, "User retrieved successfully")
+        );
     }
 
     @PutMapping("/{id}")
@@ -150,25 +123,18 @@ public class UserController {
             @Valid @RequestBody UserUpdateRequest request
     ) {
         UserDto user = userService.updateUser(id, request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(user)
-                .message("User updated successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(user, "User updated successfully")
+        );
     }
 
     @DeleteMapping("/{id}")
     @RequiresPermission(resource = "USERS", scope = "DELETE")
     public ResponseEntity<ApiResponse> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .message("User deleted successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success("User deleted successfully")
+        );
     }
 
 
@@ -179,38 +145,26 @@ public class UserController {
     ) {
         UUID userId = userContext.getCurrentUserId();
         UserDto user = userService.updateUser(userId, request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(user)
-                .message("User updated successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(user, "User profile updated successfully")
+        );
     }
 
     @PutMapping("/{id}/lock")
     @RequiresPermission(resource = "USERS", scope = "UPDATE")
     public ResponseEntity<ApiResponse> lockUser(@PathVariable UUID id) {
         UserDto user = userService.lockUser(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(user)
-                .message("User locked successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(user, "User locked successfully")
+        );
     }
 
     @PutMapping("/{id}/unlock")
     @RequiresPermission(resource = "USERS", scope = "UPDATE")
     public ResponseEntity<ApiResponse> unlockUser(@PathVariable UUID id) {
         UserDto user = userService.unlockUser(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(user)
-                .message("User unlocked successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(user, "User unlocked successfully")
+        );
     }
 }

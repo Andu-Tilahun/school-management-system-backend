@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication(scanBasePackages = "com.schoolmanagment")
-@EntityScan(basePackages = "com.example")
+@EntityScan(basePackages = "com.schoolmanagment")
 @EnableJpaRepositories(basePackages = "com.schoolmanagment")
 @EnableFeignClients(basePackages = {
         "com.schoolmanagment.commonsecurity.client"

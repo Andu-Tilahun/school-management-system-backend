@@ -16,7 +16,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @RestController
@@ -28,72 +27,64 @@ public class GroupController {
 
     @PostMapping
     @RequiresPermission(resource = "GROUPS", scope = "CREATE")
-    public ResponseEntity<ApiResponse> create(@Valid @RequestBody GroupRequest request) {
+    public ResponseEntity<ApiResponse<GroupDto>> create(
+            @Valid @RequestBody GroupRequest request
+    ) {
         GroupDto group = groupService.create(request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(group)
-                .message("Group created successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+
+        ApiResponse<GroupDto> response =
+                ApiResponse.success(group, "Group created successfully");
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(response);
     }
 
     @GetMapping
     @RequiresPermission(resource = "GROUPS", scope = "READ")
-    public ResponseEntity<ApiResponse<Page>> getAll(
+    public ResponseEntity<ApiResponse<Page<GroupDto>>> getAll(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "ASC") String sortDir
     ) {
-        Sort sort = sortDir.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Sort sort = sortDir.equalsIgnoreCase("ASC")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
         Pageable pageable = PageRequest.of(page, size, sort);
+
         Page<GroupDto> groups = groupService.getAll(pageable);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(groups)
-                .message("Groups retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(groups, "Groups retrieved successfully")
+        );
     }
 
     @GetMapping("/{id}")
     @RequiresPermission(resource = "GROUPS", scope = "READ")
     public ResponseEntity<ApiResponse> getById(@PathVariable UUID id) {
         GroupDto group = groupService.getById(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(group)
-                .message("Group retrieved successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(group, "Group retrieved successfully")
+        );
     }
 
     @PutMapping("/{id}")
     @RequiresPermission(resource = "GROUPS", scope = "UPDATE")
     public ResponseEntity<ApiResponse> update(@PathVariable UUID id, @Valid @RequestBody GroupRequest request) {
         GroupDto group = groupService.update(id, request);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .data(group)
-                .message("Group updated successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success(group, "Group updated successfully")
+        );
     }
 
     @DeleteMapping("/{id}")
     @RequiresPermission(resource = "GROUPS", scope = "DELETE")
     public ResponseEntity<ApiResponse> delete(@PathVariable UUID id) {
         groupService.delete(id);
-        ApiResponse response = ApiResponse.builder()
-                .success(true)
-                .message("Group deleted successfully")
-                .timestamp(LocalDateTime.now())
-                .build();
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(
+                ApiResponse.success("Group deleted successfully")
+        );
     }
 }

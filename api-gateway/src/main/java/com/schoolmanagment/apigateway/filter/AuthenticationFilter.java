@@ -26,11 +26,7 @@ public class AuthenticationFilter implements GlobalFilter, Ordered {
             "/api/auth/login",
             "/api/auth/forgot-password",
             "/api/auth/reset-password",
-            "/api/farm/farm-plots/public/active",
-            "/api/farm/company",
-            "/api/farm/farm-plots/public/gallery",
-            "/api/files",
-            "/eureka"
+            "/api/files"
     );
 
 

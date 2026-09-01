@@ -14,18 +14,5 @@ INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VAL
 INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('PERMISSIONS', 'Permissions', 'UI', '/permissions', '2026-05-02 11:09:26.275589', 'c3fc2cbc-dcd5-433c-8feb-dfc459db78ca');
 INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('POLICIES', 'Policies', 'UI', '/policies', '2026-05-02 11:09:26.275589', '4fb75048-64ac-4314-a5d0-04e698d75a0d');
 INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('GROUPS', 'Groups', 'UI', '/groups', '2026-05-02 11:09:26.275589', 'b49f9ea7-39a2-487b-a234-70cdbb8e44e1');
-INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('FARM_COMPANY', 'Farm company', 'UI', '/farm-company', '2026-05-02 11:09:26.275589', '5cca2240-1a2a-4ab4-bafa-a40ececf5e91');
-INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('FARM_PLOTS', 'Farm plots', 'UI', '/farm-plots', '2026-05-02 11:09:26.275589', '7ac03558-8da8-445f-bc32-d7941f93fb78');
-INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('FARM_LEASES', 'Farm leases', 'UI', '/farm-leases', '2026-05-02 11:09:26.275589', 'f3ecba0c-3e9d-4868-bfb9-adb841ad80fd');
-INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('FARM_FOLLOWUPS', 'Farm follow-ups', 'UI', '/farm-followups', '2026-05-02 11:09:26.275589', 'e36d8d8e-ddd3-4413-8e41-7740cf57dde2');
-INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('CROWDFUNDING', 'Crowdfunding campaigns', 'UI', '/crowd-funding', '2026-05-02 11:09:26.275589', 'b695bd5a-2ec6-4756-ac3e-3cae0ca2f067');
-INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('CROWDFUND_INVESTMENTS', 'Crowdfunding investments', 'UI', '/crowd-funding/investments', '2026-05-02 11:09:26.275589', 'c5606c4f-9e66-4f6b-befa-cc66d86f65fb');
-INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('NOTIFICATIONS', 'Notifications', 'UI', '/notifications', '2026-05-02 11:09:26.413858', '3ac0d76a-9f17-48c7-acf3-f41157529f91');
-INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('PAYMENTS', 'Payments', 'UI', '/payments', '2026-05-02 11:09:26.413858', 'cddaf231-18e9-4cc7-afef-94aa1fa20574');
-
 
 INSERT INTO policies (name, description, effect, created_at, id) VALUES ('ADMIN_ALL_FEATURES', 'Full application features for administrators', 'ALLOW', '2026-05-02 11:09:26.275589', '9cd6da93-36f0-49b7-a923-857c06f78b58');
-INSERT INTO policies (name, description, effect, created_at, id) VALUES ('INVESTOR_POLICY', 'Farm leases and crowdfunding for investors', 'ALLOW', '2026-05-02 11:09:26.413858', '79ed0d57-7627-4e9d-bc37-41bdcde4d31b');
-INSERT INTO policies (name, description, effect, created_at, id) VALUES ('OPERATOR_POLICY', 'Field operations: plots, payments, farm company', 'ALLOW', '2026-05-02 11:09:26.413858', '63887a2b-7671-4bcf-aa1b-523785c3109f');
-INSERT INTO policies (name, description, effect, created_at, id) VALUES ('EXTENSION_WORKER_ASSIGNED', 'Farm follow-ups and related field work', 'ALLOW', '2026-05-02 11:09:26.413858', 'fadbe3a8-4388-4015-95be-37de382fdfbd');
-INSERT INTO policies (name, description, effect, created_at, id) VALUES ('CCA_ACCESS', 'Clearing agent / CCA license workflow users', 'ALLOW', '2026-05-02 11:09:26.413858', 'ad40c3ad-4c42-450d-942f-96e7476efcd9');

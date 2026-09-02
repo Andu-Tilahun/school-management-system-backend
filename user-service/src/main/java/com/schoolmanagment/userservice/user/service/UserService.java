@@ -241,10 +241,7 @@ public class UserService {
         return userRepository.findAll(specification, pageable).map(userMapper::toDto);
     }
 
-    /**
-     * Users with {@code ADMIN_ALL_FEATURES} (direct or via group) receive the default navigation group
-     * when present in the database, in addition to any groups from the request (register / update).
-     */
+
     private void addDefaultNavigationGroupForFullAccess(Set<Group> groups, Set<Policy> directPolicies) {
         boolean qualifies = groups.stream().anyMatch(g -> ADMIN_DEFAULT_NAVIGATION_GROUP.equals(g.getName()))
                 || (directPolicies != null && directPolicies.stream()

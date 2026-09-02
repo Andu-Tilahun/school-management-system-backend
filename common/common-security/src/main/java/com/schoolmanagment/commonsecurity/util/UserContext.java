@@ -22,10 +22,6 @@ public class UserContext {
         return UUID.fromString(pullAuthentication().getName());
     }
 
-    /**
-     * True if the user has the named policy (directly or via group), encoded as a
-     * {@code POLICY_&lt;name&gt;} granted authority on the JWT.
-     */
     public boolean isAuthenticated() {
         return pullAuthenticationOptional() != null;
     }
@@ -38,10 +34,6 @@ public class UserContext {
                 .anyMatch(name -> name.equalsIgnoreCase(policyName));
     }
 
-    /**
-     * Policy names from JWT authorities ({@code POLICY_&lt;name&gt;}), without the prefix.
-     * In zion these act as transition "roles" (license-service uses {@code roleId} UUIDs instead).
-     */
     public Set<String> getEffectivePolicyNames() {
         Authentication authentication = pullAuthenticationOptional();
         if (authentication == null || authentication.getAuthorities() == null) {
@@ -66,26 +58,6 @@ public class UserContext {
 
     public boolean isAdmin() {
         return hasPolicy(PolicyNames.ADMIN_POLICY);
-    }
-
-    public boolean isRegionalRepresentative() {
-        return hasPolicy(PolicyNames.REGION_REPRESENTATIVE_POLICY);
-    }
-
-    public boolean isOrganizationalRepresentative() {
-        return hasPolicy(PolicyNames.ORGANIZATION_REPRESENTATIVE_POLICY);
-    }
-
-    public boolean isInvestor() {
-        return hasPolicy(PolicyNames.INVESTOR_POLICY);
-    }
-
-    public boolean isExtensionWorker() {
-        return hasPolicy(PolicyNames.EXTENSION_WORKER_ASSIGNED);
-    }
-
-    public boolean isOperator() {
-        return hasPolicy(PolicyNames.OPERATOR_POLICY);
     }
 
     public Optional<UUID> getCurrentExternalId() {

@@ -74,7 +74,7 @@ security:
 app:
   admin:
     username: admin
-    password: admin123
+    password: ChangeMe123!
     email: admin@example.com
 
 management:

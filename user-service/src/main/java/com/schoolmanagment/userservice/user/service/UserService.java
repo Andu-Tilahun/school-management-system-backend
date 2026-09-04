@@ -39,7 +39,7 @@ public class UserService {
 
     private static final String ADMIN_ALL_FEATURES_POLICY = "ADMIN_ALL_FEATURES";
 
-    /** Must match seeded group in V12__alter_user.sql */
+    /** Must match seeded group in V7__seed_menu_group.sql */
     private static final String ADMIN_DEFAULT_NAVIGATION_GROUP = "ADMIN_FULL_ACCESS";
 
     private final UserRepository userRepository;

@@ -1,5 +1,3 @@
--- Navigation lives in `menu`; `resources` stays the RBAC catalog only (no menu columns).
-
 CREATE TABLE menu (
     id          BIGSERIAL PRIMARY KEY,
     parent_id   BIGINT REFERENCES menu (id) ON DELETE CASCADE,

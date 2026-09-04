@@ -23,6 +23,7 @@ import java.util.UUID;
 public class StudentService {
 
     private final StudentRepository studentRepository;
+
     private final StudentMapper studentMapper;
 
     public Page<StudentDto> getAllStudents(int page, int size) {

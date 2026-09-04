@@ -1,6 +1,6 @@
 package com.schoolmanagment.coreservice.student.entity;
 
-import com.schoolmanagment.coreservice.student.enums.Sex;
+import com.schoolmanagment.coreservice.student.enums.Gender;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -38,7 +38,7 @@ public class Student {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
-    private Sex sex;
+    private Gender gender;
 
     @Column(nullable = false, length = 100)
     private String nationality;

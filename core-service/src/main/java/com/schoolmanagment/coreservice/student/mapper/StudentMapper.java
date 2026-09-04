@@ -15,7 +15,7 @@ public class StudentMapper {
                 .middleName(student.getMiddleName())
                 .lastName(student.getLastName())
                 .age(student.getAge())
-                .sex(student.getSex())
+                .gender(student.getGender())
                 .nationality(student.getNationality())
                 .subCity(student.getSubCity())
                 .kebele(student.getKebele())
@@ -31,7 +31,7 @@ public class StudentMapper {
                 .middleName(request.getMiddleName())
                 .lastName(request.getLastName())
                 .age(request.getAge())
-                .sex(request.getSex())
+                .gender(request.getGender())
                 .nationality(request.getNationality())
                 .subCity(request.getSubCity())
                 .kebele(request.getKebele())
@@ -46,7 +46,7 @@ public class StudentMapper {
         student.setMiddleName(request.getMiddleName());
         student.setLastName(request.getLastName());
         student.setAge(request.getAge());
-        student.setSex(request.getSex());
+        student.setGender(request.getGender());
         student.setNationality(request.getNationality());
         student.setSubCity(request.getSubCity());
         student.setKebele(request.getKebele());

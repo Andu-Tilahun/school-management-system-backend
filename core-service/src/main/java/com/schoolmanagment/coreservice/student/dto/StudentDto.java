@@ -1,6 +1,6 @@
 package com.schoolmanagment.coreservice.student.dto;
 
-import com.schoolmanagment.coreservice.student.enums.Sex;
+import com.schoolmanagment.coreservice.student.enums.Gender;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,7 +21,7 @@ public class StudentDto {
     private String middleName;
     private String lastName;
     private int age;
-    private Sex sex;
+    private Gender gender;
     private String nationality;
     private String subCity;
     private Integer kebele;
@@ -36,7 +36,7 @@ public class StudentDto {
                 .middleName(student.getMiddleName())
                 .lastName(student.getLastName())
                 .age(student.getAge())
-                .sex(student.getSex())
+                .gender(student.getGender())
                 .nationality(student.getNationality())
                 .subCity(student.getSubCity())
                 .kebele(student.getKebele())

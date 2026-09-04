@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS tbl_students (
     middle_name VARCHAR(100),
     last_name VARCHAR(100) NOT NULL,
     age INTEGER NOT NULL,
-    sex VARCHAR(20) NOT NULL CHECK (sex IN ('MALE', 'FEMALE')),
+    gender VARCHAR(20) NOT NULL CHECK (gender IN ('MALE', 'FEMALE')),
     nationality VARCHAR(100) NOT NULL,
     sub_city VARCHAR(100) NOT NULL,
     kebele INTEGER,

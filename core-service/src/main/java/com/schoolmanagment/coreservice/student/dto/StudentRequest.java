@@ -1,6 +1,6 @@
 package com.schoolmanagment.coreservice.student.dto;
 
-import com.schoolmanagment.coreservice.student.enums.Sex;
+import com.schoolmanagment.coreservice.student.enums.Gender;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -21,8 +21,8 @@ public class StudentRequest {
     @Min(value = 1, message = "Age must be at least 1")
     private Integer age;
 
-    @NotNull(message = "Sex is required")
-    private Sex sex;
+    @NotNull(message = "Gender is required")
+    private Gender gender;
 
     @NotBlank(message = "Nationality is required")
     private String nationality;

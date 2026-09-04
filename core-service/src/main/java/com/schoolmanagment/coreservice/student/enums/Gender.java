@@ -1,6 +1,6 @@
 package com.schoolmanagment.coreservice.student.enums;
 
-public enum Sex {
+public enum Gender {
     MALE,
     FEMALE
 }

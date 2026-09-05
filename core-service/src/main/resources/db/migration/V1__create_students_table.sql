@@ -1,3 +1,5 @@
+CREATE SCHEMA IF NOT EXISTS public;
+
 CREATE TABLE IF NOT EXISTS tbl_students (
     id UUID PRIMARY KEY,
     first_name VARCHAR(100) NOT NULL,

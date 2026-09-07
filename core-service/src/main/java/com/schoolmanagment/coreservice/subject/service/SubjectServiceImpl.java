@@ -4,11 +4,14 @@ package com.schoolmanagment.coreservice.subject.service;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.coreservice.subject.dto.SubjectDto;
+import com.schoolmanagment.coreservice.subject.dto.SubjectFilterRequest;
 import com.schoolmanagment.coreservice.subject.dto.SubjectRequest;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.mapper.SubjectMapper;
 import com.schoolmanagment.coreservice.subject.repository.SubjectRepository;
+import com.schoolmanagment.coreservice.subject.specification.SubjectSpecification;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -42,8 +45,16 @@ public class SubjectServiceImpl implements SubjectService{
     }
 
     @Override
-    public List<SubjectDto> getAllSubjects() {
-        return subjectRepository.findAll().stream()
+    public List<SubjectDto> getSubjects(SubjectFilterRequest filterRequest) {
+        Specification<Subject> spec = new SubjectSpecification(filterRequest);
+        return subjectRepository.findAll(spec).stream()
+                .map(subjectMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    public List<SubjectDto> getSubjectsByGrade(Integer gradeLevel) {
+        return subjectRepository.findByGradeLevel(gradeLevel).stream()
                 .map(subjectMapper::toDto)
                 .toList();
     }

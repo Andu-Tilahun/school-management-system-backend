@@ -19,6 +19,7 @@ public class SubjectRequest {
     private String subjectName;
 
     @NotNull(message = "Credit hours is required")
+    @Min(value = 1, message = "Credit hours must be at least 1")
     private Integer creditHours;
 
     @NotNull(message = "Grade level is required")

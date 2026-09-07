@@ -2,6 +2,7 @@ package com.schoolmanagment.coreservice.subject.controller;
 
 import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.coreservice.subject.dto.SubjectDto;
+import com.schoolmanagment.coreservice.subject.dto.SubjectFilterRequest;
 import com.schoolmanagment.coreservice.subject.dto.SubjectRequest;
 import com.schoolmanagment.coreservice.subject.service.SubjectService;
 import jakarta.validation.Valid;
@@ -32,8 +33,8 @@ public class SubjectController {
     }
 
     @GetMapping
-    public ResponseEntity<List<SubjectDto>>getAll(){
-        return ResponseEntity.ok(subjectService.getAllSubjects());
+    public ResponseEntity<List<SubjectDto>> getAll(SubjectFilterRequest filterRequest) {
+        return ResponseEntity.ok(subjectService.getSubjects(filterRequest));
     }
     @PutMapping("/{id}")
     public ResponseEntity<SubjectDto> update(@PathVariable UUID id, @Valid @RequestBody SubjectRequest request){
@@ -46,6 +47,11 @@ public class SubjectController {
         ApiResponse response = ApiResponse.success("Subject deleted successfully", null);
         return ResponseEntity.ok(response);
 
+    }
+
+    @GetMapping("/by-grade/{gradeLevel}")
+    public ResponseEntity<List<SubjectDto>> getByGrade(@PathVariable Integer gradeLevel) {
+        return ResponseEntity.ok(subjectService.getSubjectsByGrade(gradeLevel));
     }
 
 

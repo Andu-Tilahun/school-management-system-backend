@@ -4,6 +4,7 @@ import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonsecurity.util.JwtService;
 import com.schoolmanagment.commonsecurity.util.TokenBlacklistService;
+import com.schoolmanagment.commonsecurity.util.UserStatusCache;
 import com.schoolmanagment.userservice.user.dto.*;
 import com.schoolmanagment.userservice.user.service.UserService;
 import jakarta.validation.Valid;
@@ -28,6 +29,7 @@ public class AuthController {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final TokenBlacklistService tokenBlacklistService;
+    private final UserStatusCache userStatusCache;
 
     @PostMapping("/login")
     public ResponseEntity<ApiResponse> login(@Valid @RequestBody LoginRequest request) {
@@ -42,9 +44,11 @@ public class AuthController {
                     ? userDto.getEffectivePolicyNames()
                     : Collections.<String>emptySet();
 
-            String token = jwtService.generateToken(userDto.getId().toString(), policyNames, userDto.getExternalId());
+            userStatusCache.setUserPolicies(userDto.getId().toString(), policyNames);
 
-            String refreshToken = jwtService.generateRefreshToken(userDto.getId().toString(), policyNames, userDto.getExternalId());
+            String token = jwtService.generateToken(userDto.getId().toString(), userDto.getExternalId());
+
+            String refreshToken = jwtService.generateRefreshToken(userDto.getId().toString(), userDto.getExternalId());
 
             AuthResponse authResponse = AuthResponse.builder()
                     .token(token)
@@ -89,8 +93,9 @@ public class AuthController {
             var policyNames = userDto.getEffectivePolicyNames() != null
                     ? userDto.getEffectivePolicyNames()
                     : Collections.<String>emptySet();
-            String newToken = jwtService.generateToken(userDto.getId().toString(), policyNames, userDto.getExternalId());
-            String newRefreshToken = jwtService.generateRefreshToken(userDto.getId().toString(), policyNames, userDto.getExternalId());
+            userStatusCache.setUserPolicies(userDto.getId().toString(), policyNames);
+            String newToken = jwtService.generateToken(userDto.getId().toString(), userDto.getExternalId());
+            String newRefreshToken = jwtService.generateRefreshToken(userDto.getId().toString(), userDto.getExternalId());
             Long expirationTime = jwtService.extractExpiration(refreshToken).getTime() - System.currentTimeMillis();
             tokenBlacklistService.blacklistToken(refreshToken, expirationTime);
 

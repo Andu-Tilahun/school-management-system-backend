@@ -3,7 +3,6 @@ package com.schoolmanagment.commonsecurity.util;
 import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.auth.JwtAuthDetails;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -19,6 +18,12 @@ import java.util.stream.Collectors;
 public class UserContext {
 
     private static UserContext instance;
+
+    private final UserStatusCache userStatusCache;
+
+    public UserContext(UserStatusCache userStatusCache) {
+        this.userStatusCache = userStatusCache;
+    }
 
     @jakarta.annotation.PostConstruct
     private void registerStaticInstance() {
@@ -45,26 +50,21 @@ public class UserContext {
                 .anyMatch(name -> name.equalsIgnoreCase(policyName));
     }
 
-    public Set<String> getEffectivePolicyNames() {
+    private Set<String> getEffectivePolicyNames() {
         Authentication authentication = pullAuthenticationOptional();
-        if (authentication == null || authentication.getAuthorities() == null) {
+        if (authentication == null || authentication.getName() == null) {
             return Collections.emptySet();
         }
-        return authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .map(UserContext::stripPolicyPrefix)
-                .collect(Collectors.toSet());
+        return userStatusCache.getUserPolicies(authentication.getName());
     }
 
     public Set<String> getUserAuthorities() {
-        Authentication authentication = pullAuthenticationOptional();
-        if (authentication == null || authentication.getAuthorities() == null) {
+        if (pullAuthenticationOptional() == null) {
             return null;
         }
-        Set<String> authorities = authentication.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
+        return getEffectivePolicyNames().stream()
+                .map(name -> name.regionMatches(true, 0, "POLICY_", 0, 7) ? name : "POLICY_" + name)
                 .collect(Collectors.toSet());
-        return authorities;
     }
 
     public boolean isAdmin() {
@@ -80,13 +80,6 @@ public class UserContext {
             return Optional.ofNullable(details.externalId());
         }
         return Optional.empty();
-    }
-
-    private static String stripPolicyPrefix(String authority) {
-        if (authority != null && authority.regionMatches(true, 0, "POLICY_", 0, 7)) {
-            return authority.substring(7);
-        }
-        return authority;
     }
 
     private Authentication pullAuthenticationOptional() {

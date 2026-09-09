@@ -3,9 +3,14 @@ package com.schoolmanagment.commonsecurity.util;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Set;
+
 @Component
 public class UserStatusCache {
     private static final String INACTIVE_USER_PREFIX = "user:status:";
+    private static final String USER_POLICIES_PREFIX = "user:policies:";
     private static final String INACTIVE_STATUS = "INACTIVE";
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -54,5 +59,38 @@ public class UserStatusCache {
      */
     public void updateUserStatus(String id) {
         setUserStatus(id);
+    }
+
+    /**
+     * Store the user's effective policy names with key pattern: user:policies:{id}
+     */
+    public void setUserPolicies(String id, Collection<String> policyNames) {
+        String key = USER_POLICIES_PREFIX + id;
+        redisTemplate.delete(key);
+        if (policyNames == null || policyNames.isEmpty()) {
+            return;
+        }
+        String[] values = policyNames.stream()
+                .filter(name -> name != null && !name.isBlank())
+                .distinct()
+                .toArray(String[]::new);
+        if (values.length > 0) {
+            redisTemplate.opsForSet().add(key, values);
+        }
+    }
+
+    /**
+     * Read the user's effective policy names from Redis.
+     */
+    public Set<String> getUserPolicies(String id) {
+        Set<String> policies = redisTemplate.opsForSet().members(USER_POLICIES_PREFIX + id);
+        return policies != null ? policies : Collections.emptySet();
+    }
+
+    /**
+     * Remove cached policy names for the user.
+     */
+    public void removeUserPolicies(String id) {
+        redisTemplate.delete(USER_POLICIES_PREFIX + id);
     }
 }

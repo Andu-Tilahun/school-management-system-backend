@@ -2,7 +2,6 @@ package com.schoolmanagment.userservice.user.dto;
 
 import com.schoolmanagment.userservice.group.dto.GroupSummaryDto;
 import com.schoolmanagment.userservice.policy.dto.PolicySummaryDto;
-import com.schoolmanagment.userservice.user.enums.UserScopeType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

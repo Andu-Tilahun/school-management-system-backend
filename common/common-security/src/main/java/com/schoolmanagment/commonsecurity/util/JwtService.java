@@ -5,13 +5,13 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @Component
 public class JwtService {
@@ -36,22 +36,6 @@ public class JwtService {
         return extractAllClaims(token).getExpiration();
     }
 
-    /**
-     * JWT claim key remains {@code roles} for backward compatibility; values are policy authorities
-     * ({@code POLICY_&lt;name&gt;}) only.
-     */
-    public List<String> extractRoles(String token) {
-        Claims claims = extractAllClaims(token);
-        List<String> roles = claims.get("roles", List.class);
-        return roles != null ? roles : Collections.emptyList();
-    }
-
-    public List<GrantedAuthority> extractAuthorities(String token) {
-        return extractRoles(token).stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
-    }
-
     public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
@@ -73,29 +57,27 @@ public class JwtService {
         }
     }
 
-    public String generateToken(String userId, Collection<String> effectivePolicyNames) {
-        return generateToken(userId, effectivePolicyNames, null);
+    public String generateToken(String userId) {
+        return generateToken(userId, null);
     }
 
     /**
      * @param externalId region or organization id for scoped representatives; omitted from token when null
      */
-    public String generateToken(String userId, Collection<String> effectivePolicyNames, UUID externalId) {
+    public String generateToken(String userId, UUID externalId) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", buildPolicyAuthorities(effectivePolicyNames));
         if (externalId != null) {
             claims.put(CLAIM_EXTERNAL_ID, externalId.toString());
         }
         return createToken(claims, userId, expiration);
     }
 
-    public String generateRefreshToken(String userId, Collection<String> effectivePolicyNames) {
-        return generateRefreshToken(userId, effectivePolicyNames, null);
+    public String generateRefreshToken(String userId) {
+        return generateRefreshToken(userId, null);
     }
 
-    public String generateRefreshToken(String userId, Collection<String> effectivePolicyNames, UUID externalId) {
+    public String generateRefreshToken(String userId, UUID externalId) {
         Map<String, Object> claims = new HashMap<>();
-        claims.put("roles", buildPolicyAuthorities(effectivePolicyNames));
         claims.put("tokenType", "refresh");
         if (externalId != null) {
             claims.put(CLAIM_EXTERNAL_ID, externalId.toString());
@@ -120,18 +102,6 @@ public class JwtService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private static List<String> buildPolicyAuthorities(Collection<String> effectivePolicyNames) {
-        List<String> authorities = new ArrayList<>();
-        if (effectivePolicyNames != null) {
-            for (String name : effectivePolicyNames) {
-                if (name != null && !name.isBlank()) {
-                    authorities.add("POLICY_" + name);
-                }
-            }
-        }
-        return authorities;
     }
 
     private String createToken(Map<String, Object> claims, String subject, Long expiration) {

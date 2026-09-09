@@ -28,6 +28,7 @@ public class SecurityConfig {
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/core/subjects/**").permitAll()
                         .requestMatchers("/api/core/tenants/**").permitAll()
+                        .requestMatchers("/api/core/schools/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

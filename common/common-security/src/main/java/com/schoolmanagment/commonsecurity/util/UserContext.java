@@ -67,8 +67,12 @@ public class UserContext {
                 .collect(Collectors.toSet());
     }
 
-    public boolean isAdmin() {
+    public boolean hasAdmin() {
         return hasPolicy(PolicyNames.ADMIN_POLICY);
+    }
+
+    public boolean hasTenantManager() {
+        return hasPolicy(PolicyNames.TENANT_MANAGER_POLICY);
     }
 
     public Optional<UUID> getCurrentExternalId() {

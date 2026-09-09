@@ -4,7 +4,6 @@ import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.userservice.internal.dto.InternalRegisterRequest;
 import com.schoolmanagment.userservice.user.dto.UserRegisterRequest;
 import com.schoolmanagment.userservice.user.dto.UserDto;
-import com.schoolmanagment.userservice.user.enums.UserScopeType;
 import com.schoolmanagment.userservice.policy.entity.Policy;
 import com.schoolmanagment.userservice.policy.repository.PolicyRepository;
 import com.schoolmanagment.userservice.user.service.UserService;
@@ -49,7 +48,6 @@ public class InternalController {
                 .email(request.getEmail())
                 .password(request.getPassword())
                 .policyIds(policyIds.isEmpty() ? null : policyIds)
-                .userScopeType(request.getUserScopeType() != null ? request.getUserScopeType() : UserScopeType.SYSTEM)
                 .externalId(request.getExternalId())
                 .build();
 

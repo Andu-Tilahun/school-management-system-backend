@@ -1,15 +1,11 @@
 package com.schoolmanagment.userservice.user.specification;
 
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.userservice.group.entity.Group;
 import com.schoolmanagment.userservice.policy.entity.Policy;
 import com.schoolmanagment.userservice.user.dto.UserFilterRequest;
 import com.schoolmanagment.userservice.user.entity.User;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.JoinType;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -40,6 +36,15 @@ public class UserSpecification implements Specification<User> {
     @Override
     public Predicate toPredicate(Root<User> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
+
+        if (UserContext.current().hasTenantManager() || UserContext.current().hasSchoolAdminPolicy()) {
+            predicates.add(cb.equal(root.get("externalId"), filterRequest.getExternalId()));
+        }
+
+        if (UserContext.current().hasSchoolAdminPolicy()) {
+            UserContext.current().getCurrentExternalId()
+                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("externalId"), externalId)));
+        }
 
         if (filterRequest.getPolicyNames() != null && !filterRequest.getPolicyNames().isEmpty()) {
             List<String> nameStrings = filterRequest.getPolicyNames().stream()

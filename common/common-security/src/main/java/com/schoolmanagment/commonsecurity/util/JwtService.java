@@ -16,7 +16,6 @@ import java.util.UUID;
 @Component
 public class JwtService {
 
-    public static final String CLAIM_USER_SCOPE_TYPE = "userScopeType";
     public static final String CLAIM_EXTERNAL_ID = "externalId";
 
     @Value("${jwt.secret}")
@@ -61,14 +60,9 @@ public class JwtService {
         return generateToken(userId, null);
     }
 
-    /**
-     * @param externalId region or organization id for scoped representatives; omitted from token when null
-     */
     public String generateToken(String userId, UUID externalId) {
         Map<String, Object> claims = new HashMap<>();
-        if (externalId != null) {
-            claims.put(CLAIM_EXTERNAL_ID, externalId.toString());
-        }
+        putUuidClaim(claims, CLAIM_EXTERNAL_ID, externalId);
         return createToken(claims, userId, expiration);
     }
 
@@ -79,18 +73,23 @@ public class JwtService {
     public String generateRefreshToken(String userId, UUID externalId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tokenType", "refresh");
-        if (externalId != null) {
-            claims.put(CLAIM_EXTERNAL_ID, externalId.toString());
-        }
+        putUuidClaim(claims, CLAIM_EXTERNAL_ID, externalId);
         return createToken(claims, userId, refreshExpiration);
     }
 
-    /**
-     * Reads {@link #CLAIM_EXTERNAL_ID} from a valid JWT body; returns null if absent or invalid.
-     */
     public UUID extractExternalId(String token) {
+        return extractUuidClaim(token, CLAIM_EXTERNAL_ID);
+    }
+
+    private void putUuidClaim(Map<String, Object> claims, String claimName, UUID value) {
+        if (value != null) {
+            claims.put(claimName, value.toString());
+        }
+    }
+
+    private UUID extractUuidClaim(String token, String claimName) {
         try {
-            Object raw = extractAllClaims(token).get(CLAIM_EXTERNAL_ID);
+            Object raw = extractAllClaims(token).get(claimName);
             if (raw == null) {
                 return null;
             }

@@ -2,13 +2,8 @@ package com.schoolmanagment.commonsecurity;
 
 
 public final class PolicyNames {
-
-    private PolicyNames() {
-    }
-
-    public static final String ADMIN_POLICY = "ADMIN_ALL_FEATURES";
-
+    public static final String SUPER_ADMIN_FEATURES = "SUPER_ADMIN_FEATURES";
     public static final String TENANT_MANAGER_POLICY = "TENANT_MANAGER_POLICY";
+    public static final String SCHOOL_ADMIN_POLICY = "SCHOOL_ADMIN_POLICY";
 
-    public static final String USER_POLICY = "USER_POLICY";
 }

@@ -56,7 +56,6 @@ public class UserMapper {
                                 .map(Policy::getId)
                                 .collect(Collectors.toSet()))
                 .effectivePolicyNames(collectEffectivePolicyNames(user))
-                .userScopeType(user.getUserScopeType())
                 .externalId(user.getExternalId())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())

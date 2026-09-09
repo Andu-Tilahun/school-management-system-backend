@@ -28,7 +28,7 @@ public class SubjectSpecification implements Specification<Subject> {
     public Predicate toPredicate(Root<Subject> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        if(UserContext.current().hasAdmin()){
+        if(UserContext.current().hasAdminPolicy()){
 
         }
 

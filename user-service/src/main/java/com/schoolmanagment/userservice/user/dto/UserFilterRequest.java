@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
@@ -17,7 +18,11 @@ public class UserFilterRequest {
 
     private String searchText;
 
-    /** Policy names (e.g. {@code OPERATOR_POLICY}); matches direct or group policies. */
+    private UUID externalId;
+
+    /**
+     * Policy names (e.g. {@code OPERATOR_POLICY}); matches direct or group policies.
+     */
     private List<String> policyNames;
 
     private List<String> genders;

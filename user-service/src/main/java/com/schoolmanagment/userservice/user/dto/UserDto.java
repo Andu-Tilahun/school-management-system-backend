@@ -31,7 +31,6 @@ public class UserDto {
     private Set<PolicySummaryDto> directPolicies;
     private Set<UUID> effectivePolicyIds;
     private Set<String> effectivePolicyNames;
-    private UserScopeType userScopeType;
     private UUID externalId;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;

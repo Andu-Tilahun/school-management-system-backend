@@ -2,21 +2,21 @@ package com.schoolmanagment.userservice.user.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.util.UserStatusCache;
-import com.schoolmanagment.userservice.user.dto.UserRegisterRequest;
-import com.schoolmanagment.userservice.user.dto.UserUpdateRequest;
+import com.schoolmanagment.userservice.group.entity.Group;
+import com.schoolmanagment.userservice.group.repository.GroupRepository;
+import com.schoolmanagment.userservice.kafka.NotifierEventProducer;
+import com.schoolmanagment.userservice.policy.entity.Policy;
+import com.schoolmanagment.userservice.policy.repository.PolicyRepository;
 import com.schoolmanagment.userservice.user.dto.UserDto;
 import com.schoolmanagment.userservice.user.dto.UserFilterRequest;
-import com.schoolmanagment.userservice.user.enums.UserScopeType;
-import com.schoolmanagment.userservice.user.mapper.UserMapper;
+import com.schoolmanagment.userservice.user.dto.UserRegisterRequest;
+import com.schoolmanagment.userservice.user.dto.UserUpdateRequest;
 import com.schoolmanagment.userservice.user.entity.PasswordResetToken;
-import com.schoolmanagment.userservice.policy.entity.Policy;
 import com.schoolmanagment.userservice.user.entity.User;
-import com.schoolmanagment.userservice.group.entity.Group;
-import com.schoolmanagment.userservice.kafka.NotifierEventProducer;
-import com.schoolmanagment.userservice.group.repository.GroupRepository;
+import com.schoolmanagment.userservice.user.mapper.UserMapper;
 import com.schoolmanagment.userservice.user.repository.PasswordResetTokenRepository;
-import com.schoolmanagment.userservice.policy.repository.PolicyRepository;
 import com.schoolmanagment.userservice.user.repository.UserRepository;
 import com.schoolmanagment.userservice.user.specification.UserSpecification;
 import jakarta.transaction.Transactional;
@@ -30,18 +30,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class UserService {
-
-    private static final String ADMIN_ALL_FEATURES_POLICY = "ADMIN_ALL_FEATURES";
-
-    /** Must match seeded group in V7__seed_menu_group.sql */
-    private static final String ADMIN_DEFAULT_NAVIGATION_GROUP = "ADMIN_FULL_ACCESS";
-
     private final UserRepository userRepository;
     private final GroupRepository groupRepository;
     private final PolicyRepository policyRepository;
@@ -67,8 +63,6 @@ public class UserService {
         Set<Policy> policies = resolvePolicies(request.getPolicyIds());
         addDefaultNavigationGroupForFullAccess(groups, policies);
 
-        validateUserScope(request.getUserScopeType(), request.getExternalId());
-
         User user = User.builder()
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
@@ -78,8 +72,7 @@ public class UserService {
                 .middleName(request.getMiddleName())
                 .gender(request.getGender())
                 .profileImageUuid(request.getProfileImageUuid())
-                .userScopeType(request.getUserScopeType())
-                .externalId(request.getUserScopeType() == UserScopeType.SYSTEM ? null : request.getExternalId())
+                .externalId(request.getExternalId())
                 .enabled(true)
                 .accountNonExpired(true)
                 .accountNonLocked(true)
@@ -130,11 +123,7 @@ public class UserService {
         user.setMiddleName(request.getMiddleName());
         user.setGender(request.getGender());
         user.setProfileImageUuid(request.getProfileImageUuid());
-        if (request.getUserScopeType() != null) {
-            validateUserScope(request.getUserScopeType(), request.getExternalId());
-            user.setUserScopeType(request.getUserScopeType());
-            user.setExternalId(request.getUserScopeType() == UserScopeType.SYSTEM ? null : request.getExternalId());
-        }
+        user.setExternalId(request.getExternalId());
         if (request.getGroupIds() != null) {
             user.setGroups(new HashSet<>(resolveGroups(request.getGroupIds())));
         }
@@ -206,7 +195,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        if (hasEffectivePolicy(user, ADMIN_ALL_FEATURES_POLICY)) {
+        if (hasEffectivePolicy(user, PolicyNames.SUPER_ADMIN_FEATURES)) {
             throw new BadRequestException("Cannot lock admin users");
         }
 
@@ -243,13 +232,13 @@ public class UserService {
 
 
     private void addDefaultNavigationGroupForFullAccess(Set<Group> groups, Set<Policy> directPolicies) {
-        boolean qualifies = groups.stream().anyMatch(g -> ADMIN_DEFAULT_NAVIGATION_GROUP.equals(g.getName()))
+        boolean qualifies = groups.stream().anyMatch(g -> PolicyNames.SUPER_ADMIN_FEATURES.equals(g.getName()))
                 || (directPolicies != null && directPolicies.stream()
-                .anyMatch(p -> ADMIN_ALL_FEATURES_POLICY.equals(p.getName())));
+                .anyMatch(p -> PolicyNames.SUPER_ADMIN_FEATURES.equals(p.getName())));
         if (!qualifies) {
             return;
         }
-        groupRepository.findByName(ADMIN_DEFAULT_NAVIGATION_GROUP).ifPresent(navGroup -> {
+        groupRepository.findByName(PolicyNames.SUPER_ADMIN_FEATURES).ifPresent(navGroup -> {
             boolean alreadyPresent = groups.stream().anyMatch(g -> g.getId().equals(navGroup.getId()));
             if (!alreadyPresent) {
                 groups.add(navGroup);
@@ -303,17 +292,5 @@ public class UserService {
             policies.add(policy);
         }
         return policies;
-    }
-
-    private static void validateUserScope(UserScopeType type, UUID externalId) {
-        if (type == null) {
-            throw new BadRequestException("User type is required");
-        }
-        if (type == UserScopeType.SYSTEM) {
-            return;
-        }
-        if (externalId == null) {
-            throw new BadRequestException("A region or clearing agent organization must be selected for this user type");
-        }
     }
 }

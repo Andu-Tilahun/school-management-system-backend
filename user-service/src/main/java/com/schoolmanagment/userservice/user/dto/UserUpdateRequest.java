@@ -1,6 +1,5 @@
 package com.schoolmanagment.userservice.user.dto;
 
-import com.schoolmanagment.userservice.user.enums.UserScopeType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -30,9 +29,6 @@ public class UserUpdateRequest {
 
     private Set<UUID> groupIds;
     private Set<UUID> policyIds;
-
-    /** When set, replaces scope; use with {@link #externalId} per scope rules. */
-    private UserScopeType userScopeType;
 
     private UUID externalId;
 }

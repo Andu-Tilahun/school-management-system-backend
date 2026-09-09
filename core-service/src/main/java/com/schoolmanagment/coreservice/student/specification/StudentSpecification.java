@@ -1,5 +1,6 @@
 package com.schoolmanagment.coreservice.student.specification;
 
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.student.dto.StudentFilterRequest;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -32,8 +33,9 @@ public class StudentSpecification implements Specification<Student> {
 
         predicates.add(cb.isTrue(root.get("active")));
 
-        if (filterRequest.getSchoolId() != null) {
-            predicates.add(cb.equal(root.get("schoolId"), filterRequest.getSchoolId()));
+        if (UserContext.current().hasSchoolAdminPolicy()) {
+            UserContext.current().getCurrentExternalId()
+                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
         }
 
         if (filterRequest.getSearchText() != null && !filterRequest.getSearchText().isBlank()) {

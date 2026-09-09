@@ -113,7 +113,7 @@ User → Groups → Policies → Permissions → Resource + Scopes
 - **READ** — API access without sidebar menu entry
 - **VIEW** — Menu visibility (implies READ)
 - Controllers use `@RequiresPermission(resource = "USERS", scope = "READ")`
-- Admin policy: `ADMIN_ALL_FEATURES`
+- Admin policy: `SUPER_ADMIN_FEATURES`
 
 Seeded resources: `HOME`, `USERS`, `SCOPES`, `RBAC_RESOURCES`, `PERMISSIONS`, `POLICIES`, `GROUPS`.
 
@@ -131,6 +131,7 @@ Flyway migrations run automatically on startup (`user_db`):
 | V6 | Seed scopes, resources, admin policy |
 | V7 | Seed menu, admin group membership |
 | V8 | Seed permissions and policy links |
+| V15 | Rename `ADMIN_ALL_FEATURES` policy to `SUPER_ADMIN_FEATURES` |
 
 > **Note:** If you previously ran older migration versions, drop and recreate `user_db` (or wipe the Postgres Docker volume) before starting fresh.
 

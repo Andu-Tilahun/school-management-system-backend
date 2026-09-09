@@ -8,8 +8,6 @@ import lombok.Data;
 import java.util.List;
 import java.util.UUID;
 
-import com.schoolmanagment.userservice.user.enums.UserScopeType;
-
 @Data
 public class InternalRegisterRequest {
     @NotBlank(message = "Username is required")
@@ -37,8 +35,6 @@ public class InternalRegisterRequest {
 
     /** Policy names from {@code policies.name} (e.g. {@code CCA_ACCESS}). */
     private List<String> policyNames;
-
-    private UserScopeType userScopeType;
 
     private UUID externalId;
 }

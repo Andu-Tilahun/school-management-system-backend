@@ -1,9 +1,7 @@
 package com.schoolmanagment.userservice.user.dto;
 
-import com.schoolmanagment.userservice.user.enums.UserScopeType;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,13 +41,10 @@ public class UserRegisterRequest {
     private String gender;
 
     private Set<UUID> groupIds;
+
     private Set<UUID> policyIds;
 
     private UUID profileImageUuid;
 
-    @NotNull(message = "User type is required")
-    private UserScopeType userScopeType;
-
-    /** Region or organization id when {@link #userScopeType} is not {@link UserScopeType#SYSTEM}. */
     private UUID externalId;
 }

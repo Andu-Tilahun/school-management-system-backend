@@ -2,7 +2,6 @@ package com.schoolmanagment.userservice.user.entity;
 
 import com.schoolmanagment.userservice.group.entity.Group;
 import com.schoolmanagment.userservice.policy.entity.Policy;
-import com.schoolmanagment.userservice.user.enums.UserScopeType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -62,11 +61,6 @@ public class User {
 
     @Column(name = "profile_image_uuid")
     private UUID profileImageUuid;
-
-    @Enumerated(EnumType.STRING)
-    @Column(name = "user_scope_type", nullable = false, length = 40)
-    @Builder.Default
-    private UserScopeType userScopeType = UserScopeType.SYSTEM;
 
     @Column(name = "external_id")
     private UUID externalId;

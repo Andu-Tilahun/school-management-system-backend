@@ -15,4 +15,4 @@ INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VAL
 INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('POLICIES', 'Policies', 'UI', '/policies', '2026-05-02 11:09:26.275589', '4fb75048-64ac-4314-a5d0-04e698d75a0d');
 INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('GROUPS', 'Groups', 'UI', '/groups', '2026-05-02 11:09:26.275589', 'b49f9ea7-39a2-487b-a234-70cdbb8e44e1');
 
-INSERT INTO policies (name, description, effect, created_at, id) VALUES ('ADMIN_ALL_FEATURES', 'Full application features for administrators', 'ALLOW', '2026-05-02 11:09:26.275589', '9cd6da93-36f0-49b7-a923-857c06f78b58');
+INSERT INTO policies (name, description, effect, created_at, id) VALUES ('SUPER_ADMIN_FEATURES', 'Full application features for administrators', 'ALLOW', '2026-05-02 11:09:26.275589', '9cd6da93-36f0-49b7-a923-857c06f78b58');

@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.school.specification;
 
-import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.school.dto.SchoolFilterRequest;
 import com.schoolmanagment.coreservice.school.entity.School;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -20,10 +19,6 @@ public class SchoolSpecification implements Specification<School> {
     @Override
     public Predicate toPredicate(Root<School> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
-
-        if (UserContext.current().hasTenantManager()) {
-            predicates.add(cb.equal(root.get("tenant").get("id"), UserContext.current().getCurrentExternalId()));
-        }
 
         if (filterRequest.getTenantId() != null) {
             predicates.add(cb.equal(root.get("tenant").get("id"), filterRequest.getTenantId()));

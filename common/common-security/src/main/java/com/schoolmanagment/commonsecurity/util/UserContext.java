@@ -67,23 +67,26 @@ public class UserContext {
                 .collect(Collectors.toSet());
     }
 
-    public boolean hasAdmin() {
-        return hasPolicy(PolicyNames.ADMIN_POLICY);
+    public boolean hasAdminPolicy() {
+        return hasPolicy(PolicyNames.SUPER_ADMIN_FEATURES);
     }
-
+    public boolean hasSchoolAdminPolicy() {
+        return hasPolicy(PolicyNames.SCHOOL_ADMIN_POLICY);
+    }
     public boolean hasTenantManager() {
         return hasPolicy(PolicyNames.TENANT_MANAGER_POLICY);
     }
 
     public Optional<UUID> getCurrentExternalId() {
+        return currentAuthDetails().map(JwtAuthDetails::externalId);
+    }
+
+    private Optional<JwtAuthDetails> currentAuthDetails() {
         Authentication auth = pullAuthenticationOptional();
-        if (auth == null || auth.getDetails() == null) {
+        if (auth == null || !(auth.getDetails() instanceof JwtAuthDetails details)) {
             return Optional.empty();
         }
-        if (auth.getDetails() instanceof JwtAuthDetails details) {
-            return Optional.ofNullable(details.externalId());
-        }
-        return Optional.empty();
+        return Optional.of(details);
     }
 
     private Authentication pullAuthenticationOptional() {

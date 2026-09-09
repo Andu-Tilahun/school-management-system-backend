@@ -12,11 +12,7 @@ import java.util.UUID;
 public interface SubjectRepository extends JpaRepository<Subject, UUID>, JpaSpecificationExecutor<Subject> {
     Optional<Subject> findBySubjectCode(String subjectCode);
 
-    List<Subject> findByGradeLevel(Integer gradeLevel);
-
     List<Subject> findByStatus(SubjectStatus status);
 
-    List<Subject> findByGradeLevelAndStatus(Integer gradeLevel, SubjectStatus status);
     boolean existsBySubjectCode(String subjectCode);
-    boolean existsBySubjectNameAndGradeLevel(String subjectName, Integer gradeLevel);
 }

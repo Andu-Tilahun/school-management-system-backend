@@ -11,7 +11,6 @@ public interface SubjectService {
     SubjectDto createSubject(SubjectRequest request);
     SubjectDto getSubjectById(UUID id);
     List<SubjectDto> getSubjects(SubjectFilterRequest filterRequest);
-    List<SubjectDto> getSubjectsByGrade(Integer gradeLevel);
     SubjectDto updateSubject(UUID id, SubjectRequest request);
     void deleteSubject(UUID id);
 

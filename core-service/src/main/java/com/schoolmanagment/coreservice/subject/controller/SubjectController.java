@@ -1,6 +1,7 @@
 package com.schoolmanagment.coreservice.subject.controller;
 
 import com.schoolmanagment.commonapplication.api.ApiResponse;
+import com.schoolmanagment.commonsecurity.checker.RequiresPermission;
 import com.schoolmanagment.coreservice.subject.dto.SubjectDto;
 import com.schoolmanagment.coreservice.subject.dto.SubjectFilterRequest;
 import com.schoolmanagment.coreservice.subject.dto.SubjectRequest;
@@ -18,41 +19,57 @@ import java.util.UUID;
 @RestController
 @RequestMapping(value = "/api/core/subjects", produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
-
 public class SubjectController {
+
     private final SubjectService subjectService;
 
-    @PostMapping
-    public ResponseEntity<SubjectDto> create(@Valid @RequestBody SubjectRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(subjectService.createSubject(request));
+    @GetMapping
+    @RequiresPermission(resource = "SUBJECTS", scope = "READ")
+    public ResponseEntity<ApiResponse<List<SubjectDto>>> getAllSubjects(SubjectFilterRequest filterRequest) {
+        List<SubjectDto> subjects = subjectService.getSubjects(filterRequest);
+        return ResponseEntity.ok(
+                ApiResponse.success(subjects, "Subjects retrieved successfully")
+        );
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<SubjectDto> getById(@PathVariable UUID id){
-        return ResponseEntity.ok(subjectService.getSubjectById(id));
+    @RequiresPermission(resource = "SUBJECTS", scope = "READ")
+    public ResponseEntity<ApiResponse<SubjectDto>> getSubjectById(@PathVariable UUID id) {
+        SubjectDto subject = subjectService.getSubjectById(id);
+        return ResponseEntity.ok(
+                ApiResponse.success(subject, "Subject retrieved successfully")
+        );
     }
 
-    @GetMapping
-    public ResponseEntity<List<SubjectDto>> getAll(SubjectFilterRequest filterRequest) {
-        return ResponseEntity.ok(subjectService.getSubjects(filterRequest));
+    @PostMapping
+    @RequiresPermission(resource = "SUBJECTS", scope = "CREATE")
+    public ResponseEntity<ApiResponse<SubjectDto>> createSubject(
+            @Valid @RequestBody SubjectRequest request
+    ) {
+        SubjectDto subject = subjectService.createSubject(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.success(subject, "Subject created successfully")
+        );
     }
+
     @PutMapping("/{id}")
-    public ResponseEntity<SubjectDto> update(@PathVariable UUID id, @Valid @RequestBody SubjectRequest request){
-        return ResponseEntity.ok(subjectService.updateSubject(id, request));
+    @RequiresPermission(resource = "SUBJECTS", scope = "UPDATE")
+    public ResponseEntity<ApiResponse<SubjectDto>> updateSubject(
+            @PathVariable UUID id,
+            @Valid @RequestBody SubjectRequest request
+    ) {
+        SubjectDto subject = subjectService.updateSubject(id, request);
+        return ResponseEntity.ok(
+                ApiResponse.success(subject, "Subject updated successfully")
+        );
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse> delete(@PathVariable UUID id) {
+    @RequiresPermission(resource = "SUBJECTS", scope = "DELETE")
+    public ResponseEntity<ApiResponse<Void>> deleteSubject(@PathVariable UUID id) {
         subjectService.deleteSubject(id);
-        ApiResponse response = ApiResponse.success("Subject deleted successfully", null);
-        return ResponseEntity.ok(response);
-
+        return ResponseEntity.ok(
+                ApiResponse.success("Subject deleted successfully")
+        );
     }
-
-    @GetMapping("/by-grade/{gradeLevel}")
-    public ResponseEntity<List<SubjectDto>> getByGrade(@PathVariable Integer gradeLevel) {
-        return ResponseEntity.ok(subjectService.getSubjectsByGrade(gradeLevel));
-    }
-
-
 }

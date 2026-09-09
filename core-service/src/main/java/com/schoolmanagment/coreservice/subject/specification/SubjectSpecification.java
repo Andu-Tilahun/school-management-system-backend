@@ -18,9 +18,7 @@ public class SubjectSpecification implements Specification<Subject> {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of(
             "subjectCode",
-            "subjectName",
-            "gradeLevel",
-            "creditHours"
+            "subjectName"
     );
 
     private final SubjectFilterRequest filterRequest;
@@ -28,10 +26,6 @@ public class SubjectSpecification implements Specification<Subject> {
     @Override
     public Predicate toPredicate(Root<Subject> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
-
-        if (filterRequest.getGradeLevel() != null) {
-            predicates.add(cb.equal(root.get("gradeLevel"), filterRequest.getGradeLevel()));
-        }
 
         if (filterRequest.getStatus() != null) {
             predicates.add(cb.equal(root.get("status"), filterRequest.getStatus()));
@@ -53,7 +47,7 @@ public class SubjectSpecification implements Specification<Subject> {
     private void applySorting(Root<Subject> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         String sortBy = filterRequest.getSortBy();
         if (sortBy == null || sortBy.isBlank() || !SORTABLE_FIELDS.contains(sortBy)) {
-            sortBy = "gradeLevel";
+            sortBy = "subjectName";
         }
 
         boolean ascending = !"DESC".equalsIgnoreCase(filterRequest.getSortDirection());

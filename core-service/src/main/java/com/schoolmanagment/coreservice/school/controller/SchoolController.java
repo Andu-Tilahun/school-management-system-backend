@@ -23,39 +23,52 @@ public class SchoolController {
     private final SchoolService schoolService;
 
     @GetMapping
-//    @RequiresPermission(resource = "SCHOOLS", scope = "READ")
+    @RequiresPermission(resource = "SCHOOLS", scope = "READ")
     public ResponseEntity<ApiResponse<List<SchoolDto>>> getAllSchools() {
         List<SchoolDto> schools = schoolService.getAllSchools();
-        return ResponseEntity.ok(ApiResponse.success(schools, "Schools retrieved successfully"));
+        return ResponseEntity.ok(
+                ApiResponse.success(schools, "Schools retrieved successfully")
+        );
     }
 
     @GetMapping("/{id}")
-//    @RequiresPermission(resource = "SCHOOLS", scope = "READ")
+    @RequiresPermission(resource = "SCHOOLS", scope = "READ")
     public ResponseEntity<ApiResponse<SchoolDto>> getSchoolById(@PathVariable UUID id) {
         SchoolDto school = schoolService.getSchoolById(id);
-        return ResponseEntity.ok(ApiResponse.success(school, "School retrieved successfully"));
+        return ResponseEntity.ok(
+                ApiResponse.success(school, "School retrieved successfully")
+        );
     }
 
     @PostMapping
-//    @RequiresPermission(resource = "SCHOOLS", scope = "CREATE")
-    public ResponseEntity<ApiResponse<SchoolDto>> createSchool(@Valid @RequestBody SchoolRequest request) {
+    @RequiresPermission(resource = "SCHOOLS", scope = "CREATE")
+    public ResponseEntity<ApiResponse<SchoolDto>> createSchool(
+            @Valid @RequestBody SchoolRequest request
+    ) {
         SchoolDto school = schoolService.createSchool(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-                ApiResponse.success(school, "School created successfully"));
+                ApiResponse.success(school, "School created successfully")
+        );
     }
 
     @PutMapping("/{id}")
-//    @RequiresPermission(resource = "SCHOOLS", scope = "UPDATE")
+    @RequiresPermission(resource = "SCHOOLS", scope = "UPDATE")
     public ResponseEntity<ApiResponse<SchoolDto>> updateSchool(
-            @PathVariable UUID id, @Valid @RequestBody SchoolRequest request) {
+            @PathVariable UUID id,
+            @Valid @RequestBody SchoolRequest request
+    ) {
         SchoolDto school = schoolService.updateSchool(id, request);
-        return ResponseEntity.ok(ApiResponse.success(school, "School updated successfully"));
+        return ResponseEntity.ok(
+                ApiResponse.success(school, "School updated successfully")
+        );
     }
 
     @DeleteMapping("/{id}")
-//    @RequiresPermission(resource = "SCHOOLS", scope = "DELETE")
+    @RequiresPermission(resource = "SCHOOLS", scope = "DELETE")
     public ResponseEntity<ApiResponse<Void>> deleteSchool(@PathVariable UUID id) {
         schoolService.deleteSchool(id);
-        return ResponseEntity.ok(ApiResponse.success("School deleted successfully"));
+        return ResponseEntity.ok(
+                ApiResponse.success("School deleted successfully")
+        );
     }
 }

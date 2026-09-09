@@ -12,10 +12,10 @@ public class SubjectMapper {
         if (subject == null) return null;
         return SubjectDto.builder()
                 .id(subject.getId())
+                .schoolId(subject.getSchool().getId())
+                .schoolName(subject.getSchool().getSchoolName())
                 .subjectCode(subject.getSubjectCode())
                 .subjectName(subject.getSubjectName())
-                .creditHours(subject.getCreditHours())
-                .gradeLevel(subject.getGradeLevel())
                 .status(subject.getStatus())
                 .build();
     }
@@ -24,8 +24,6 @@ public class SubjectMapper {
         return Subject.builder()
                 .subjectCode(request.getSubjectCode())
                 .subjectName(request.getSubjectName())
-                .creditHours(request.getCreditHours())
-                .gradeLevel(request.getGradeLevel())
                 .status(SubjectStatus.ACTIVE)
                 .build();
     }
@@ -33,7 +31,5 @@ public class SubjectMapper {
     public void updateEntity(Subject subject, SubjectRequest request) {
         subject.setSubjectCode(request.getSubjectCode());
         subject.setSubjectName(request.getSubjectName());
-        subject.setCreditHours(request.getCreditHours());
-        subject.setGradeLevel(request.getGradeLevel());
     }
 }

@@ -23,7 +23,7 @@ public class TenantController {
     private final TenantService tenantService;
 
     @GetMapping
-//    @RequiresPermission(resource = "TENANTS", scope = "READ")
+    @RequiresPermission(resource = "TENANTS", scope = "READ")
     public ResponseEntity<ApiResponse<List<TenantDto>>> getAllTenants() {
         List<TenantDto> tenants = tenantService.getAllTenants();
         return ResponseEntity.ok(
@@ -32,7 +32,7 @@ public class TenantController {
     }
 
     @GetMapping("/{id}")
-//    @RequiresPermission(resource = "TENANTS", scope = "READ")
+    @RequiresPermission(resource = "TENANTS", scope = "READ")
     public ResponseEntity<ApiResponse<TenantDto>> getTenantById(@PathVariable UUID id) {
         TenantDto tenant = tenantService.getTenantById(id);
         return ResponseEntity.ok(
@@ -41,7 +41,7 @@ public class TenantController {
     }
 
     @PostMapping
-//    @RequiresPermission(resource = "TENANTS", scope = "CREATE")
+    @RequiresPermission(resource = "TENANTS", scope = "CREATE")
     public ResponseEntity<ApiResponse<TenantDto>> createTenant(
             @Valid @RequestBody TenantRequest request
     ) {
@@ -52,7 +52,7 @@ public class TenantController {
     }
 
     @PutMapping("/{id}")
-//    @RequiresPermission(resource = "TENANTS", scope = "UPDATE")
+    @RequiresPermission(resource = "TENANTS", scope = "UPDATE")
     public ResponseEntity<ApiResponse<TenantDto>> updateTenant(
             @PathVariable UUID id,
             @Valid @RequestBody TenantRequest request
@@ -64,7 +64,7 @@ public class TenantController {
     }
 
     @DeleteMapping("/{id}")
-//    @RequiresPermission(resource = "TENANTS", scope = "DELETE")
+    @RequiresPermission(resource = "TENANTS", scope = "DELETE")
     public ResponseEntity<ApiResponse<Void>> deleteTenant(@PathVariable UUID id) {
         tenantService.deleteTenant(id);
         return ResponseEntity.ok(

@@ -1,5 +1,6 @@
 package com.schoolmanagment.coreservice.subject.entity;
 
+import com.schoolmanagment.coreservice.school.entity.School;
 import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -7,7 +8,13 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "subjects")
+@Table(
+        name = "tbl_subjects",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_subjects_school_subject_code",
+                columnNames = {"school_id", "subject_code"}
+        )
+)
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,15 +24,16 @@ public class Subject {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    @Column(name = "subject_code", nullable = false, unique = true)
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "school_id", nullable = false)
+    private School school;
+
+    @Column(name = "subject_code", nullable = false)
     private String subjectCode;
     @Column(name = "subject_name", nullable = false)
     private String subjectName;
-    @Column(name = "credit_hours", nullable = false)
-    private Integer creditHours;
-    @Column(name = "grade_level", nullable = false)
-    private Integer gradeLevel;
-   @Enumerated(EnumType.STRING)
-   @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
     private SubjectStatus status;
 }

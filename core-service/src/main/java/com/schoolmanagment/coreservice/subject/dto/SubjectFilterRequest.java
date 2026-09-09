@@ -11,7 +11,6 @@ import lombok.NoArgsConstructor;
 public class SubjectFilterRequest {
 
     private String searchText;
-    private Integer gradeLevel;
     private SubjectStatus status;
     private String sortBy;
     private String sortDirection = "ASC";

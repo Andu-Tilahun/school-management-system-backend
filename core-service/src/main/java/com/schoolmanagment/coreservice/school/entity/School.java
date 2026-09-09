@@ -1,5 +1,6 @@
 package com.schoolmanagment.coreservice.school.entity;
 
+import com.schoolmanagment.commonapplication.entity.Auditable;
 import com.schoolmanagment.coreservice.school.enums.SchoolType;
 import com.schoolmanagment.coreservice.tenant.entity.Tenant;
 import jakarta.persistence.*;
@@ -14,15 +15,13 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class School {
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class School extends Auditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id", nullable = false)
-    private Tenant tenant;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "school_type", nullable = false)
@@ -33,4 +32,8 @@ public class School {
 
     @Column(name = "website")
     private String website;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
 }

@@ -18,6 +18,17 @@ import java.util.stream.Collectors;
 @Component
 public class UserContext {
 
+    private static UserContext instance;
+
+    @jakarta.annotation.PostConstruct
+    private void registerStaticInstance() {
+        instance = this;
+    }
+
+    public static UserContext current() {
+        return instance;
+    }
+
     public UUID getCurrentUserId() {
         return UUID.fromString(pullAuthentication().getName());
     }

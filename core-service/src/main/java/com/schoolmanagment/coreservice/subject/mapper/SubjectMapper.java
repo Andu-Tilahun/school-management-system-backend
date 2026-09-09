@@ -12,8 +12,7 @@ public class SubjectMapper {
         if (subject == null) return null;
         return SubjectDto.builder()
                 .id(subject.getId())
-                .schoolId(subject.getSchool().getId())
-                .schoolName(subject.getSchool().getSchoolName())
+                .schoolId(subject.getSchoolId())
                 .subjectCode(subject.getSubjectCode())
                 .subjectName(subject.getSubjectName())
                 .status(subject.getStatus())

@@ -3,6 +3,7 @@ package com.schoolmanagment.coreservice.school.controller;
 import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.commonsecurity.checker.RequiresPermission;
 import com.schoolmanagment.coreservice.school.dto.SchoolDto;
+import com.schoolmanagment.coreservice.school.dto.SchoolFilterRequest;
 import com.schoolmanagment.coreservice.school.dto.SchoolRequest;
 import com.schoolmanagment.coreservice.school.service.SchoolService;
 import jakarta.validation.Valid;
@@ -24,8 +25,8 @@ public class SchoolController {
 
     @GetMapping
     @RequiresPermission(resource = "SCHOOLS", scope = "READ")
-    public ResponseEntity<ApiResponse<List<SchoolDto>>> getAllSchools() {
-        List<SchoolDto> schools = schoolService.getAllSchools();
+    public ResponseEntity<ApiResponse<List<SchoolDto>>> getAllSchools(SchoolFilterRequest filterRequest) {
+        List<SchoolDto> schools = schoolService.getAllSchools(filterRequest);
         return ResponseEntity.ok(
                 ApiResponse.success(schools, "Schools retrieved successfully")
         );

@@ -11,6 +11,7 @@ public class StudentMapper {
     public StudentDto toDto(Student student) {
         return StudentDto.builder()
                 .id(student.getId())
+                .schoolId(student.getSchoolId())
                 .firstName(student.getFirstName())
                 .middleName(student.getMiddleName())
                 .lastName(student.getLastName())

@@ -9,11 +9,13 @@ CREATE TABLE IF NOT EXISTS tbl_students (
     sub_city VARCHAR(100) NOT NULL,
     kebele INTEGER,
     house_number VARCHAR(50),
-    mobile_number VARCHAR(20) NOT NULL UNIQUE,
+    mobile_number VARCHAR(20) NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP,
-    updated_at TIMESTAMP
+    updated_at TIMESTAMP,
+    school_id UUID NOT NULL REFERENCES tbl_schools (id),
+    CONSTRAINT uk_students_school_mobile UNIQUE (school_id, mobile_number)
 );
 
-CREATE INDEX IF NOT EXISTS idx_students_mobile_number ON tbl_students (mobile_number);
-CREATE INDEX IF NOT EXISTS idx_students_last_first_name ON tbl_students (last_name, first_name);
+CREATE INDEX IF NOT EXISTS idx_students_last_first_name ON tbl_students (school_id, last_name, first_name);
+CREATE INDEX IF NOT EXISTS idx_students_school_id ON tbl_students (school_id);

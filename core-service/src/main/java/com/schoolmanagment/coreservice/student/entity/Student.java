@@ -1,15 +1,15 @@
 package com.schoolmanagment.coreservice.student.entity;
 
+import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
 import com.schoolmanagment.coreservice.student.enums.Gender;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import lombok.ToString;
 
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
@@ -18,7 +18,9 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Student {
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class Student extends SchoolAuditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
@@ -52,17 +54,10 @@ public class Student {
     @Column(name = "house_number", length = 50)
     private String houseNumber;
 
-    @Column(name = "mobile_number", nullable = false, unique = true, length = 20)
+    @Column(name = "mobile_number", nullable = false, length = 20)
     private String mobileNumber;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean active = true;
-
-    @CreationTimestamp
-    @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
 }

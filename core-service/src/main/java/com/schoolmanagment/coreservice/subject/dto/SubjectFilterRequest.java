@@ -5,11 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.UUID;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class SubjectFilterRequest {
 
+    private UUID schoolId;
     private String searchText;
     private SubjectStatus status;
     private String sortBy;

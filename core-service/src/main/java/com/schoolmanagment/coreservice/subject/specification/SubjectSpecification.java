@@ -1,5 +1,6 @@
 package com.schoolmanagment.coreservice.subject.specification;
 
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.subject.dto.SubjectFilterRequest;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -26,6 +27,14 @@ public class SubjectSpecification implements Specification<Subject> {
     @Override
     public Predicate toPredicate(Root<Subject> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
+
+        if(UserContext.current().isAdmin()){
+
+        }
+
+        if (filterRequest.getSchoolId() != null) {
+            predicates.add(cb.equal(root.get("schoolId"), filterRequest.getSchoolId()));
+        }
 
         if (filterRequest.getStatus() != null) {
             predicates.add(cb.equal(root.get("status"), filterRequest.getStatus()));

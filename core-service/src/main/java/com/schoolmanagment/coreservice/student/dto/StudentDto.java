@@ -17,6 +17,8 @@ import java.util.UUID;
 public class StudentDto {
 
     private UUID id;
+    private UUID schoolId;
+    private String schoolName;
     private String firstName;
     private String middleName;
     private String lastName;
@@ -32,6 +34,7 @@ public class StudentDto {
     public static StudentDto fromEntity(Student student) {
         return StudentDto.builder()
                 .id(student.getId())
+                .schoolId(student.getSchoolId())
                 .firstName(student.getFirstName())
                 .middleName(student.getMiddleName())
                 .lastName(student.getLastName())

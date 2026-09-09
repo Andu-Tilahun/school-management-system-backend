@@ -18,6 +18,4 @@ public interface StudentRepository extends JpaRepository<Student, UUID>, JpaSpec
     Optional<Student> findByIdAndActiveTrue(UUID id);
 
     Optional<Student> findByMobileNumber(String mobileNumber);
-
-    Optional<Student> findByLastNameIgnoreCaseAndFirstNameIgnoreCase(String lastName, String firstName);
 }

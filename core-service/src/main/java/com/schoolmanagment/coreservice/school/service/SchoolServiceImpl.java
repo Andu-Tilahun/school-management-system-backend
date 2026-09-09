@@ -1,10 +1,12 @@
 package com.schoolmanagment.coreservice.school.service;
 
 import com.schoolmanagment.coreservice.school.dto.SchoolDto;
+import com.schoolmanagment.coreservice.school.dto.SchoolFilterRequest;
 import com.schoolmanagment.coreservice.school.dto.SchoolRequest;
 import com.schoolmanagment.coreservice.school.entity.School;
 import com.schoolmanagment.coreservice.school.mapper.SchoolMapper;
 import com.schoolmanagment.coreservice.school.repository.SchoolRepository;
+import com.schoolmanagment.coreservice.school.specification.SchoolSpecification;
 import com.schoolmanagment.coreservice.tenant.entity.Tenant;
 import com.schoolmanagment.coreservice.tenant.repository.TenantRepository;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
@@ -34,7 +36,8 @@ public class SchoolServiceImpl implements SchoolService {
                 .website(request.getWebsite())
                 .build();
 
-        return schoolMapper.toDto(schoolRepository.save(school));
+        School saved = schoolRepository.save(school);
+        return schoolMapper.toDto(saved);
     }
 
     @Override
@@ -45,8 +48,8 @@ public class SchoolServiceImpl implements SchoolService {
     }
 
     @Override
-    public List<SchoolDto> getAllSchools() {
-        return schoolRepository.findAll().stream()
+    public List<SchoolDto> getAllSchools(SchoolFilterRequest filterRequest) {
+        return schoolRepository.findAll(new SchoolSpecification(filterRequest)).stream()
                 .map(schoolMapper::toDto)
                 .toList();
     }

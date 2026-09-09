@@ -26,6 +26,7 @@ public class StudentServiceImpl implements StudentService {
     private final StudentMapper studentMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public Page<StudentDto> getAllStudents(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         return studentRepository.findByActiveTrue(pageable)
@@ -33,6 +34,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<StudentDto> filterStudents(StudentFilterRequest request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
         return studentRepository.findAll(new StudentSpecification(request), pageable)
@@ -40,6 +42,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public StudentDto getStudentById(UUID id) {
         return studentMapper.toDto(findActiveStudentById(id));
     }
@@ -48,7 +51,6 @@ public class StudentServiceImpl implements StudentService {
     @Transactional
     public StudentDto createStudent(StudentRequest request) {
         validateMobileNumberNotTaken(request.getMobileNumber(), null);
-
         return studentMapper.toDto(studentRepository.save(studentMapper.toEntity(request)));
     }
 
@@ -57,9 +59,7 @@ public class StudentServiceImpl implements StudentService {
     public StudentDto updateStudent(UUID id, StudentRequest request) {
         Student student = findActiveStudentById(id);
         validateMobileNumberNotTaken(request.getMobileNumber(), id);
-
         studentMapper.updateEntity(student, request);
-
         return studentMapper.toDto(studentRepository.save(student));
     }
 
@@ -79,7 +79,7 @@ public class StudentServiceImpl implements StudentService {
     private void validateMobileNumberNotTaken(String mobileNumber, UUID excludeId) {
         studentRepository.findByMobileNumber(mobileNumber).ifPresent(existing -> {
             if (!existing.getId().equals(excludeId)) {
-                throw new BadRequestException("Student with mobile number '" + mobileNumber + "' already exists");
+                throw new BadRequestException("Student with mobile number '" + mobileNumber + "' already exists in this school");
             }
         });
     }

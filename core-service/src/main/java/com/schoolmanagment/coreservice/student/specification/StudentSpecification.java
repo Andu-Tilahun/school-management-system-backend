@@ -32,6 +32,10 @@ public class StudentSpecification implements Specification<Student> {
 
         predicates.add(cb.isTrue(root.get("active")));
 
+        if (filterRequest.getSchoolId() != null) {
+            predicates.add(cb.equal(root.get("schoolId"), filterRequest.getSchoolId()));
+        }
+
         if (filterRequest.getSearchText() != null && !filterRequest.getSearchText().isBlank()) {
             String likeValue = "%" + filterRequest.getSearchText().toLowerCase(Locale.ROOT) + "%";
             predicates.add(cb.or(

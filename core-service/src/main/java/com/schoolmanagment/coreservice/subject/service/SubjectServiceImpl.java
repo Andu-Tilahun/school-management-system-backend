@@ -3,8 +3,6 @@ package com.schoolmanagment.coreservice.subject.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
-import com.schoolmanagment.coreservice.school.entity.School;
-import com.schoolmanagment.coreservice.school.repository.SchoolRepository;
 import com.schoolmanagment.coreservice.subject.dto.SubjectDto;
 import com.schoolmanagment.coreservice.subject.dto.SubjectFilterRequest;
 import com.schoolmanagment.coreservice.subject.dto.SubjectRequest;
@@ -23,18 +21,14 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SubjectServiceImpl implements SubjectService{
     private final SubjectRepository subjectRepository;
-    private final SchoolRepository schoolRepository;
     private final SubjectMapper subjectMapper;
 
     @Override
     public SubjectDto createSubject(SubjectRequest request) {
-        School school = schoolRepository.findById(request.getSchoolId())
-                .orElseThrow(() -> new ResourceNotFoundException("School not found: " + request.getSchoolId()));
         if (subjectRepository.existsBySubjectCode(request.getSubjectCode())){
             throw new BadRequestException("Subject code already exists: " + request.getSubjectCode());
         }
         Subject subject = subjectMapper.toEntity(request);
-        subject.setSchool(school);
         return subjectMapper.toDto(subjectRepository.save(subject));
     }
 
@@ -58,11 +52,6 @@ public class SubjectServiceImpl implements SubjectService{
 
         Subject subject =subjectRepository.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Subject not found: " + id));
-        if (!subject.getSchool().getId().equals(request.getSchoolId())) {
-            School school = schoolRepository.findById(request.getSchoolId())
-                    .orElseThrow(() -> new ResourceNotFoundException("School not found: " + request.getSchoolId()));
-            subject.setSchool(school);
-        }
         if (!subject.getSubjectCode().equals(request.getSubjectCode())
                 && subjectRepository.existsBySubjectCode(request.getSubjectCode())) {
             throw new BadRequestException("Subject code already exists: " + request.getSubjectCode());
@@ -78,6 +67,5 @@ public class SubjectServiceImpl implements SubjectService{
             throw new ResourceNotFoundException("Subject not found: " + id);
         }
         subjectRepository.deleteById(id);
-
     }
 }

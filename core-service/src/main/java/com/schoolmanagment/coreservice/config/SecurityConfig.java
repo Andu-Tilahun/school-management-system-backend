@@ -27,6 +27,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/api/core/subjects/**").permitAll()
+                        .requestMatchers("/api/core/tenants/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session

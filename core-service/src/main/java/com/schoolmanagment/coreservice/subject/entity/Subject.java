@@ -7,12 +7,7 @@ import lombok.*;
 import java.util.UUID;
 
 @Entity
-@Table(name = "subjects",
-        uniqueConstraints = @UniqueConstraint(
-                name = "uq_subject_name_grade",
-                columnNames = {"subject_name", "grade_level"}
-        )
-)
+@Table(name = "subjects")
 @Getter
 @Setter
 @NoArgsConstructor

@@ -1,0 +1,23 @@
+package com.schoolmanagment.coreservice.grade.service;
+
+import com.schoolmanagment.coreservice.grade.dto.GradeDto;
+import com.schoolmanagment.coreservice.grade.dto.GradeFilterRequest;
+import com.schoolmanagment.coreservice.grade.dto.GradeRequest;
+import org.springframework.data.domain.Page;
+
+import java.util.UUID;
+
+public interface GradeService {
+
+    Page<GradeDto> getAllGrades(int page, int size);
+
+    Page<GradeDto> filterGrades(GradeFilterRequest request);
+
+    GradeDto getGradeById(UUID id);
+
+    GradeDto createGrade(GradeRequest request);
+
+    GradeDto updateGrade(UUID id, GradeRequest request);
+
+    void deleteGrade(UUID id);
+}

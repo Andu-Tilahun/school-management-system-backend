@@ -1,0 +1,1 @@
+INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('CLASS_SECTIONS', 'Class Sections', 'UI', '/class-sections', '2026-05-02 11:09:26.275589', 'a8b9c0d1-e2f3-4a4b-9c6d-7e8f9012abcd');

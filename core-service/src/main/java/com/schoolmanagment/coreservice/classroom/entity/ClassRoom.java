@@ -1,4 +1,4 @@
-package com.schoolmanagment.coreservice.grade.entity;
+package com.schoolmanagment.coreservice.classroom.entity;
 
 import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
 import jakarta.persistence.*;
@@ -12,21 +12,24 @@ import lombok.ToString;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tbl_grades")
+@Table(name = "tbl_classrooms")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class Grade extends SchoolAuditable {
+public class ClassRoom extends SchoolAuditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(nullable = false, length = 100)
-    private String name;
+    @Column(name = "room_number", nullable = false, length = 50)
+    private String roomNumber;
+
+    @Column(name = "room_size", nullable = false)
+    private Integer roomSize;
 
     @Column(nullable = false)
     @Builder.Default

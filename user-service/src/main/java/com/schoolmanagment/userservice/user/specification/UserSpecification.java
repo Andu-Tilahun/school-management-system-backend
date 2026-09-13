@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 public class UserSpecification implements Specification<User> {
@@ -37,13 +38,23 @@ public class UserSpecification implements Specification<User> {
     public Predicate toPredicate(Root<User> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        if (UserContext.current().hasTenantManager() || UserContext.current().hasSchoolAdminPolicy()) {
+        UserContext ctx = UserContext.current();
+        if (ctx != null && ctx.hasSchoolAdminPolicy()) {
+            ctx.getCurrentExternalId().ifPresentOrElse(
+                    externalId -> predicates.add(cb.equal(root.get("externalId"), externalId)),
+                    () -> predicates.add(cb.disjunction())
+            );
+        } else if (ctx != null && ctx.hasTenantManager()) {
+            UUID scopeId = filterRequest.getExternalId() != null
+                    ? filterRequest.getExternalId()
+                    : ctx.getCurrentExternalId().orElse(null);
+            if (scopeId != null) {
+                predicates.add(cb.equal(root.get("externalId"), scopeId));
+            } else {
+                predicates.add(cb.disjunction());
+            }
+        } else if (filterRequest.getExternalId() != null) {
             predicates.add(cb.equal(root.get("externalId"), filterRequest.getExternalId()));
-        }
-
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("externalId"), externalId)));
         }
 
         if (filterRequest.getPolicyNames() != null && !filterRequest.getPolicyNames().isEmpty()) {

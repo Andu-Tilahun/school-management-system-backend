@@ -19,3 +19,5 @@ INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('b9c0d1e2-f3a4-4
 
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('a8b9c0d1-e2f3-4a5b-9c7d-8e9f0a1b2c3d', '9cd6da93-36f0-49b7-a923-857c06f78b58');
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('b9c0d1e2-f3a4-4b5c-8d7e-8f9a0b1c2d3e', '9cd6da93-36f0-49b7-a923-857c06f78b58');
+INSERT INTO permission_policies (permission_id, policy_id) VALUES ('a8b9c0d1-e2f3-4a5b-9c7d-8e9f0a1b2c3d', '09cb27d2-c7a8-4bd3-9d17-aa5b93786333');
+INSERT INTO permission_policies (permission_id, policy_id) VALUES ('b9c0d1e2-f3a4-4b5c-8d7e-8f9a0b1c2d3e', 'cd29816f-ec74-4720-8833-18ce2e169102');

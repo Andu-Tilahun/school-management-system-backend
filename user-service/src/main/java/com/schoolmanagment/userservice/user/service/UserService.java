@@ -3,6 +3,7 @@ package com.schoolmanagment.userservice.user.service;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.commonsecurity.PolicyNames;
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.commonsecurity.util.UserStatusCache;
 import com.schoolmanagment.userservice.group.entity.Group;
 import com.schoolmanagment.userservice.group.repository.GroupRepository;
@@ -61,7 +62,7 @@ public class UserService {
 
         Set<Group> groups = new HashSet<>(resolveGroups(request.getGroupIds()));
         Set<Policy> policies = resolvePolicies(request.getPolicyIds());
-        addDefaultNavigationGroupForFullAccess(groups, policies);
+        UUID externalId = applyHierarchyAndGroups(groups, policies, request.getExternalId(), null);
 
         User user = User.builder()
                 .username(request.getUsername())
@@ -72,7 +73,7 @@ public class UserService {
                 .middleName(request.getMiddleName())
                 .gender(request.getGender())
                 .profileImageUuid(request.getProfileImageUuid())
-                .externalId(request.getExternalId())
+                .externalId(externalId)
                 .enabled(true)
                 .accountNonExpired(true)
                 .accountNonLocked(true)
@@ -89,14 +90,12 @@ public class UserService {
     }
 
     public Page<UserDto> getAllUsers(Pageable pageable) {
-        return userRepository.findAll(pageable)
-                .map(userMapper::toDto);
+        Specification<User> specification = new UserSpecification(new UserFilterRequest());
+        return userRepository.findAll(specification, pageable).map(userMapper::toDto);
     }
 
     public UserDto getUserById(UUID id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-        return userMapper.toDto(user);
+        return userMapper.toDto(findUserInScope(id));
     }
 
     public UserDto getUserByUsername(String username) {
@@ -108,8 +107,7 @@ public class UserService {
 
     @Transactional
     public UserDto updateUser(UUID id, UserUpdateRequest request) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        User user = findUserInScope(id);
 
         // Check if email is being changed and if it already exists
         if (!user.getEmail().equals(request.getEmail()) &&
@@ -123,27 +121,24 @@ public class UserService {
         user.setMiddleName(request.getMiddleName());
         user.setGender(request.getGender());
         user.setProfileImageUuid(request.getProfileImageUuid());
-        user.setExternalId(request.getExternalId());
         if (request.getGroupIds() != null) {
             user.setGroups(new HashSet<>(resolveGroups(request.getGroupIds())));
         }
         if (request.getPolicyIds() != null) {
             user.setPolicies(resolvePolicies(request.getPolicyIds()));
         }
-        if (request.getGroupIds() != null || request.getPolicyIds() != null) {
-            Set<Group> mergedGroups = new HashSet<>(user.getGroups() != null ? user.getGroups() : Set.of());
-            Set<Policy> mergedPolicies = new HashSet<>(user.getPolicies() != null ? user.getPolicies() : Set.of());
-            addDefaultNavigationGroupForFullAccess(mergedGroups, mergedPolicies);
-            user.setGroups(mergedGroups);
-        }
+        Set<Group> mergedGroups = new HashSet<>(user.getGroups() != null ? user.getGroups() : Set.of());
+        Set<Policy> mergedPolicies = new HashSet<>(user.getPolicies() != null ? user.getPolicies() : Set.of());
+        user.setExternalId(applyHierarchyAndGroups(mergedGroups, mergedPolicies, request.getExternalId(), user.getId()));
+        user.setGroups(mergedGroups);
+        user.setPolicies(mergedPolicies);
         User updatedUser = userRepository.save(user);
         return userMapper.toDto(updatedUser);
     }
 
     @Transactional
     public void deleteUser(UUID id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        User user = findUserInScope(id);
         userRepository.delete(user);
     }
 
@@ -192,8 +187,7 @@ public class UserService {
 
     @Transactional
     public UserDto lockUser(UUID id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        User user = findUserInScope(id);
 
         if (hasEffectivePolicy(user, PolicyNames.SUPER_ADMIN_FEATURES)) {
             throw new BadRequestException("Cannot lock admin users");
@@ -211,8 +205,7 @@ public class UserService {
 
     @Transactional
     public UserDto unlockUser(UUID id) {
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        User user = findUserInScope(id);
 
         user.setAccountNonLocked(true);
         User updatedUser = userRepository.save(user);
@@ -231,19 +224,125 @@ public class UserService {
     }
 
 
-    private void addDefaultNavigationGroupForFullAccess(Set<Group> groups, Set<Policy> directPolicies) {
-        boolean qualifies = groups.stream().anyMatch(g -> PolicyNames.SUPER_ADMIN_FEATURES.equals(g.getName()))
-                || (directPolicies != null && directPolicies.stream()
-                .anyMatch(p -> PolicyNames.SUPER_ADMIN_FEATURES.equals(p.getName())));
-        if (!qualifies) {
+    private User findUserInScope(UUID id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        assertUserInScope(user);
+        return user;
+    }
+
+    private void assertUserInScope(User user) {
+        UserContext ctx = UserContext.current();
+        if (ctx == null || !ctx.isAuthenticated() || ctx.hasAdminPolicy()) {
             return;
         }
-        groupRepository.findByName(PolicyNames.SUPER_ADMIN_FEATURES).ifPresent(navGroup -> {
-            boolean alreadyPresent = groups.stream().anyMatch(g -> g.getId().equals(navGroup.getId()));
-            if (!alreadyPresent) {
-                groups.add(navGroup);
+        if (user.getId() != null && user.getId().equals(ctx.getCurrentUserId())) {
+            return;
+        }
+        if (ctx.hasSchoolAdminPolicy()) {
+            UUID schoolId = ctx.getCurrentExternalId().orElse(null);
+            if (schoolId == null || !schoolId.equals(user.getExternalId())) {
+                throw new ResourceNotFoundException("User not found with id: " + user.getId());
             }
-        });
+            return;
+        }
+        if (ctx.hasTenantManager()) {
+            if (hasEffectivePolicy(user, PolicyNames.SUPER_ADMIN_FEATURES)
+                    || hasEffectivePolicy(user, PolicyNames.TENANT_MANAGER_POLICY)) {
+                throw new ResourceNotFoundException("User not found with id: " + user.getId());
+            }
+        }
+    }
+
+    private UUID applyHierarchyAndGroups(
+            Set<Group> groups,
+            Set<Policy> policies,
+            UUID requestedExternalId,
+            UUID targetUserId
+    ) {
+        UserContext ctx = UserContext.current();
+        boolean authenticated = ctx != null && ctx.isAuthenticated();
+
+        if (authenticated) {
+            Set<String> assignedNames = collectAssignedPolicyNames(groups, policies);
+            boolean selfUpdate = targetUserId != null && targetUserId.equals(ctx.getCurrentUserId());
+            if (ctx.hasAdminPolicy()) {
+                if (assignedNames.contains(PolicyNames.TENANT_MANAGER_POLICY) && requestedExternalId == null) {
+                    throw new BadRequestException("Tenant Manager users must have externalId set to the tenant id");
+                }
+                if (assignedNames.contains(PolicyNames.SCHOOL_ADMIN_POLICY) && requestedExternalId == null) {
+                    throw new BadRequestException("School Admin users must have externalId set to the school id");
+                }
+            } else if (ctx.hasTenantManager()) {
+                if (selfUpdate) {
+                    if (assignedNames.contains(PolicyNames.SUPER_ADMIN_FEATURES)) {
+                        throw new BadRequestException("Cannot assign SUPER_ADMIN_FEATURES");
+                    }
+                    if (requestedExternalId == null) {
+                        requestedExternalId = ctx.getCurrentExternalId().orElse(null);
+                    }
+                } else {
+                    boolean onlySchoolAdmin = !assignedNames.isEmpty()
+                            && assignedNames.stream().allMatch(PolicyNames.SCHOOL_ADMIN_POLICY::equals);
+                    if (!onlySchoolAdmin) {
+                        throw new BadRequestException("Tenant Manager may assign SCHOOL_ADMIN_POLICY only");
+                    }
+                    if (requestedExternalId == null) {
+                        throw new BadRequestException("School Admin users must have externalId set to the school id");
+                    }
+                }
+            } else if (ctx.hasSchoolAdminPolicy()) {
+                if (assignedNames.contains(PolicyNames.SUPER_ADMIN_FEATURES)
+                        || assignedNames.contains(PolicyNames.TENANT_MANAGER_POLICY)
+                        || (!selfUpdate && assignedNames.contains(PolicyNames.SCHOOL_ADMIN_POLICY))) {
+                    throw new BadRequestException("School Admin cannot assign admin policies");
+                }
+                requestedExternalId = ctx.getCurrentExternalId()
+                        .orElseThrow(() -> new BadRequestException(
+                                "School Admin users must have an externalId"));
+            } else if (assignedNames.contains(PolicyNames.SUPER_ADMIN_FEATURES)
+                    || assignedNames.contains(PolicyNames.TENANT_MANAGER_POLICY)
+                    || assignedNames.contains(PolicyNames.SCHOOL_ADMIN_POLICY)) {
+                throw new BadRequestException("Cannot assign admin policies");
+            }
+        }
+
+        addMatchingPolicyGroups(groups, policies);
+        return requestedExternalId;
+    }
+
+    private Set<String> collectAssignedPolicyNames(Set<Group> groups, Set<Policy> policies) {
+        Set<String> names = new HashSet<>();
+        if (policies != null) {
+            for (Policy policy : policies) {
+                names.add(policy.getName());
+            }
+        }
+        if (groups != null) {
+            for (Group group : groups) {
+                names.add(group.getName());
+                if (group.getPolicies() != null) {
+                    for (Policy policy : group.getPolicies()) {
+                        names.add(policy.getName());
+                    }
+                }
+            }
+        }
+        return names;
+    }
+
+    private void addMatchingPolicyGroups(Set<Group> groups, Set<Policy> policies) {
+        if (policies == null) {
+            return;
+        }
+        for (Policy policy : policies) {
+            groupRepository.findByName(policy.getName()).ifPresent(matchingGroup -> {
+                boolean alreadyPresent = groups.stream().anyMatch(g -> g.getId().equals(matchingGroup.getId()));
+                if (!alreadyPresent) {
+                    groups.add(matchingGroup);
+                }
+            });
+        }
     }
 
     private boolean hasEffectivePolicy(User user, String policyName) {

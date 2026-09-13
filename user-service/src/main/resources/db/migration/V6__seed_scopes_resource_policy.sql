@@ -16,3 +16,5 @@ INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VAL
 INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('GROUPS', 'Groups', 'UI', '/groups', '2026-05-02 11:09:26.275589', 'b49f9ea7-39a2-487b-a234-70cdbb8e44e1');
 
 INSERT INTO policies (name, description, effect, created_at, id) VALUES ('SUPER_ADMIN_FEATURES', 'Full application features for administrators', 'ALLOW', '2026-05-02 11:09:26.275589', '9cd6da93-36f0-49b7-a923-857c06f78b58');
+INSERT INTO policies (name, description, effect, created_at, id) VALUES ('TENANT_MANAGER_POLICY', 'Manage schools and School Admin users within a tenant', 'ALLOW', '2026-05-02 11:09:26.275589', '09cb27d2-c7a8-4bd3-9d17-aa5b93786333');
+INSERT INTO policies (name, description, effect, created_at, id) VALUES ('SCHOOL_ADMIN_POLICY', 'Manage school operational resources and school-scoped users', 'ALLOW', '2026-05-02 11:09:26.275589', 'cd29816f-ec74-4720-8833-18ce2e169102');

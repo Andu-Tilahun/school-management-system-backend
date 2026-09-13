@@ -11,3 +11,15 @@ CREATE TABLE IF NOT EXISTS tbl_schools (
 CREATE INDEX IF NOT EXISTS idx_schools_tenant_id ON tbl_schools (tenant_id);
 CREATE INDEX IF NOT EXISTS idx_schools_school_type ON tbl_schools (tenant_id, school_type);
 CREATE INDEX IF NOT EXISTS idx_schools_school_name ON tbl_schools (tenant_id, school_name);
+
+INSERT INTO tbl_schools (id, school_type, school_name, website, created_at, updated_at, tenant_id)
+VALUES (
+    '8b716506-a316-450b-9f64-d1c95e05c647',
+    'PRIVATE',
+    'Default School',
+    NULL,
+    '2026-05-02 11:09:26.275589',
+    '2026-05-02 11:09:26.275589',
+    'afe48348-1934-419f-9cba-ba0f41b14748'
+)
+ON CONFLICT (id) DO NOTHING;

@@ -13,9 +13,6 @@ import com.schoolmanagment.userservice.user.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -86,11 +83,14 @@ public class UserController {
             @RequestParam(defaultValue = "id") String sortBy,
             @RequestParam(defaultValue = "ASC") String sortDir
     ) {
-        Sort sort = sortDir.equalsIgnoreCase("ASC") ?
-                Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-        Pageable pageable = PageRequest.of(page, size, sort);
+        UserFilterRequest filterRequest = UserFilterRequest.builder()
+                .page(page)
+                .size(size)
+                .sortBy(sortBy)
+                .sortDirection(sortDir)
+                .build();
 
-        Page<UserDto> users = userService.getAllUsers(pageable);
+        Page<UserDto> users = userService.filterUsers(filterRequest);
 
         return ResponseEntity.ok(
                 ApiResponse.success(users, "Users retrieved successfully")

@@ -1,5 +1,6 @@
 package com.schoolmanagment.coreservice.school.specification;
 
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.school.dto.SchoolFilterRequest;
 import com.schoolmanagment.coreservice.school.entity.School;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 public class SchoolSpecification implements Specification<School> {
@@ -20,7 +22,14 @@ public class SchoolSpecification implements Specification<School> {
     public Predicate toPredicate(Root<School> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        if (filterRequest.getTenantId() != null) {
+        if (UserContext.current().hasTenantManager()) {
+            UUID tenantId = UserContext.current().getCurrentExternalId().orElse(null);
+            if (tenantId != null) {
+                predicates.add(cb.equal(root.get("tenant").get("id"), tenantId));
+            } else {
+                predicates.add(cb.disjunction());
+            }
+        } else if (filterRequest.getTenantId() != null) {
             predicates.add(cb.equal(root.get("tenant").get("id"), filterRequest.getTenantId()));
         }
 

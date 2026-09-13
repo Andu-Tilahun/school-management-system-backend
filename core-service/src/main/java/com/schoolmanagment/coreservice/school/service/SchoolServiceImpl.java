@@ -1,5 +1,7 @@
 package com.schoolmanagment.coreservice.school.service;
 
+import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.school.dto.SchoolDto;
 import com.schoolmanagment.coreservice.school.dto.SchoolFilterRequest;
 import com.schoolmanagment.coreservice.school.dto.SchoolRequest;
@@ -9,11 +11,11 @@ import com.schoolmanagment.coreservice.school.repository.SchoolRepository;
 import com.schoolmanagment.coreservice.school.specification.SchoolSpecification;
 import com.schoolmanagment.coreservice.tenant.entity.Tenant;
 import com.schoolmanagment.coreservice.tenant.repository.TenantRepository;
-import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -26,8 +28,9 @@ public class SchoolServiceImpl implements SchoolService {
 
     @Override
     public SchoolDto createSchool(SchoolRequest request) {
-        Tenant tenant = tenantRepository.findById(request.getTenantId())
-                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found: " + request.getTenantId()));
+        UUID tenantId = resolveTenantId(request.getTenantId());
+        Tenant tenant = tenantRepository.findById(tenantId)
+                .orElseThrow(() -> new ResourceNotFoundException("Tenant not found: " + tenantId));
 
         School school = School.builder()
                 .tenant(tenant)
@@ -42,9 +45,7 @@ public class SchoolServiceImpl implements SchoolService {
 
     @Override
     public SchoolDto getSchoolById(UUID id) {
-        School school = schoolRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("School not found: " + id));
-        return schoolMapper.toDto(school);
+        return schoolMapper.toDto(findSchoolInScope(id));
     }
 
     @Override
@@ -56,12 +57,12 @@ public class SchoolServiceImpl implements SchoolService {
 
     @Override
     public SchoolDto updateSchool(UUID id, SchoolRequest request) {
-        School existing = schoolRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("School not found: " + id));
+        School existing = findSchoolInScope(id);
+        UUID tenantId = resolveTenantId(request.getTenantId());
 
-        if (!existing.getTenant().getId().equals(request.getTenantId())) {
-            Tenant newTenant = tenantRepository.findById(request.getTenantId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Tenant not found: " + request.getTenantId()));
+        if (!existing.getTenant().getId().equals(tenantId)) {
+            Tenant newTenant = tenantRepository.findById(tenantId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Tenant not found: " + tenantId));
             existing.setTenant(newTenant);
         }
 
@@ -71,9 +72,42 @@ public class SchoolServiceImpl implements SchoolService {
 
     @Override
     public void deleteSchool(UUID id) {
-        if (!schoolRepository.existsById(id)) {
-            throw new ResourceNotFoundException("School not found: " + id);
-        }
+        findSchoolInScope(id);
         schoolRepository.deleteById(id);
+    }
+
+    private School findSchoolInScope(UUID id) {
+        School school = schoolRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("School not found: " + id));
+        assertSchoolInTenantScope(school);
+        return school;
+    }
+
+    private void assertSchoolInTenantScope(School school) {
+        if (!isTenantManagerScoped()) {
+            return;
+        }
+        if (!school.getTenant().getId().equals(requiredTenantId())) {
+            throw new ResourceNotFoundException("School not found: " + school.getId());
+        }
+    }
+
+    private UUID resolveTenantId(UUID requestedTenantId) {
+        if (isTenantManagerScoped()) {
+            return requiredTenantId();
+        }
+        return requestedTenantId;
+    }
+
+    private boolean isTenantManagerScoped() {
+        UserContext ctx = UserContext.current();
+        return ctx != null && ctx.hasTenantManager();
+    }
+
+    private UUID requiredTenantId() {
+        return Optional.ofNullable(UserContext.current())
+                .flatMap(UserContext::getCurrentExternalId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No tenant id on the current authentication — cannot scope schools without one."));
     }
 }

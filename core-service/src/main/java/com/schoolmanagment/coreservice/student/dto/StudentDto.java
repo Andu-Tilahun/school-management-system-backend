@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -22,7 +23,7 @@ public class StudentDto {
     private String firstName;
     private String middleName;
     private String lastName;
-    private int age;
+    private LocalDate birthDate;
     private Gender gender;
     private String nationality;
     private String subCity;
@@ -38,7 +39,7 @@ public class StudentDto {
                 .firstName(student.getFirstName())
                 .middleName(student.getMiddleName())
                 .lastName(student.getLastName())
-                .age(student.getAge())
+                .birthDate(student.getBirthDate())
                 .gender(student.getGender())
                 .nationality(student.getNationality())
                 .subCity(student.getSubCity())

@@ -1,10 +1,12 @@
 package com.schoolmanagment.coreservice.student.dto;
 
 import com.schoolmanagment.coreservice.student.enums.Gender;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Past;
 import lombok.Data;
+
+import java.time.LocalDate;
 
 @Data
 public class StudentRequest {
@@ -17,9 +19,9 @@ public class StudentRequest {
     @NotBlank(message = "Last name is required")
     private String lastName;
 
-    @NotNull(message = "Age is required")
-    @Min(value = 1, message = "Age must be at least 1")
-    private Integer age;
+    @NotNull(message = "Birth date is required")
+    @Past(message = "Birth date must be in the past")
+    private LocalDate birthDate;
 
     @NotNull(message = "Gender is required")
     private Gender gender;

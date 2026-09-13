@@ -20,7 +20,7 @@ public class StudentSpecification implements Specification<Student> {
     private static final Set<String> SORTABLE_FIELDS = Set.of(
             "firstName",
             "lastName",
-            "age",
+            "birthDate",
             "createdAt",
             "id"
     );

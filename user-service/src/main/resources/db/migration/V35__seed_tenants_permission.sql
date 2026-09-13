@@ -9,3 +9,8 @@ INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('e3f4a5b6-c7d8-4
 INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('e3f4a5b6-c7d8-4f90-a123-23456789f012', 'e1da5d22-aa98-4849-b178-64d945475730');
 
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('e3f4a5b6-c7d8-4f90-a123-23456789f012', '9cd6da93-36f0-49b7-a923-857c06f78b58');
+
+-- Tenant Manager: TENANTS:READ only (API read, no Tenants menu / CRUD)
+INSERT INTO permissions (name, description, created_at, id, resource_id) VALUES ('TENANTS_READ', 'API read: Tenants (no menu)', '2026-05-02 11:09:26.275589', '8d9e0f1a-2b3c-4d4e-9f60-7b8c9d0e1f20', 'e2f3a4b5-c6d7-4e8f-b012-12345678ef01');
+INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('8d9e0f1a-2b3c-4d4e-9f60-7b8c9d0e1f20', 'e1da5d22-aa98-4849-b178-64d945475730');
+INSERT INTO permission_policies (permission_id, policy_id) VALUES ('8d9e0f1a-2b3c-4d4e-9f60-7b8c9d0e1f20', '09cb27d2-c7a8-4bd3-9d17-aa5b93786333');

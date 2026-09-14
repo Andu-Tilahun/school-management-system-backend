@@ -5,6 +5,10 @@ CREATE TABLE IF NOT EXISTS tbl_room_sections (
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
+    created_by UUID,
+    updated_by UUID,
+    created_by_name VARCHAR(100),
+    updated_by_name VARCHAR(100),
     school_id UUID NOT NULL REFERENCES tbl_schools (id),
     CONSTRAINT uk_room_sections_school_class_section_room UNIQUE (school_id, class_section_id, room_id)
 );

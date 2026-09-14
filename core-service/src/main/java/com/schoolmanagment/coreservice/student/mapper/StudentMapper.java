@@ -23,6 +23,8 @@ public class StudentMapper {
                 .houseNumber(student.getHouseNumber())
                 .mobileNumber(student.getMobileNumber())
                 .createdAt(student.getCreatedAt())
+                .createdByName(student.getCreatedByName())
+                .updatedByName(student.getUpdatedByName())
                 .build();
     }
 

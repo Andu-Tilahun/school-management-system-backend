@@ -25,6 +25,8 @@ public class RoomSectionMapper {
                 .roomNumber(room != null ? room.getRoomNumber() : null)
                 .roomSize(room != null ? room.getRoomSize() : null)
                 .createdAt(roomSection.getCreatedAt())
+                .createdByName(roomSection.getCreatedByName())
+                .updatedByName(roomSection.getUpdatedByName())
                 .build();
     }
 

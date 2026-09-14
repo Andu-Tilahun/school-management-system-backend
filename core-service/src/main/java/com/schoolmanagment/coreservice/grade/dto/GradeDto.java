@@ -19,6 +19,8 @@ public class GradeDto {
     private UUID schoolId;
     private String name;
     private LocalDateTime createdAt;
+    private String createdByName;
+    private String updatedByName;
 
     public static GradeDto fromEntity(Grade grade) {
         return GradeDto.builder()
@@ -26,6 +28,8 @@ public class GradeDto {
                 .schoolId(grade.getSchoolId())
                 .name(grade.getName())
                 .createdAt(grade.getCreatedAt())
+                .createdByName(grade.getCreatedByName())
+                .updatedByName(grade.getUpdatedByName())
                 .build();
     }
 }

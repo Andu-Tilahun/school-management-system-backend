@@ -22,6 +22,8 @@ public class TeacherMapper {
                 .houseNumber(teacher.getHouseNumber())
                 .mobileNumber(teacher.getMobileNumber())
                 .createdAt(teacher.getCreatedAt())
+                .createdByName(teacher.getCreatedByName())
+                .updatedByName(teacher.getUpdatedByName())
                 .build();
     }
 

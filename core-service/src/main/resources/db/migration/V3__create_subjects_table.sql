@@ -6,6 +6,10 @@ CREATE TABLE IF NOT EXISTS tbl_subjects
     status       VARCHAR(20)  NOT NULL,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
+    created_by UUID,
+    updated_by UUID,
+    created_by_name VARCHAR(100),
+    updated_by_name VARCHAR(100),
     school_id    UUID         NOT NULL REFERENCES tbl_schools (id),
     CONSTRAINT uk_subjects_school_subject_code UNIQUE (school_id, subject_code)
 );

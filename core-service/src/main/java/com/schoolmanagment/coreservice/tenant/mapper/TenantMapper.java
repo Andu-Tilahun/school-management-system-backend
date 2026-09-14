@@ -14,6 +14,8 @@ public class TenantMapper {
                 .tenantCode(tenant.getTenantCode())
                 .tenantName(tenant.getTenantName())
                 .website(tenant.getWebsite())
+                .createdByName(tenant.getCreatedByName())
+                .updatedByName(tenant.getUpdatedByName())
                 .build();
     }
 

@@ -38,6 +38,13 @@ public class UserContext {
         return UUID.fromString(pullAuthentication().getName());
     }
 
+    public String getCurrentUserName() {
+        return currentAuthDetails()
+                .map(JwtAuthDetails::username)
+                .filter(username -> username != null && !username.isBlank())
+                .orElse(null);
+    }
+
     public boolean isAuthenticated() {
         return pullAuthenticationOptional() != null;
     }

@@ -19,4 +19,6 @@ public class SchoolDto {
     private SchoolType schoolType;
     private String schoolName;
     private String website;
+    private String createdByName;
+    private String updatedByName;
 }

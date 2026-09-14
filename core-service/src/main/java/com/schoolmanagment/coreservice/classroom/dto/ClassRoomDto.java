@@ -20,6 +20,8 @@ public class ClassRoomDto {
     private String roomNumber;
     private Integer roomSize;
     private LocalDateTime createdAt;
+    private String createdByName;
+    private String updatedByName;
 
     public static ClassRoomDto fromEntity(ClassRoom classRoom) {
         return ClassRoomDto.builder()
@@ -28,6 +30,8 @@ public class ClassRoomDto {
                 .roomNumber(classRoom.getRoomNumber())
                 .roomSize(classRoom.getRoomSize())
                 .createdAt(classRoom.getCreatedAt())
+                .createdByName(classRoom.getCreatedByName())
+                .updatedByName(classRoom.getUpdatedByName())
                 .build();
     }
 }

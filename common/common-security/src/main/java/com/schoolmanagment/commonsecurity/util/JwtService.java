@@ -17,6 +17,7 @@ import java.util.UUID;
 public class JwtService {
 
     public static final String CLAIM_EXTERNAL_ID = "externalId";
+    public static final String CLAIM_USERNAME = "username";
 
     @Value("${jwt.secret}")
     private String secret;
@@ -57,28 +58,42 @@ public class JwtService {
     }
 
     public String generateToken(String userId) {
-        return generateToken(userId, null);
+        return generateToken(userId, null, null);
     }
 
     public String generateToken(String userId, UUID externalId) {
+        return generateToken(userId, externalId, null);
+    }
+
+    public String generateToken(String userId, UUID externalId, String username) {
         Map<String, Object> claims = new HashMap<>();
         putUuidClaim(claims, CLAIM_EXTERNAL_ID, externalId);
+        putStringClaim(claims, CLAIM_USERNAME, username);
         return createToken(claims, userId, expiration);
     }
 
     public String generateRefreshToken(String userId) {
-        return generateRefreshToken(userId, null);
+        return generateRefreshToken(userId, null, null);
     }
 
     public String generateRefreshToken(String userId, UUID externalId) {
+        return generateRefreshToken(userId, externalId, null);
+    }
+
+    public String generateRefreshToken(String userId, UUID externalId, String username) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("tokenType", "refresh");
         putUuidClaim(claims, CLAIM_EXTERNAL_ID, externalId);
+        putStringClaim(claims, CLAIM_USERNAME, username);
         return createToken(claims, userId, refreshExpiration);
     }
 
     public UUID extractExternalId(String token) {
         return extractUuidClaim(token, CLAIM_EXTERNAL_ID);
+    }
+
+    public String extractUsername(String token) {
+        return extractStringClaim(token, CLAIM_USERNAME);
     }
 
     private void putUuidClaim(Map<String, Object> claims, String claimName, UUID value) {
@@ -87,17 +102,32 @@ public class JwtService {
         }
     }
 
+    private void putStringClaim(Map<String, Object> claims, String claimName, String value) {
+        if (value != null && !value.isBlank()) {
+            claims.put(claimName, value);
+        }
+    }
+
     private UUID extractUuidClaim(String token, String claimName) {
+        String value = extractStringClaim(token, claimName);
+        if (value == null) {
+            return null;
+        }
+        try {
+            return UUID.fromString(value);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
+    }
+
+    private String extractStringClaim(String token, String claimName) {
         try {
             Object raw = extractAllClaims(token).get(claimName);
             if (raw == null) {
                 return null;
             }
-            String s = raw.toString().trim();
-            if (s.isEmpty()) {
-                return null;
-            }
-            return UUID.fromString(s);
+            String value = raw.toString().trim();
+            return value.isEmpty() ? null : value;
         } catch (Exception e) {
             return null;
         }

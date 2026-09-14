@@ -27,6 +27,8 @@ public class RoomSectionDto {
     private String roomNumber;
     private Integer roomSize;
     private LocalDateTime createdAt;
+    private String createdByName;
+    private String updatedByName;
 
     public static RoomSectionDto fromEntity(RoomSection roomSection) {
         ClassSection classSection = roomSection.getClassSection();
@@ -42,6 +44,8 @@ public class RoomSectionDto {
                 .roomNumber(room != null ? room.getRoomNumber() : null)
                 .roomSize(room != null ? room.getRoomSize() : null)
                 .createdAt(roomSection.getCreatedAt())
+                .createdByName(roomSection.getCreatedByName())
+                .updatedByName(roomSection.getUpdatedByName())
                 .build();
     }
 }

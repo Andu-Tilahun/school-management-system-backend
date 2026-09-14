@@ -15,6 +15,8 @@ public class ClassRoomMapper {
                 .roomNumber(classRoom.getRoomNumber())
                 .roomSize(classRoom.getRoomSize())
                 .createdAt(classRoom.getCreatedAt())
+                .createdByName(classRoom.getCreatedByName())
+                .updatedByName(classRoom.getUpdatedByName())
                 .build();
     }
 

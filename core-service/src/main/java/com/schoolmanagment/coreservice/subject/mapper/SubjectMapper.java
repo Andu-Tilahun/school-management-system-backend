@@ -16,6 +16,8 @@ public class SubjectMapper {
                 .subjectCode(subject.getSubjectCode())
                 .subjectName(subject.getSubjectName())
                 .status(subject.getStatus())
+                .createdByName(subject.getCreatedByName())
+                .updatedByName(subject.getUpdatedByName())
                 .build();
     }
 

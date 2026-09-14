@@ -21,6 +21,8 @@ public class ClassSectionDto {
     private UUID gradeId;
     private String gradeName;
     private LocalDateTime createdAt;
+    private String createdByName;
+    private String updatedByName;
 
     public static ClassSectionDto fromEntity(ClassSection classSection) {
         Grade grade = classSection.getGrade();
@@ -30,6 +32,8 @@ public class ClassSectionDto {
                 .gradeId(grade != null ? grade.getId() : null)
                 .gradeName(grade != null ? grade.getName() : null)
                 .createdAt(classSection.getCreatedAt())
+                .createdByName(classSection.getCreatedByName())
+                .updatedByName(classSection.getUpdatedByName())
                 .build();
     }
 }

@@ -15,6 +15,8 @@ public class SchoolMapper {
                 .schoolType(school.getSchoolType())
                 .schoolName(school.getSchoolName())
                 .website(school.getWebsite())
+                .createdByName(school.getCreatedByName())
+                .updatedByName(school.getUpdatedByName())
                 .build();
     }
 

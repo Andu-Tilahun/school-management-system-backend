@@ -66,7 +66,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
 
                 UUID externalId = jwtService.extractExternalId(jwt);
-                authToken.setDetails(new JwtAuthDetails(externalId));
+                String username = jwtService.extractUsername(jwt);
+                authToken.setDetails(new JwtAuthDetails(externalId, username));
                 SecurityContextHolder.getContext().setAuthentication(authToken);
             }
         }

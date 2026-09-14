@@ -31,6 +31,8 @@ public class StudentDto {
     private String houseNumber;
     private String mobileNumber;
     private LocalDateTime createdAt;
+    private String createdByName;
+    private String updatedByName;
 
     public static StudentDto fromEntity(Student student) {
         return StudentDto.builder()
@@ -47,6 +49,8 @@ public class StudentDto {
                 .houseNumber(student.getHouseNumber())
                 .mobileNumber(student.getMobileNumber())
                 .createdAt(student.getCreatedAt())
+                .createdByName(student.getCreatedByName())
+                .updatedByName(student.getUpdatedByName())
                 .build();
     }
 }

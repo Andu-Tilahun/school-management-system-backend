@@ -5,6 +5,10 @@ CREATE TABLE IF NOT EXISTS tbl_schools (
     website      VARCHAR(200),
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
+    created_by UUID,
+    updated_by UUID,
+    created_by_name VARCHAR(100),
+    updated_by_name VARCHAR(100),
     tenant_id    UUID NOT NULL REFERENCES tbl_tenants(id)
 );
 

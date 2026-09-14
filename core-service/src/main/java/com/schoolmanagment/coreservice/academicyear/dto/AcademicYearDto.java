@@ -21,6 +21,8 @@ public class AcademicYearDto {
     private String semester;
     private Boolean active;
     private LocalDateTime createdAt;
+    private String createdByName;
+    private String updatedByName;
 
     public static AcademicYearDto fromEntity(AcademicYear academicYear) {
         return AcademicYearDto.builder()
@@ -30,6 +32,8 @@ public class AcademicYearDto {
                 .semester(academicYear.getSemester())
                 .active(academicYear.getActive())
                 .createdAt(academicYear.getCreatedAt())
+                .createdByName(academicYear.getCreatedByName())
+                .updatedByName(academicYear.getUpdatedByName())
                 .build();
     }
 }

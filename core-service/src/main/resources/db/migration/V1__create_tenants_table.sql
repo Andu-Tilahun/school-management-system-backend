@@ -4,7 +4,11 @@ CREATE TABLE IF NOT EXISTS tbl_tenants (
      tenant_name  VARCHAR(200) NOT NULL UNIQUE,
      website      VARCHAR(200),
      created_at TIMESTAMP,
-     updated_at TIMESTAMP
+     updated_at TIMESTAMP,
+     created_by UUID,
+     updated_by UUID,
+     created_by_name VARCHAR(100),
+     updated_by_name VARCHAR(100)
 );
 
 CREATE INDEX IF NOT EXISTS idx_tenants_tenant_code ON tbl_tenants (tenant_code);

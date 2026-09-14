@@ -17,6 +17,8 @@ public class ClassSectionMapper {
                 .gradeId(grade != null ? grade.getId() : null)
                 .gradeName(grade != null ? grade.getName() : null)
                 .createdAt(classSection.getCreatedAt())
+                .createdByName(classSection.getCreatedByName())
+                .updatedByName(classSection.getUpdatedByName())
                 .build();
     }
 

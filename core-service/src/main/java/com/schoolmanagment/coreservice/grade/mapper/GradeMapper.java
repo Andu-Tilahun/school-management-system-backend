@@ -14,6 +14,8 @@ public class GradeMapper {
                 .schoolId(grade.getSchoolId())
                 .name(grade.getName())
                 .createdAt(grade.getCreatedAt())
+                .createdByName(grade.getCreatedByName())
+                .updatedByName(grade.getUpdatedByName())
                 .build();
     }
 

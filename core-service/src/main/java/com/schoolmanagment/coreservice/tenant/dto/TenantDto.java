@@ -15,4 +15,6 @@ public class TenantDto {
     private String tenantCode;
     private String tenantName;
     private String website;
+    private String createdByName;
+    private String updatedByName;
 }

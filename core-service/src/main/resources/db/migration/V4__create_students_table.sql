@@ -13,6 +13,10 @@ CREATE TABLE IF NOT EXISTS tbl_students (
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,
+    created_by UUID,
+    updated_by UUID,
+    created_by_name VARCHAR(100),
+    updated_by_name VARCHAR(100),
     school_id UUID NOT NULL REFERENCES tbl_schools (id),
     CONSTRAINT uk_students_school_mobile UNIQUE (school_id, mobile_number)
 );

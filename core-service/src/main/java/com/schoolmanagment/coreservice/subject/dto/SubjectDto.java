@@ -18,4 +18,6 @@ public class SubjectDto {
     private String subjectCode;
     private String subjectName;
     private SubjectStatus status;
+    private String createdByName;
+    private String updatedByName;
 }

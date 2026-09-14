@@ -46,10 +46,11 @@ public class AuthController {
 
             userStatusCache.setUserPolicies(userDto.getId().toString(), policyNames);
 
-            String token = jwtService.generateToken(userDto.getId().toString(), userDto.getExternalId());
+            String token = jwtService.generateToken(
+                    userDto.getId().toString(), userDto.getExternalId(), userDto.getUsername());
 
             String refreshToken = jwtService.generateRefreshToken(
-                    userDto.getId().toString(), userDto.getExternalId());
+                    userDto.getId().toString(), userDto.getExternalId(), userDto.getUsername());
 
             AuthResponse authResponse = AuthResponse.builder()
                     .token(token)
@@ -95,9 +96,10 @@ public class AuthController {
                     ? userDto.getEffectivePolicyNames()
                     : Collections.<String>emptySet();
             userStatusCache.setUserPolicies(userDto.getId().toString(), policyNames);
-            String newToken = jwtService.generateToken(userDto.getId().toString(), userDto.getExternalId());
+            String newToken = jwtService.generateToken(
+                    userDto.getId().toString(), userDto.getExternalId(), userDto.getUsername());
             String newRefreshToken = jwtService.generateRefreshToken(
-                    userDto.getId().toString(), userDto.getExternalId());
+                    userDto.getId().toString(), userDto.getExternalId(), userDto.getUsername());
             Long expirationTime = jwtService.extractExpiration(refreshToken).getTime() - System.currentTimeMillis();
             tokenBlacklistService.blacklistToken(refreshToken, expirationTime);
 

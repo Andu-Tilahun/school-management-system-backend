@@ -16,6 +16,8 @@ public class AcademicYearMapper {
                 .semester(academicYear.getSemester())
                 .active(academicYear.getActive())
                 .createdAt(academicYear.getCreatedAt())
+                .createdByName(academicYear.getCreatedByName())
+                .updatedByName(academicYear.getUpdatedByName())
                 .build();
     }
 

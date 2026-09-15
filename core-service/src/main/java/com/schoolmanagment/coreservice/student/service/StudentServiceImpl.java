@@ -50,24 +50,27 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional
     public StudentDto createStudent(StudentRequest request) {
-        validateMobileNumberNotTaken(request.getMobileNumber(), null);
-        return studentMapper.toDto(studentRepository.save(studentMapper.toEntity(request)));
+        validateStudentMobileNumberNotTaken(request.getMobileNumber(), null);
+        Student student = studentMapper.toEntity(request);
+        Student saved = studentRepository.save(student);
+        return studentMapper.toDto(saved);
     }
 
     @Override
     @Transactional
     public StudentDto updateStudent(UUID id, StudentRequest request) {
         Student student = findActiveStudentById(id);
-        validateMobileNumberNotTaken(request.getMobileNumber(), id);
+        validateStudentMobileNumberNotTaken(request.getMobileNumber(), id);
         studentMapper.updateEntity(student, request);
-        return studentMapper.toDto(studentRepository.save(student));
+        Student saved = studentRepository.save(student);
+        return studentMapper.toDto(saved);
     }
 
     @Override
     @Transactional
     public void deleteStudent(UUID id) {
         Student student = findActiveStudentById(id);
-        student.setActive(false);
+        student.deactivateWithContacts();
         studentRepository.save(student);
     }
 
@@ -76,7 +79,7 @@ public class StudentServiceImpl implements StudentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
     }
 
-    private void validateMobileNumberNotTaken(String mobileNumber, UUID excludeId) {
+    private void validateStudentMobileNumberNotTaken(String mobileNumber, UUID excludeId) {
         studentRepository.findByMobileNumber(mobileNumber).ifPresent(existing -> {
             if (!existing.getId().equals(excludeId)) {
                 throw new BadRequestException("Student with mobile number '" + mobileNumber + "' already exists in this school");

@@ -65,6 +65,7 @@ public class UserContext {
         return userStatusCache.getUserPolicies(authentication.getName());
     }
 
+
     public Set<String> getUserAuthorities() {
         if (pullAuthenticationOptional() == null) {
             return null;
@@ -77,6 +78,7 @@ public class UserContext {
     public boolean hasAdminPolicy() {
         return hasPolicy(PolicyNames.SUPER_ADMIN_FEATURES);
     }
+
     public boolean hasSchoolAdminPolicy() {
         return hasPolicy(PolicyNames.SCHOOL_ADMIN_POLICY);
     }

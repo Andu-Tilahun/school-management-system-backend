@@ -1,18 +1,16 @@
 package com.schoolmanagment.coreservice.student.dto;
 
 import com.schoolmanagment.coreservice.student.enums.Gender;
-import jakarta.validation.Valid;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import lombok.Data;
 
 import java.time.LocalDate;
-import java.util.List;
 
 @Data
-public class StudentRequest {
+public class EmergencyContactRequest {
 
     @NotBlank(message = "First name is required")
     private String firstName;
@@ -42,7 +40,6 @@ public class StudentRequest {
     @NotBlank(message = "Mobile number is required")
     private String mobileNumber;
 
-    @NotEmpty(message = "At least one emergency contact is required")
-    @Valid
-    private List<EmergencyContactRequest> emergencyContacts;
+    @Email(message = "Email should be valid")
+    private String email;
 }

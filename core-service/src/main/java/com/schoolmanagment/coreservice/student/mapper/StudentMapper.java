@@ -1,35 +1,24 @@
 package com.schoolmanagment.coreservice.student.mapper;
 
+import com.schoolmanagment.coreservice.student.dto.EmergencyContactRequest;
 import com.schoolmanagment.coreservice.student.dto.StudentDto;
 import com.schoolmanagment.coreservice.student.dto.StudentRequest;
+import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Component
 public class StudentMapper {
 
     public StudentDto toDto(Student student) {
-        return StudentDto.builder()
-                .id(student.getId())
-                .schoolId(student.getSchoolId())
-                .firstName(student.getFirstName())
-                .middleName(student.getMiddleName())
-                .lastName(student.getLastName())
-                .birthDate(student.getBirthDate())
-                .gender(student.getGender())
-                .nationality(student.getNationality())
-                .subCity(student.getSubCity())
-                .kebele(student.getKebele())
-                .houseNumber(student.getHouseNumber())
-                .mobileNumber(student.getMobileNumber())
-                .createdAt(student.getCreatedAt())
-                .createdByName(student.getCreatedByName())
-                .updatedByName(student.getUpdatedByName())
-                .build();
+        return StudentDto.fromEntity(student);
     }
 
     public Student toEntity(StudentRequest request) {
-        return Student.builder()
+        Student student = Student.builder()
                 .firstName(request.getFirstName())
                 .middleName(request.getMiddleName())
                 .lastName(request.getLastName())
@@ -42,6 +31,8 @@ public class StudentMapper {
                 .mobileNumber(request.getMobileNumber())
                 .active(true)
                 .build();
+        addContacts(student, request.getEmergencyContacts());
+        return student;
     }
 
     public void updateEntity(Student student, StudentRequest request) {
@@ -55,5 +46,45 @@ public class StudentMapper {
         student.setKebele(request.getKebele());
         student.setHouseNumber(request.getHouseNumber());
         student.setMobileNumber(request.getMobileNumber());
+        replaceContacts(student, request.getEmergencyContacts());
+    }
+
+    private void replaceContacts(Student student, List<EmergencyContactRequest> requests) {
+        if (student.getEmergencyContacts() == null) {
+            student.setEmergencyContacts(new ArrayList<>());
+        } else {
+            student.getEmergencyContacts().clear();
+        }
+        addContacts(student, requests);
+    }
+
+    private void addContacts(Student student, List<EmergencyContactRequest> requests) {
+        if (requests == null) {
+            return;
+        }
+        for (EmergencyContactRequest request : requests) {
+            student.addEmergencyContact(toContactEntity(request, student));
+        }
+    }
+
+    private EmergencyContact toContactEntity(EmergencyContactRequest request, Student student) {
+        EmergencyContact contact = EmergencyContact.builder()
+                .firstName(request.getFirstName())
+                .middleName(request.getMiddleName())
+                .lastName(request.getLastName())
+                .birthDate(request.getBirthDate())
+                .gender(request.getGender())
+                .nationality(request.getNationality())
+                .subCity(request.getSubCity())
+                .kebele(request.getKebele())
+                .houseNumber(request.getHouseNumber())
+                .mobileNumber(request.getMobileNumber())
+                .email(request.getEmail())
+                .active(true)
+                .build();
+        if (student.getSchoolId() != null) {
+            contact.setSchoolId(student.getSchoolId());
+        }
+        return contact;
     }
 }

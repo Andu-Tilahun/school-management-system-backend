@@ -11,23 +11,26 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tbl_students")
+@Table(name = "tbl_emergency_contacts")
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class Student extends SchoolAuditable {
+public class EmergencyContact extends SchoolAuditable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "student_id", nullable = false)
+    @ToString.Exclude
+    private Student student;
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
@@ -60,28 +63,10 @@ public class Student extends SchoolAuditable {
     @Column(name = "mobile_number", nullable = false, length = 20)
     private String mobileNumber;
 
+    @Column(length = 100)
+    private String email;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
-
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private List<EmergencyContact> emergencyContacts = new ArrayList<>();
-
-    public void addEmergencyContact(EmergencyContact contact) {
-        contact.setStudent(this);
-        emergencyContacts.add(contact);
-    }
-
-    public void deactivateWithContacts() {
-        this.active = false;
-        if (emergencyContacts == null) {
-            return;
-        }
-        for (EmergencyContact contact : emergencyContacts) {
-            contact.setActive(false);
-        }
-    }
 }

@@ -3,12 +3,7 @@ package com.schoolmanagment.coreservice.student.entity;
 import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
 import com.schoolmanagment.coreservice.student.enums.Gender;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -63,25 +58,19 @@ public class Student extends SchoolAuditable {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
-
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private List<EmergencyContact> emergencyContacts = new ArrayList<>();
+    private List<StudentEmergencyContact> emergencyContactLinks = new ArrayList<>();
 
-    public void addEmergencyContact(EmergencyContact contact) {
-        contact.setStudent(this);
-        emergencyContacts.add(contact);
-    }
-
-    public void deactivateWithContacts() {
+    public void deactivateWithContactLinks() {
         this.active = false;
-        if (emergencyContacts == null) {
+        if (emergencyContactLinks == null) {
             return;
         }
-        for (EmergencyContact contact : emergencyContacts) {
-            contact.setActive(false);
+        for (StudentEmergencyContact link : emergencyContactLinks) {
+            link.setActive(false);
         }
     }
 }

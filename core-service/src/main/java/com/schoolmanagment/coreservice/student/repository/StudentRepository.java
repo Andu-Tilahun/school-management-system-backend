@@ -15,8 +15,7 @@ import java.util.UUID;
 public interface StudentRepository extends JpaRepository<Student, UUID>, JpaSpecificationExecutor<Student> {
 
     Page<Student> findByActiveTrue(Pageable pageable);
-
-    @EntityGraph(attributePaths = "emergencyContacts")
+    @EntityGraph(attributePaths = {"emergencyContactLinks", "emergencyContactLinks.emergencyContact"})
     Optional<Student> findByIdAndActiveTrue(UUID id);
 
     Optional<Student> findByMobileNumber(String mobileNumber);

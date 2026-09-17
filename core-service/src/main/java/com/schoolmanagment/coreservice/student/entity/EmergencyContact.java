@@ -3,18 +3,18 @@ package com.schoolmanagment.coreservice.student.entity;
 import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
 import com.schoolmanagment.coreservice.student.enums.Gender;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tbl_emergency_contacts")
+@Table(
+        name = "tbl_emergency_contacts",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"school_id", "email"})
+)
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,11 +26,6 @@ public class EmergencyContact extends SchoolAuditable {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
-    @ToString.Exclude
-    private Student student;
 
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
@@ -69,4 +64,10 @@ public class EmergencyContact extends SchoolAuditable {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @OneToMany(mappedBy = "emergencyContact")
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<StudentEmergencyContact> studentLinks = new ArrayList<>();
 }

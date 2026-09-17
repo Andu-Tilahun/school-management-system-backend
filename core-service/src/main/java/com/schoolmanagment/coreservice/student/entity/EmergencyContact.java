@@ -11,10 +11,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(
-        name = "tbl_emergency_contacts",
-        uniqueConstraints = @UniqueConstraint(columnNames = {"school_id", "email"})
-)
+@Table(name = "tbl_emergency_contacts")
 @Data
 @Builder
 @NoArgsConstructor
@@ -58,7 +55,7 @@ public class EmergencyContact extends SchoolAuditable {
     @Column(name = "mobile_number", nullable = false, length = 20)
     private String mobileNumber;
 
-    @Column(length = 100)
+    @Column(nullable = false, length = 100)
     private String email;
 
     @Column(nullable = false)

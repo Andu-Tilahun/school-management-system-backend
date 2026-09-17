@@ -18,7 +18,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -43,46 +42,49 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
     @Override
     @Transactional
     public EmergencyContactDto registerEmergencyContact(UUID studentId, EmergencyContactRequest request) {
+
         Student student = findActiveStudentById(studentId);
 
         EmergencyContact contact = resolveContact(student.getSchoolId(), request);
 
         boolean alreadyLinked = studentEmergencyContactRepository
                 .existsByStudent_IdAndEmergencyContact_IdAndActiveTrue(student.getId(), contact.getId());
+
         if (alreadyLinked) {
             throw new BadRequestException(
                     "This contact is already linked to this student: emergencyContactId=" + contact.getId());
         }
 
-        StudentEmergencyContact link = StudentEmergencyContact.builder()
+        StudentEmergencyContact studentEmergencyContact = StudentEmergencyContact.builder()
                 .student(student)
                 .emergencyContact(contact)
                 .relationship(request.getRelationship())
                 .isPrimary(Boolean.TRUE.equals(request.getIsPrimary()))
                 .active(true)
                 .build();
-        studentEmergencyContactRepository.save(link);
 
-        return EmergencyContactDto.fromLink(link);
+        studentEmergencyContactRepository.save(studentEmergencyContact);
+
+        return EmergencyContactDto.fromStudentEmergencyContact(studentEmergencyContact);
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<EmergencyContactDto> getEmergencyContactsForStudent(UUID studentId) {
         return studentEmergencyContactRepository.findByStudent_IdAndActiveTrue(studentId).stream()
-                .map(EmergencyContactDto::fromLink)
+                .map(EmergencyContactDto::fromStudentEmergencyContact)
                 .toList();
     }
 
     @Override
     @Transactional
     public void removeEmergencyContactFromStudent(UUID studentId, UUID emergencyContactId) {
-        StudentEmergencyContact link = studentEmergencyContactRepository
+        StudentEmergencyContact studentEmergencyContact = studentEmergencyContactRepository
                 .findByStudent_IdAndEmergencyContact_Id(studentId, emergencyContactId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "No emergency contact link found for studentId=" + studentId + ", emergencyContactId=" + emergencyContactId));
-        link.setActive(false);
-        studentEmergencyContactRepository.save(link);
+        studentEmergencyContact.setActive(false);
+        studentEmergencyContactRepository.save(studentEmergencyContact);
     }
 
     @Override
@@ -96,31 +98,11 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
     }
 
     private EmergencyContact resolveContact(UUID schoolId, EmergencyContactRequest request) {
-        if (request.getEmail() == null || request.getEmail().isBlank()) {
-            return emergencyContactRepository.save(emergencyContactMapper.toEntity(request));
-        }
-
-        Optional<EmergencyContact> existing = emergencyContactRepository.findBySchoolIdAndEmail(schoolId, request.getEmail());
-        if (existing.isPresent()) {
-            EmergencyContact contact = existing.get();
-            warnIfSubmittedDataDiffers(contact, request);
-            return contact;
-        }
-
-        return emergencyContactRepository.save(emergencyContactMapper.toEntity(request));
+        return emergencyContactRepository
+                .findBySchoolIdAndEmail(schoolId, request.getEmail())
+                .orElseGet(() -> emergencyContactRepository.save(emergencyContactMapper.toEntity(request)));
     }
 
-    private void warnIfSubmittedDataDiffers(EmergencyContact existing, EmergencyContactRequest request) {
-        boolean nameDiffers = !Objects.equals(existing.getFirstName(), request.getFirstName())
-                || !Objects.equals(existing.getLastName(), request.getLastName());
-        boolean mobileDiffers = !Objects.equals(existing.getMobileNumber(), request.getMobileNumber());
-
-        if (nameDiffers || mobileDiffers) {
-            log.warn("Emergency contact matched by email ({}) but submitted data differs from what's on file. "
-                            + "Existing record was reused unchanged.",
-                    existing.getEmail());
-        }
-    }
 
     private Student findActiveStudentById(UUID id) {
         return studentRepository.findByIdAndActiveTrue(id)

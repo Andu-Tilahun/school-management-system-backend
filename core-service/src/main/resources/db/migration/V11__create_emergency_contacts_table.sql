@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS tbl_emergency_contacts (
     kebele INTEGER,
     house_number VARCHAR(50),
     mobile_number VARCHAR(20) NOT NULL,
-    email VARCHAR(100),
+    email VARCHAR(100) NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,

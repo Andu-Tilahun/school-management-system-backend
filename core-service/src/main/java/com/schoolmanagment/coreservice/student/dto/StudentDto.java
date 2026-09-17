@@ -67,7 +67,7 @@ public class StudentDto {
         return links.stream()
                 .filter(link -> Boolean.TRUE.equals(link.getActive())
                         && Boolean.TRUE.equals(link.getEmergencyContact().getActive()))
-                .map(EmergencyContactDto::fromLink)
+                .map(EmergencyContactDto::fromStudentEmergencyContact)
                 .toList();
     }
 }

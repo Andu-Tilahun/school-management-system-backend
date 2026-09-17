@@ -38,6 +38,7 @@ public class EmergencyContactRequest {
     @NotBlank(message = "Mobile number is required")
     private String mobileNumber;
 
+    @NotBlank(message = "Email is required")
     @Email(message = "Email must be valid")
     private String email;
 

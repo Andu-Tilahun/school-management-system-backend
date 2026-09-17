@@ -33,8 +33,6 @@ public class EmergencyContactDto {
     private String houseNumber;
     private String mobileNumber;
     private String email;
-
-    // Null when this DTO represents a bare person lookup.
     private ContactRelationship relationship;
     private Boolean isPrimary;
 
@@ -55,7 +53,7 @@ public class EmergencyContactDto {
                 .build();
     }
 
-    public static EmergencyContactDto fromLink(StudentEmergencyContact link) {
+    public static EmergencyContactDto fromStudentEmergencyContact(StudentEmergencyContact link) {
         EmergencyContactDto dto = fromEntity(link.getEmergencyContact());
         dto.setLinkId(link.getId());
         dto.setRelationship(link.getRelationship());

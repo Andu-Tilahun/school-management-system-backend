@@ -1,7 +1,7 @@
 package com.schoolmanagment.coreservice.student.dto;
 
-import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
 import com.schoolmanagment.coreservice.student.entity.Student;
+import com.schoolmanagment.coreservice.student.entity.StudentEmergencyContact;
 import com.schoolmanagment.coreservice.student.enums.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -60,13 +60,14 @@ public class StudentDto {
     }
 
     private static List<EmergencyContactDto> toEmergencyContactDtos(Student student) {
-        List<EmergencyContact> contacts = student.getEmergencyContacts();
-        if (contacts == null || !Hibernate.isInitialized(contacts)) {
+        List<StudentEmergencyContact> links = student.getEmergencyContactLinks();
+        if (links == null || !Hibernate.isInitialized(links)) {
             return null;
         }
-        return contacts.stream()
-                .filter(contact -> Boolean.TRUE.equals(contact.getActive()))
-                .map(EmergencyContactDto::fromEntity)
+        return links.stream()
+                .filter(link -> Boolean.TRUE.equals(link.getActive())
+                        && Boolean.TRUE.equals(link.getEmergencyContact().getActive()))
+                .map(EmergencyContactDto::fromStudentEmergencyContact)
                 .toList();
     }
 }

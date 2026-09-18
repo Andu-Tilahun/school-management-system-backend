@@ -2,6 +2,7 @@ package com.schoolmanagment.coreservice.student.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.coreservice.student.dto.EmergencyContactRequest;
 import com.schoolmanagment.coreservice.student.dto.StudentDto;
 import com.schoolmanagment.coreservice.student.dto.StudentFilterRequest;
 import com.schoolmanagment.coreservice.student.dto.StudentRequest;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -24,6 +26,7 @@ public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepository;
     private final StudentMapper studentMapper;
+    private final EmergencyContactService emergencyContactService;
 
     @Override
     @Transactional(readOnly = true)
@@ -51,9 +54,14 @@ public class StudentServiceImpl implements StudentService {
     @Transactional
     public StudentDto createStudent(StudentRequest request) {
         validateStudentMobileNumberNotTaken(request.getMobileNumber(), null);
+
         Student student = studentMapper.toEntity(request);
+
         Student saved = studentRepository.save(student);
-        return studentMapper.toDto(saved);
+
+        registerEmergencyContacts(saved.getId(), request.getEmergencyContacts());
+
+        return studentMapper.toDto(findActiveStudentById(saved.getId()));
     }
 
     @Override
@@ -70,8 +78,17 @@ public class StudentServiceImpl implements StudentService {
     @Transactional
     public void deleteStudent(UUID id) {
         Student student = findActiveStudentById(id);
-        student.deactivateWithContacts();
+        student.deactivateWithContactLinks();
         studentRepository.save(student);
+    }
+
+    private void registerEmergencyContacts(UUID studentId, List<EmergencyContactRequest> requests) {
+        if (requests == null) {
+            return;
+        }
+        for (EmergencyContactRequest request : requests) {
+            emergencyContactService.registerEmergencyContact(studentId, request);
+        }
     }
 
     private Student findActiveStudentById(UUID id) {

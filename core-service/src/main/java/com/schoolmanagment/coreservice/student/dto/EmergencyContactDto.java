@@ -1,7 +1,8 @@
 package com.schoolmanagment.coreservice.student.dto;
 
 import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
-import com.schoolmanagment.coreservice.student.entity.Student;
+import com.schoolmanagment.coreservice.student.entity.StudentEmergencyContact;
+import com.schoolmanagment.coreservice.student.enums.ContactRelationship;
 import com.schoolmanagment.coreservice.student.enums.Gender;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,7 +10,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Data
@@ -18,9 +18,10 @@ import java.util.UUID;
 @AllArgsConstructor
 public class EmergencyContactDto {
 
+
+    private UUID linkId;
+
     private UUID id;
-    private UUID studentId;
-    private UUID schoolId;
     private String firstName;
     private String middleName;
     private String lastName;
@@ -32,14 +33,12 @@ public class EmergencyContactDto {
     private String houseNumber;
     private String mobileNumber;
     private String email;
-    private LocalDateTime createdAt;
+    private ContactRelationship relationship;
+    private Boolean isPrimary;
 
     public static EmergencyContactDto fromEntity(EmergencyContact contact) {
-        Student student = contact.getStudent();
         return EmergencyContactDto.builder()
                 .id(contact.getId())
-                .studentId(student != null ? student.getId() : null)
-                .schoolId(contact.getSchoolId())
                 .firstName(contact.getFirstName())
                 .middleName(contact.getMiddleName())
                 .lastName(contact.getLastName())
@@ -51,7 +50,14 @@ public class EmergencyContactDto {
                 .houseNumber(contact.getHouseNumber())
                 .mobileNumber(contact.getMobileNumber())
                 .email(contact.getEmail())
-                .createdAt(contact.getCreatedAt())
                 .build();
+    }
+
+    public static EmergencyContactDto fromStudentEmergencyContact(StudentEmergencyContact link) {
+        EmergencyContactDto dto = fromEntity(link.getEmergencyContact());
+        dto.setLinkId(link.getId());
+        dto.setRelationship(link.getRelationship());
+        dto.setIsPrimary(link.getIsPrimary());
+        return dto;
     }
 }

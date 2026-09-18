@@ -11,8 +11,4 @@ import java.util.UUID;
 public interface EmergencyContactRepository extends JpaRepository<EmergencyContact, UUID> {
 
     Optional<EmergencyContact> findBySchoolIdAndEmail(UUID schoolId, String email);
-
-    Optional<EmergencyContact> findBySchoolIdAndEmailAndActiveTrue(UUID schoolId, String email);
-
-    Optional<EmergencyContact> findByIdAndSchoolId(UUID id, UUID schoolId);
 }

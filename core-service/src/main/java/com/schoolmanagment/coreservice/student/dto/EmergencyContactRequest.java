@@ -1,10 +1,8 @@
 package com.schoolmanagment.coreservice.student.dto;
 
+import com.schoolmanagment.coreservice.student.enums.ContactRelationship;
 import com.schoolmanagment.coreservice.student.enums.Gender;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -40,6 +38,12 @@ public class EmergencyContactRequest {
     @NotBlank(message = "Mobile number is required")
     private String mobileNumber;
 
-    @Email(message = "Email should be valid")
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email must be valid")
     private String email;
+
+    @NotNull(message = "Relationship is required")
+    private ContactRelationship relationship;
+
+    private Boolean isPrimary;
 }

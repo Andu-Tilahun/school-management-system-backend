@@ -64,6 +64,12 @@ public class Student extends SchoolAuditable {
     @EqualsAndHashCode.Exclude
     private List<StudentEmergencyContact> emergencyContactLinks = new ArrayList<>();
 
+    @OneToMany(mappedBy = "student", fetch = FetchType.LAZY)
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<Enrollment> enrollments = new ArrayList<>();
+
     public void deactivateWithContactLinks() {
         this.active = false;
         if (emergencyContactLinks == null) {

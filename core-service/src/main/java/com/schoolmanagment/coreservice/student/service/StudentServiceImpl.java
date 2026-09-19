@@ -6,11 +6,13 @@ import com.schoolmanagment.coreservice.student.dto.EmergencyContactRequest;
 import com.schoolmanagment.coreservice.student.dto.StudentDto;
 import com.schoolmanagment.coreservice.student.dto.StudentFilterRequest;
 import com.schoolmanagment.coreservice.student.dto.StudentRequest;
+import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import com.schoolmanagment.coreservice.student.mapper.StudentMapper;
 import com.schoolmanagment.coreservice.student.repository.StudentRepository;
 import com.schoolmanagment.coreservice.student.specification.StudentSpecification;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -92,8 +94,28 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private Student findActiveStudentById(UUID id) {
-        return studentRepository.findByIdAndActiveTrue(id)
+        Student student = studentRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
+        initializeEnrollmentsForDetail(student);
+        return student;
+    }
+
+    private void initializeEnrollmentsForDetail(Student student) {
+        Hibernate.initialize(student.getEnrollments());
+        if (student.getEnrollments() == null) {
+            return;
+        }
+        for (Enrollment enrollment : student.getEnrollments()) {
+            if (enrollment.getClassSection() != null) {
+                Hibernate.initialize(enrollment.getClassSection());
+                if (enrollment.getClassSection().getGrade() != null) {
+                    Hibernate.initialize(enrollment.getClassSection().getGrade());
+                }
+            }
+            if (enrollment.getAcademicYear() != null) {
+                Hibernate.initialize(enrollment.getAcademicYear());
+            }
+        }
     }
 
     private void validateStudentMobileNumberNotTaken(String mobileNumber, UUID excludeId) {

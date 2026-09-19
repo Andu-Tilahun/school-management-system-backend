@@ -1,0 +1,46 @@
+CREATE TABLE IF NOT EXISTS tbl_penalties (
+    id UUID PRIMARY KEY,
+    penalty_trigger VARCHAR(40) NOT NULL CHECK (penalty_trigger IN (
+        'FIGHTING',
+        'BULLYING',
+        'HARASSMENT',
+        'SEXUAL_HARASSMENT',
+        'HATE_SPEECH',
+        'VANDALISM',
+        'THEFT',
+        'CHEATING',
+        'PLAGIARISM',
+        'FORGERY',
+        'INSUBORDINATION',
+        'DISRUPTIVE_BEHAVIOR',
+        'DRESS_CODE_VIOLATION',
+        'SKIPPING_CLASS',
+        'MOBILE_PHONE_MISUSE',
+        'SMOKING',
+        'ALCOHOL_POSSESSION',
+        'DRUG_POSSESSION',
+        'WEAPON_POSSESSION',
+        'PROHIBITED_ITEM',
+        'GAMBLING',
+        'TRESPASSING',
+        'EXAM_MISCONDUCT',
+        'ABSENCE',
+        'TARDINESS',
+        'EARLY_DEPARTURE',
+        'UNEXCUSED_ABSENCE'
+    )),
+    penalty_type VARCHAR(40) NOT NULL CHECK (penalty_type IN ('ORAL_WARNING', 'WRITTEN_WARNING', 'SUSPENSION', 'CANCELLATION', 'EMERGENCY_CONTACT_REQUIRED')),
+    occurrence_number INTEGER NOT NULL CHECK (occurrence_number >= 1),
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP,
+    created_by UUID,
+    updated_by UUID,
+    created_by_name VARCHAR(100),
+    updated_by_name VARCHAR(100),
+    school_id UUID NOT NULL REFERENCES tbl_schools (id),
+    CONSTRAINT uk_penalties_school_trigger_occurrence UNIQUE (school_id, penalty_trigger, occurrence_number)
+);
+
+CREATE INDEX IF NOT EXISTS idx_penalties_school_id ON tbl_penalties (school_id);
+CREATE INDEX IF NOT EXISTS idx_penalties_penalty_trigger ON tbl_penalties (penalty_trigger);

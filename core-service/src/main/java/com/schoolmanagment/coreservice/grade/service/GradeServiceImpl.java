@@ -73,7 +73,8 @@ public class GradeServiceImpl implements GradeService {
         gradeRepository.save(grade);
     }
 
-    private Grade findActiveGradeById(UUID id) {
+    @Override
+    public Grade findActiveGradeById(UUID id) {
         return gradeRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Grade not found with id: " + id));
     }

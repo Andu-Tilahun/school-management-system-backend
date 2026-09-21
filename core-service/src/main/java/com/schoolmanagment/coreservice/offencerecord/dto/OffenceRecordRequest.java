@@ -24,7 +24,4 @@ public class OffenceRecordRequest {
 
     @NotNull(message = "Status is required")
     private OffenceRecordStatus status;
-
-    @NotNull(message = "Academic year is required")
-    private UUID academicYearId;
 }

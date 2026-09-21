@@ -3,11 +3,14 @@ package com.schoolmanagment.coreservice.student.service;
 import com.schoolmanagment.coreservice.student.dto.StudentDto;
 import com.schoolmanagment.coreservice.student.dto.StudentFilterRequest;
 import com.schoolmanagment.coreservice.student.dto.StudentRequest;
+import com.schoolmanagment.coreservice.student.entity.Student;
 import org.springframework.data.domain.Page;
 
 import java.util.UUID;
 
 public interface StudentService {
+
+    Student findActiveStudentById(UUID id);
 
     Page<StudentDto> getAllStudents(int page, int size);
 

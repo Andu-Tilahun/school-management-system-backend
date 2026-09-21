@@ -11,7 +11,7 @@ import com.schoolmanagment.coreservice.classsection.mapper.ClassSectionMapper;
 import com.schoolmanagment.coreservice.classsection.repository.ClassSectionRepository;
 import com.schoolmanagment.coreservice.classsection.specification.ClassSectionSpecification;
 import com.schoolmanagment.coreservice.grade.entity.Grade;
-import com.schoolmanagment.coreservice.grade.repository.GradeRepository;
+import com.schoolmanagment.coreservice.grade.service.GradeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -28,7 +28,7 @@ public class ClassSectionServiceImpl implements ClassSectionService {
 
     private final ClassSectionRepository classSectionRepository;
     private final ClassSectionMapper classSectionMapper;
-    private final GradeRepository gradeRepository;
+    private final GradeService gradeService;
 
     @Override
     @Transactional(readOnly = true)
@@ -56,8 +56,7 @@ public class ClassSectionServiceImpl implements ClassSectionService {
     @Transactional
     public ClassSectionDto createClassSection(ClassSectionRequest request) {
         UUID schoolId = currentSchoolId();
-        Grade grade = resolveActiveGrade(request.getGradeId());
-        validateGradeBelongsToSchool(grade, schoolId);
+        Grade grade = gradeService.findActiveGradeById(request.getGradeId());
         validateSectionNotTaken(schoolId, grade.getId(), null);
         return classSectionMapper.toDto(classSectionRepository.save(classSectionMapper.toEntity(request, grade)));
     }
@@ -66,8 +65,7 @@ public class ClassSectionServiceImpl implements ClassSectionService {
     @Transactional
     public ClassSectionDto updateClassSection(UUID id, ClassSectionRequest request) {
         ClassSection classSection = findActiveClassSectionById(id);
-        Grade grade = resolveActiveGrade(request.getGradeId());
-        validateGradeBelongsToSchool(grade, classSection.getSchoolId());
+        Grade grade = gradeService.findActiveGradeById(request.getGradeId());
         validateSectionNotTaken(classSection.getSchoolId(), grade.getId(), id);
         classSectionMapper.updateEntity(classSection, grade);
         return classSectionMapper.toDto(classSectionRepository.save(classSection));
@@ -81,20 +79,10 @@ public class ClassSectionServiceImpl implements ClassSectionService {
         classSectionRepository.save(classSection);
     }
 
-    private ClassSection findActiveClassSectionById(UUID id) {
+    @Override
+    public ClassSection findActiveClassSectionById(UUID id) {
         return classSectionRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Class section not found with id: " + id));
-    }
-
-    private Grade resolveActiveGrade(UUID gradeId) {
-        return gradeRepository.findByIdAndActiveTrue(gradeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Grade not found with id: " + gradeId));
-    }
-
-    private void validateGradeBelongsToSchool(Grade grade, UUID schoolId) {
-        if (!schoolId.equals(grade.getSchoolId())) {
-            throw new BadRequestException("Grade does not belong to this school");
-        }
     }
 
     private void validateSectionNotTaken(UUID schoolId, UUID gradeId, UUID excludeId) {

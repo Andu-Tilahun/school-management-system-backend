@@ -3,9 +3,9 @@ package com.schoolmanagment.coreservice.student.service;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
-import com.schoolmanagment.coreservice.academicyear.repository.AcademicYearRepository;
+import com.schoolmanagment.coreservice.academicyear.helper.AcademicYearHelper;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
-import com.schoolmanagment.coreservice.classsection.repository.ClassSectionRepository;
+import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.student.dto.EnrollmentDto;
 import com.schoolmanagment.coreservice.student.dto.EnrollmentFilterRequest;
 import com.schoolmanagment.coreservice.student.dto.EnrollmentRequest;
@@ -13,7 +13,6 @@ import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import com.schoolmanagment.coreservice.student.mapper.EnrollmentMapper;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
-import com.schoolmanagment.coreservice.student.repository.StudentRepository;
 import com.schoolmanagment.coreservice.student.specification.EnrollmentSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -29,15 +28,14 @@ import java.util.UUID;
 public class EnrollmentServiceImpl implements EnrollmentService {
 
     private final EnrollmentRepository enrollmentRepository;
-    private final StudentRepository studentRepository;
-    private final ClassSectionRepository classSectionRepository;
-    private final AcademicYearRepository academicYearRepository;
+    private final StudentService studentService;
+    private final ClassSectionService classSectionService;
     private final EnrollmentMapper enrollmentMapper;
 
     @Override
     @Transactional(readOnly = true)
     public Page<EnrollmentDto> listByStudent(UUID studentId, EnrollmentFilterRequest filter) {
-        findActiveStudentById(studentId);
+        studentService.findActiveStudentById(studentId);
         EnrollmentFilterRequest effectiveFilter = filter != null ? filter : new EnrollmentFilterRequest();
         Pageable pageable = PageRequest.of(effectiveFilter.getPage(), effectiveFilter.getSize());
         return enrollmentRepository.findAll(new EnrollmentSpecification(studentId, effectiveFilter), pageable)
@@ -53,11 +51,9 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     @Override
     @Transactional
     public EnrollmentDto create(UUID studentId, EnrollmentRequest request) {
-        Student student = findActiveStudentById(studentId);
-        ClassSection classSection = resolveActiveClassSection(request.getClassSectionId());
-        AcademicYear academicYear = resolveActiveAcademicYear(request.getAcademicYearId());
-        validateBelongsToSchool(classSection.getSchoolId(), student.getSchoolId(), "Class section");
-        validateBelongsToSchool(academicYear.getSchoolId(), student.getSchoolId(), "Academic year");
+        Student student = studentService.findActiveStudentById(studentId);
+        ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
+        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
         validateEnrollmentNotTaken(student.getSchoolId(), student.getId(), academicYear.getId(), null);
         return enrollmentMapper.toDto(
                 enrollmentRepository.save(enrollmentMapper.toEntity(request, student, classSection, academicYear))
@@ -68,10 +64,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     @Transactional
     public EnrollmentDto update(UUID studentId, UUID enrollmentId, EnrollmentRequest request) {
         Enrollment enrollment = findActiveEnrollmentForStudent(studentId, enrollmentId);
-        ClassSection classSection = resolveActiveClassSection(request.getClassSectionId());
-        AcademicYear academicYear = resolveActiveAcademicYear(request.getAcademicYearId());
-        validateBelongsToSchool(classSection.getSchoolId(), enrollment.getSchoolId(), "Class section");
-        validateBelongsToSchool(academicYear.getSchoolId(), enrollment.getSchoolId(), "Academic year");
+        ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
+        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
         validateEnrollmentNotTaken(enrollment.getSchoolId(), studentId, academicYear.getId(), enrollmentId);
         enrollmentMapper.updateEntity(enrollment, request, classSection, academicYear);
         return enrollmentMapper.toDto(enrollmentRepository.save(enrollment));
@@ -85,13 +79,8 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         enrollmentRepository.save(enrollment);
     }
 
-    private Student findActiveStudentById(UUID studentId) {
-        return studentRepository.findByIdAndActiveTrue(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
-    }
-
     private Enrollment findActiveEnrollmentForStudent(UUID studentId, UUID enrollmentId) {
-        findActiveStudentById(studentId);
+        studentService.findActiveStudentById(studentId);
         Enrollment enrollment = enrollmentRepository.findByIdAndActiveTrue(enrollmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
         if (enrollment.getStudent() == null || !studentId.equals(enrollment.getStudent().getId())) {
@@ -99,22 +88,6 @@ public class EnrollmentServiceImpl implements EnrollmentService {
                     "Enrollment not found with id: " + enrollmentId + " for student: " + studentId);
         }
         return enrollment;
-    }
-
-    private ClassSection resolveActiveClassSection(UUID classSectionId) {
-        return classSectionRepository.findByIdAndActiveTrue(classSectionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Class section not found with id: " + classSectionId));
-    }
-
-    private AcademicYear resolveActiveAcademicYear(UUID academicYearId) {
-        return academicYearRepository.findByIdAndActiveTrue(academicYearId)
-                .orElseThrow(() -> new ResourceNotFoundException("Academic year not found with id: " + academicYearId));
-    }
-
-    private void validateBelongsToSchool(UUID entitySchoolId, UUID schoolId, String label) {
-        if (!schoolId.equals(entitySchoolId)) {
-            throw new BadRequestException(label + " does not belong to this school");
-        }
     }
 
     private void validateEnrollmentNotTaken(UUID schoolId, UUID studentId, UUID academicYearId, UUID excludeId) {

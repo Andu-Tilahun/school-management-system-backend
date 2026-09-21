@@ -4,7 +4,7 @@ import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
-import com.schoolmanagment.coreservice.academicyear.repository.AcademicYearRepository;
+import com.schoolmanagment.coreservice.academicyear.helper.AcademicYearHelper;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceDto;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceFilterRequest;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceRequest;
@@ -33,7 +33,6 @@ public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
     private final EnrollmentRepository enrollmentRepository;
-    private final AcademicYearRepository academicYearRepository;
     private final AttendanceMapper attendanceMapper;
 
     @Override
@@ -63,7 +62,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AttendanceDto create(AttendanceRequest request) {
         UUID schoolId = currentSchoolId();
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        AcademicYear academicYear = resolveActiveAcademicYear(request.getAcademicYearId());
+        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
         validateAttendanceRequest(request, enrollment, academicYear, schoolId);
 
         Attendance attendance = attendanceMapper.toEntity(request, enrollment, academicYear);
@@ -76,7 +75,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AttendanceDto update(UUID id, AttendanceRequest request) {
         Attendance attendance = findActiveAttendanceById(id);
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        AcademicYear academicYear = resolveActiveAcademicYear(request.getAcademicYearId());
+        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
         validateAttendanceRequest(request, enrollment, academicYear, attendance.getSchoolId());
         attendanceMapper.updateEntity(attendance, request, enrollment, academicYear);
         return attendanceMapper.toDto(attendanceRepository.save(attendance));
@@ -100,11 +99,6 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
     }
 
-    private AcademicYear resolveActiveAcademicYear(UUID academicYearId) {
-        return academicYearRepository.findByIdAndActiveTrue(academicYearId)
-                .orElseThrow(() -> new ResourceNotFoundException("Academic year not found with id: " + academicYearId));
-    }
-
     private void validateAttendanceRequest(
             AttendanceRequest request,
             Enrollment enrollment,
@@ -112,7 +106,6 @@ public class AttendanceServiceImpl implements AttendanceService {
             UUID schoolId
     ) {
         validateBelongsToSchool(enrollment.getSchoolId(), schoolId, "Enrollment");
-        validateBelongsToSchool(academicYear.getSchoolId(), schoolId, "Academic year");
 
         AcademicYear enrollmentYear = enrollment.getAcademicYear();
         if (enrollmentYear == null || !academicYear.getId().equals(enrollmentYear.getId())) {

@@ -24,7 +24,4 @@ public class AttendanceRequest {
 
     @NotNull(message = "Status is required")
     private AttendanceStatus status;
-
-    @NotNull(message = "Academic year is required")
-    private UUID academicYearId;
 }

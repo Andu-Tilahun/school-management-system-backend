@@ -49,7 +49,7 @@ public class StudentServiceImpl implements StudentService {
     @Override
     @Transactional(readOnly = true)
     public StudentDto getStudentById(UUID id) {
-        return studentMapper.toDto(findActiveStudentById(id));
+        return studentMapper.toDto(findActiveStudentForDetail(id));
     }
 
     @Override
@@ -63,7 +63,7 @@ public class StudentServiceImpl implements StudentService {
 
         registerEmergencyContacts(saved.getId(), request.getEmergencyContacts());
 
-        return studentMapper.toDto(findActiveStudentById(saved.getId()));
+        return studentMapper.toDto(findActiveStudentForDetail(saved.getId()));
     }
 
     @Override
@@ -93,9 +93,14 @@ public class StudentServiceImpl implements StudentService {
         }
     }
 
-    private Student findActiveStudentById(UUID id) {
-        Student student = studentRepository.findByIdAndActiveTrue(id)
+    @Override
+    public Student findActiveStudentById(UUID id) {
+        return studentRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
+    }
+
+    private Student findActiveStudentForDetail(UUID id) {
+        Student student = findActiveStudentById(id);
         initializeEnrollmentsForDetail(student);
         return student;
     }

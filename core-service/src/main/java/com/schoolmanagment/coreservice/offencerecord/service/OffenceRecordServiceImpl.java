@@ -4,7 +4,7 @@ import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
-import com.schoolmanagment.coreservice.academicyear.repository.AcademicYearRepository;
+import com.schoolmanagment.coreservice.academicyear.helper.AcademicYearHelper;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordDto;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordFilterRequest;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordRequest;
@@ -31,7 +31,6 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
 
     private final OffenceRecordRepository offenceRecordRepository;
     private final EnrollmentRepository enrollmentRepository;
-    private final AcademicYearRepository academicYearRepository;
     private final OffenceRecordMapper offenceRecordMapper;
 
     @Override
@@ -61,7 +60,7 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
     public OffenceRecordDto create(OffenceRecordRequest request) {
         UUID schoolId = currentSchoolId();
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        AcademicYear academicYear = resolveActiveAcademicYear(request.getAcademicYearId());
+        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
         validateEnrollmentForOffence(enrollment, academicYear, schoolId);
 
         OffenceRecord offenceRecord = offenceRecordMapper.toEntity(request, enrollment, academicYear);
@@ -74,7 +73,7 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
     public OffenceRecordDto update(UUID id, OffenceRecordRequest request) {
         OffenceRecord offenceRecord = findActiveOffenceRecordById(id);
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        AcademicYear academicYear = resolveActiveAcademicYear(request.getAcademicYearId());
+        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
         validateEnrollmentForOffence(enrollment, academicYear, offenceRecord.getSchoolId());
         offenceRecordMapper.updateEntity(offenceRecord, request, enrollment, academicYear);
         return offenceRecordMapper.toDto(offenceRecordRepository.save(offenceRecord));
@@ -98,14 +97,8 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
     }
 
-    private AcademicYear resolveActiveAcademicYear(UUID academicYearId) {
-        return academicYearRepository.findByIdAndActiveTrue(academicYearId)
-                .orElseThrow(() -> new ResourceNotFoundException("Academic year not found with id: " + academicYearId));
-    }
-
     private void validateEnrollmentForOffence(Enrollment enrollment, AcademicYear academicYear, UUID schoolId) {
         validateBelongsToSchool(enrollment.getSchoolId(), schoolId, "Enrollment");
-        validateBelongsToSchool(academicYear.getSchoolId(), schoolId, "Academic year");
 
         AcademicYear enrollmentYear = enrollment.getAcademicYear();
         if (enrollmentYear == null || !academicYear.getId().equals(enrollmentYear.getId())) {

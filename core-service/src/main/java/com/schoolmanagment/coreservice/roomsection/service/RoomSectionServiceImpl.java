@@ -6,7 +6,7 @@ import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.classroom.entity.ClassRoom;
 import com.schoolmanagment.coreservice.classroom.repository.ClassRoomRepository;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
-import com.schoolmanagment.coreservice.classsection.repository.ClassSectionRepository;
+import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.roomsection.dto.RoomSectionDto;
 import com.schoolmanagment.coreservice.roomsection.dto.RoomSectionFilterRequest;
 import com.schoolmanagment.coreservice.roomsection.dto.RoomSectionRequest;
@@ -30,7 +30,7 @@ public class RoomSectionServiceImpl implements RoomSectionService {
 
     private final RoomSectionRepository roomSectionRepository;
     private final RoomSectionMapper roomSectionMapper;
-    private final ClassSectionRepository classSectionRepository;
+    private final ClassSectionService classSectionService;
     private final ClassRoomRepository classRoomRepository;
 
     @Override
@@ -59,7 +59,7 @@ public class RoomSectionServiceImpl implements RoomSectionService {
     @Transactional
     public RoomSectionDto createRoomSection(RoomSectionRequest request) {
         UUID schoolId = currentSchoolId();
-        ClassSection classSection = resolveActiveClassSection(request.getClassSectionId());
+        ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
         ClassRoom room = resolveActiveClassRoom(request.getRoomId());
         validateClassSectionBelongsToSchool(classSection, schoolId);
         validateClassRoomBelongsToSchool(room, schoolId);
@@ -72,7 +72,7 @@ public class RoomSectionServiceImpl implements RoomSectionService {
     @Transactional
     public RoomSectionDto updateRoomSection(UUID id, RoomSectionRequest request) {
         RoomSection roomSection = findActiveRoomSectionById(id);
-        ClassSection classSection = resolveActiveClassSection(request.getClassSectionId());
+        ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
         ClassRoom room = resolveActiveClassRoom(request.getRoomId());
         validateClassSectionBelongsToSchool(classSection, roomSection.getSchoolId());
         validateClassRoomBelongsToSchool(room, roomSection.getSchoolId());
@@ -92,11 +92,6 @@ public class RoomSectionServiceImpl implements RoomSectionService {
     private RoomSection findActiveRoomSectionById(UUID id) {
         return roomSectionRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Room section not found with id: " + id));
-    }
-
-    private ClassSection resolveActiveClassSection(UUID classSectionId) {
-        return classSectionRepository.findByIdAndActiveTrue(classSectionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Class section not found with id: " + classSectionId));
     }
 
     private ClassRoom resolveActiveClassRoom(UUID roomId) {

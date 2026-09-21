@@ -12,8 +12,5 @@ public class EnrollmentRequest {
     @NotNull(message = "Class section is required")
     private UUID classSectionId;
 
-    @NotNull(message = "Academic year is required")
-    private UUID academicYearId;
-
     private EnrollmentStatus status = EnrollmentStatus.ACTIVE;
 }

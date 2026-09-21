@@ -2,7 +2,6 @@ package com.schoolmanagment.coreservice.offencerecord.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
-import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.academicyear.helper.AcademicYearHelper;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordDto;
@@ -22,7 +21,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -58,13 +56,9 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
     @Override
     @Transactional
     public OffenceRecordDto create(OffenceRecordRequest request) {
-        UUID schoolId = currentSchoolId();
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
-        validateEnrollmentForOffence(enrollment, academicYear, schoolId);
-
-        OffenceRecord offenceRecord = offenceRecordMapper.toEntity(request, enrollment, academicYear);
-        offenceRecord.setSchoolId(schoolId);
+        validateEnrollmentForOffence(enrollment, enrollment.getAcademicYear());
+        OffenceRecord offenceRecord = offenceRecordMapper.toEntity(request, enrollment, enrollment.getAcademicYear());
         return offenceRecordMapper.toDto(offenceRecordRepository.save(offenceRecord));
     }
 
@@ -73,9 +67,8 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
     public OffenceRecordDto update(UUID id, OffenceRecordRequest request) {
         OffenceRecord offenceRecord = findActiveOffenceRecordById(id);
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
-        validateEnrollmentForOffence(enrollment, academicYear, offenceRecord.getSchoolId());
-        offenceRecordMapper.updateEntity(offenceRecord, request, enrollment, academicYear);
+        validateEnrollmentForOffence(enrollment, enrollment.getAcademicYear());
+        offenceRecordMapper.updateEntity(offenceRecord, request, enrollment, enrollment.getAcademicYear());
         return offenceRecordMapper.toDto(offenceRecordRepository.save(offenceRecord));
     }
 
@@ -97,9 +90,7 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
     }
 
-    private void validateEnrollmentForOffence(Enrollment enrollment, AcademicYear academicYear, UUID schoolId) {
-        validateBelongsToSchool(enrollment.getSchoolId(), schoolId, "Enrollment");
-
+    private void validateEnrollmentForOffence(Enrollment enrollment, AcademicYear academicYear) {
         AcademicYear enrollmentYear = enrollment.getAcademicYear();
         if (enrollmentYear == null || !academicYear.getId().equals(enrollmentYear.getId())) {
             throw new BadRequestException("Academic year must match the enrollment's academic year");
@@ -108,18 +99,5 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
         if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
             throw new BadRequestException("Cannot record an offence for a terminated enrollment");
         }
-    }
-
-    private void validateBelongsToSchool(UUID entitySchoolId, UUID schoolId, String label) {
-        if (!schoolId.equals(entitySchoolId)) {
-            throw new BadRequestException(label + " does not belong to this school");
-        }
-    }
-
-    private UUID currentSchoolId() {
-        return Optional.ofNullable(UserContext.current())
-                .flatMap(UserContext::getCurrentExternalId)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No schoolId on the current authentication — cannot save a school-scoped entity without one."));
     }
 }

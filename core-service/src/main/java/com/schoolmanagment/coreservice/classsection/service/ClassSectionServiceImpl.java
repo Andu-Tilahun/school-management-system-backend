@@ -2,7 +2,6 @@ package com.schoolmanagment.coreservice.classsection.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
-import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.classsection.dto.ClassSectionDto;
 import com.schoolmanagment.coreservice.classsection.dto.ClassSectionFilterRequest;
 import com.schoolmanagment.coreservice.classsection.dto.ClassSectionRequest;
@@ -19,7 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -55,9 +53,8 @@ public class ClassSectionServiceImpl implements ClassSectionService {
     @Override
     @Transactional
     public ClassSectionDto createClassSection(ClassSectionRequest request) {
-        UUID schoolId = currentSchoolId();
         Grade grade = gradeService.findActiveGradeById(request.getGradeId());
-        validateSectionNotTaken(schoolId, grade.getId(), null);
+        validateSectionNotTaken(grade.getId(), null);
         return classSectionMapper.toDto(classSectionRepository.save(classSectionMapper.toEntity(request, grade)));
     }
 
@@ -66,7 +63,7 @@ public class ClassSectionServiceImpl implements ClassSectionService {
     public ClassSectionDto updateClassSection(UUID id, ClassSectionRequest request) {
         ClassSection classSection = findActiveClassSectionById(id);
         Grade grade = gradeService.findActiveGradeById(request.getGradeId());
-        validateSectionNotTaken(classSection.getSchoolId(), grade.getId(), id);
+        validateSectionNotTaken(grade.getId(), id);
         classSectionMapper.updateEntity(classSection, grade);
         return classSectionMapper.toDto(classSectionRepository.save(classSection));
     }
@@ -85,19 +82,12 @@ public class ClassSectionServiceImpl implements ClassSectionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Class section not found with id: " + id));
     }
 
-    private void validateSectionNotTaken(UUID schoolId, UUID gradeId, UUID excludeId) {
+    private void validateSectionNotTaken(UUID gradeId, UUID excludeId) {
         boolean taken = excludeId == null
-                ? classSectionRepository.existsBySchoolIdAndGrade_Id(schoolId, gradeId)
-                : classSectionRepository.existsBySchoolIdAndGrade_IdAndIdNot(schoolId, gradeId, excludeId);
+                ? classSectionRepository.existsByGrade_Id(gradeId)
+                : classSectionRepository.existsByGrade_IdAndIdNot(gradeId, excludeId);
         if (taken) {
-            throw new BadRequestException("Class section already exists for this grade in this school");
+            throw new BadRequestException("Class section already exists for this grade");
         }
-    }
-
-    private UUID currentSchoolId() {
-        return Optional.ofNullable(UserContext.current())
-                .flatMap(UserContext::getCurrentExternalId)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No schoolId on the current authentication — cannot save a school-scoped entity without one."));
     }
 }

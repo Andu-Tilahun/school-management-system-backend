@@ -52,7 +52,7 @@ public class ClassRoomServiceImpl implements ClassRoomService {
     @Override
     @Transactional
     public ClassRoomDto createClassRoom(ClassRoomRequest request) {
-        validateRoomNumberNotTaken(currentSchoolId(), request.getRoomNumber(), null);
+        validateRoomNumberNotTaken(request.getRoomNumber(), null);
         return classRoomMapper.toDto(classRoomRepository.save(classRoomMapper.toEntity(request)));
     }
 
@@ -60,7 +60,7 @@ public class ClassRoomServiceImpl implements ClassRoomService {
     @Transactional
     public ClassRoomDto updateClassRoom(UUID id, ClassRoomRequest request) {
         ClassRoom classRoom = findActiveClassRoomById(id);
-        validateRoomNumberNotTaken(classRoom.getSchoolId(), request.getRoomNumber(), id);
+        validateRoomNumberNotTaken(request.getRoomNumber(), id);
         classRoomMapper.updateEntity(classRoom, request);
         return classRoomMapper.toDto(classRoomRepository.save(classRoom));
     }
@@ -78,10 +78,10 @@ public class ClassRoomServiceImpl implements ClassRoomService {
                 .orElseThrow(() -> new ResourceNotFoundException("Classroom not found with id: " + id));
     }
 
-    private void validateRoomNumberNotTaken(UUID schoolId, String roomNumber, UUID excludeId) {
+    private void validateRoomNumberNotTaken( String roomNumber, UUID excludeId) {
         boolean taken = excludeId == null
-                ? classRoomRepository.existsBySchoolIdAndRoomNumberIgnoreCase(schoolId, roomNumber)
-                : classRoomRepository.existsBySchoolIdAndRoomNumberIgnoreCaseAndIdNot(schoolId, roomNumber, excludeId);
+                ? classRoomRepository.existsBySchoolIdAndRoomNumberIgnoreCase(currentSchoolId(), roomNumber)
+                : classRoomRepository.existsBySchoolIdAndRoomNumberIgnoreCaseAndIdNot(currentSchoolId(), roomNumber, excludeId);
         if (taken) {
             throw new BadRequestException("Classroom with room number '" + roomNumber + "' already exists in this school");
         }

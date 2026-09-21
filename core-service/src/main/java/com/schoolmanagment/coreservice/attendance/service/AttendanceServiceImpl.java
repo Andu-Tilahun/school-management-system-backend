@@ -2,7 +2,6 @@ package com.schoolmanagment.coreservice.attendance.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
-import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.academicyear.helper.AcademicYearHelper;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceDto;
@@ -24,7 +23,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -60,13 +58,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional
     public AttendanceDto create(AttendanceRequest request) {
-        UUID schoolId = currentSchoolId();
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
-        validateAttendanceRequest(request, enrollment, academicYear, schoolId);
-
-        Attendance attendance = attendanceMapper.toEntity(request, enrollment, academicYear);
-        attendance.setSchoolId(schoolId);
+        validateAttendanceRequest(request, enrollment, enrollment.getAcademicYear());
+        Attendance attendance = attendanceMapper.toEntity(request, enrollment, enrollment.getAcademicYear());
         return attendanceMapper.toDto(attendanceRepository.save(attendance));
     }
 
@@ -75,9 +69,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AttendanceDto update(UUID id, AttendanceRequest request) {
         Attendance attendance = findActiveAttendanceById(id);
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
-        validateAttendanceRequest(request, enrollment, academicYear, attendance.getSchoolId());
-        attendanceMapper.updateEntity(attendance, request, enrollment, academicYear);
+        validateAttendanceRequest(request, enrollment, enrollment.getAcademicYear());
+        attendanceMapper.updateEntity(attendance, request, enrollment, enrollment.getAcademicYear());
         return attendanceMapper.toDto(attendanceRepository.save(attendance));
     }
 
@@ -102,13 +95,10 @@ public class AttendanceServiceImpl implements AttendanceService {
     private void validateAttendanceRequest(
             AttendanceRequest request,
             Enrollment enrollment,
-            AcademicYear academicYear,
-            UUID schoolId
+            AcademicYear academicYear
     ) {
-        validateBelongsToSchool(enrollment.getSchoolId(), schoolId, "Enrollment");
-
         AcademicYear enrollmentYear = enrollment.getAcademicYear();
-        if (enrollmentYear == null || !academicYear.getId().equals(enrollmentYear.getId())) {
+        if (!academicYear.getId().equals(enrollmentYear.getId())) {
             throw new BadRequestException("Academic year must match the enrollment's academic year");
         }
 
@@ -120,18 +110,5 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (penaltyTrigger == null || penaltyTrigger.getSourceModule() != SourceModule.ATTENDANCE) {
             throw new BadRequestException("Penalty trigger must belong to the ATTENDANCE module");
         }
-    }
-
-    private void validateBelongsToSchool(UUID entitySchoolId, UUID schoolId, String label) {
-        if (!schoolId.equals(entitySchoolId)) {
-            throw new BadRequestException(label + " does not belong to this school");
-        }
-    }
-
-    private UUID currentSchoolId() {
-        return Optional.ofNullable(UserContext.current())
-                .flatMap(UserContext::getCurrentExternalId)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No schoolId on the current authentication — cannot save a school-scoped entity without one."));
     }
 }

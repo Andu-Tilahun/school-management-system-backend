@@ -12,12 +12,12 @@ import com.schoolmanagment.coreservice.attendance.repository.AttendanceRepositor
 import com.schoolmanagment.coreservice.attendance.specification.AttendanceSpecification;
 import com.schoolmanagment.coreservice.penalty.entity.Penalty;
 import com.schoolmanagment.coreservice.penalty.entity.PenaltyRule;
-import com.schoolmanagment.coreservice.penalty.entity.PenaltySourceAttendance;
+import com.schoolmanagment.coreservice.attendance.entity.PenaltySourceAttendance;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import com.schoolmanagment.coreservice.penalty.enums.SourceModule;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRepository;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRuleRepository;
-import com.schoolmanagment.coreservice.penalty.repository.PenaltySourceAttendanceRepository;
+import com.schoolmanagment.coreservice.attendance.repository.PenaltySourceAttendanceRepository;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;

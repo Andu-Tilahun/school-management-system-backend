@@ -12,11 +12,11 @@ import com.schoolmanagment.coreservice.offencerecord.repository.OffenceRecordRep
 import com.schoolmanagment.coreservice.offencerecord.specification.OffenceRecordSpecification;
 import com.schoolmanagment.coreservice.penalty.entity.Penalty;
 import com.schoolmanagment.coreservice.penalty.entity.PenaltyRule;
-import com.schoolmanagment.coreservice.penalty.entity.PenaltySourceOffenceRecord;
+import com.schoolmanagment.coreservice.offencerecord.entity.PenaltySourceOffenceRecord;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRepository;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRuleRepository;
-import com.schoolmanagment.coreservice.penalty.repository.PenaltySourceOffenceRecordRepository;
+import com.schoolmanagment.coreservice.offencerecord.repository.PenaltySourceOffenceRecordRepository;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;

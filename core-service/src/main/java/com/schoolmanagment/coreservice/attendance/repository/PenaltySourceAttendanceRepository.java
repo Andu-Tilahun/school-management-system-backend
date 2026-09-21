@@ -1,6 +1,6 @@
-package com.schoolmanagment.coreservice.penalty.repository;
+package com.schoolmanagment.coreservice.attendance.repository;
 
-import com.schoolmanagment.coreservice.penalty.entity.PenaltySourceAttendance;
+import com.schoolmanagment.coreservice.attendance.entity.PenaltySourceAttendance;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

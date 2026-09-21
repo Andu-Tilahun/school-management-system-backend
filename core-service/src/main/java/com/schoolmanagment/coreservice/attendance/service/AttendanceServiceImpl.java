@@ -3,7 +3,6 @@ package com.schoolmanagment.coreservice.attendance.service;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
-import com.schoolmanagment.coreservice.academicyear.helper.AcademicYearHelper;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceDto;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceFilterRequest;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceRequest;
@@ -11,8 +10,14 @@ import com.schoolmanagment.coreservice.attendance.entity.Attendance;
 import com.schoolmanagment.coreservice.attendance.mapper.AttendanceMapper;
 import com.schoolmanagment.coreservice.attendance.repository.AttendanceRepository;
 import com.schoolmanagment.coreservice.attendance.specification.AttendanceSpecification;
+import com.schoolmanagment.coreservice.penalty.entity.Penalty;
+import com.schoolmanagment.coreservice.penalty.entity.PenaltyRule;
+import com.schoolmanagment.coreservice.penalty.entity.PenaltySourceAttendance;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import com.schoolmanagment.coreservice.penalty.enums.SourceModule;
+import com.schoolmanagment.coreservice.penalty.repository.PenaltyRepository;
+import com.schoolmanagment.coreservice.penalty.repository.PenaltyRuleRepository;
+import com.schoolmanagment.coreservice.penalty.repository.PenaltySourceAttendanceRepository;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
@@ -23,6 +28,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,6 +39,9 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final AttendanceRepository attendanceRepository;
     private final EnrollmentRepository enrollmentRepository;
     private final AttendanceMapper attendanceMapper;
+    private final PenaltyRuleRepository penaltyRuleRepository;
+    private final PenaltyRepository penaltyRepository;
+    private final PenaltySourceAttendanceRepository sourceRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -61,6 +71,9 @@ public class AttendanceServiceImpl implements AttendanceService {
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
         validateAttendanceRequest(request, enrollment, enrollment.getAcademicYear());
         Attendance attendance = attendanceMapper.toEntity(request, enrollment, enrollment.getAcademicYear());
+        reconcile(
+                attendance.getEnrollment().getId(),
+                attendance.getPenaltyTrigger());
         return attendanceMapper.toDto(attendanceRepository.save(attendance));
     }
 
@@ -71,6 +84,9 @@ public class AttendanceServiceImpl implements AttendanceService {
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
         validateAttendanceRequest(request, enrollment, enrollment.getAcademicYear());
         attendanceMapper.updateEntity(attendance, request, enrollment, enrollment.getAcademicYear());
+        reconcile(
+                attendance.getEnrollment().getId(),
+                attendance.getPenaltyTrigger());
         return attendanceMapper.toDto(attendanceRepository.save(attendance));
     }
 
@@ -80,6 +96,18 @@ public class AttendanceServiceImpl implements AttendanceService {
         Attendance attendance = findActiveAttendanceById(id);
         attendance.setActive(false);
         attendanceRepository.save(attendance);
+    }
+
+    @Override
+    @Transactional
+    public AttendanceDto deactivate(UUID attendanceId) {
+        Attendance attendance = findActiveAttendanceById(attendanceId);
+        attendance.setActive(false);
+        attendanceRepository.save(attendance);
+        reconcile(
+                attendance.getEnrollment().getId(),
+                attendance.getPenaltyTrigger());
+        return attendanceMapper.toDto(attendance);
     }
 
     private Attendance findActiveAttendanceById(UUID id) {
@@ -109,6 +137,47 @@ public class AttendanceServiceImpl implements AttendanceService {
         PenaltyTrigger penaltyTrigger = request.getPenaltyTrigger();
         if (penaltyTrigger == null || penaltyTrigger.getSourceModule() != SourceModule.ATTENDANCE) {
             throw new BadRequestException("Penalty trigger must belong to the ATTENDANCE module");
+        }
+    }
+
+    @Transactional
+    public void reconcile(UUID enrollmentId, PenaltyTrigger trigger) {
+
+        List<Attendance> activeRecords =
+                attendanceRepository.findActiveByEnrollmentAndTrigger(enrollmentId, trigger);
+
+        int currentCount = activeRecords.size();
+
+        List<PenaltyRule> rules = penaltyRuleRepository.findActiveByTrigger(trigger);
+
+        for (PenaltyRule rule : rules) {
+            Optional<Penalty> existing =
+                    penaltyRepository.findActiveByEnrollmentAndRule(enrollmentId, rule.getId());
+
+            boolean shouldExist = currentCount >= rule.getOccurrenceNumber();
+
+            if (shouldExist && existing.isEmpty()) {
+
+                Penalty penalty = Penalty.builder()
+                        .penaltyRule(rule)
+                        .enrollment(activeRecords.get(0).getEnrollment())
+                        .occurrenceCountAtTrigger(currentCount)
+                        .build();
+                penaltyRepository.save(penalty);
+
+                List<PenaltySourceAttendance> links = activeRecords.stream()
+                        .map(a -> PenaltySourceAttendance.builder()
+                                .penalty(penalty)
+                                .attendance(a)
+                                .build())
+                        .toList();
+                sourceRepository.saveAll(links);
+
+            } else if (!shouldExist && existing.isPresent()) {
+                Penalty penalty = existing.get();
+                penalty.setActive(false);
+                penaltyRepository.save(penalty);
+            }
         }
     }
 }

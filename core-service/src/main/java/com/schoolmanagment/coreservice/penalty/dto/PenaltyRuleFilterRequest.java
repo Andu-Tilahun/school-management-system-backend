@@ -14,7 +14,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PenaltyFilterRequest {
+public class PenaltyRuleFilterRequest {
 
     private UUID schoolId;
 

@@ -1,15 +1,9 @@
 package com.schoolmanagment.coreservice.penalty.entity;
 
 import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
-import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
-import com.schoolmanagment.coreservice.penalty.enums.PenaltyType;
+import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import lombok.*;
 
 import java.util.UUID;
 
@@ -27,16 +21,16 @@ public class Penalty extends SchoolAuditable {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "penalty_trigger", nullable = false, length = 40)
-    private PenaltyTrigger penaltyTrigger;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "penalty_rule_id", nullable = false)
+    private PenaltyRule penaltyRule;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "penalty_type", nullable = false, length = 40)
-    private PenaltyType penaltyType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "enrollment_id", nullable = false)
+    private Enrollment enrollment;
 
-    @Column(name = "occurrence_number", nullable = false)
-    private Integer occurrenceNumber;
+    @Column(name = "occurrence_count_at_trigger", nullable = false)
+    private Integer occurrenceCountAtTrigger;
 
     @Column(nullable = false)
     @Builder.Default

@@ -20,4 +20,6 @@ public interface AttendanceService {
     AttendanceDto update(UUID id, AttendanceRequest request);
 
     void delete(UUID id);
+
+    AttendanceDto deactivate(UUID attendanceId);
 }

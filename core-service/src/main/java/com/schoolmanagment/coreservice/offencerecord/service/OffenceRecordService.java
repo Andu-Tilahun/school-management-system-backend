@@ -20,4 +20,6 @@ public interface OffenceRecordService {
     OffenceRecordDto update(UUID id, OffenceRecordRequest request);
 
     void delete(UUID id);
+
+    OffenceRecordDto deactivate(UUID offenceRecordId);
 }

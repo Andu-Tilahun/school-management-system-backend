@@ -73,7 +73,8 @@ public class ClassRoomServiceImpl implements ClassRoomService {
         classRoomRepository.save(classRoom);
     }
 
-    private ClassRoom findActiveClassRoomById(UUID id) {
+    @Override
+    public ClassRoom findActiveClassRoomById(UUID id) {
         return classRoomRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Classroom not found with id: " + id));
     }

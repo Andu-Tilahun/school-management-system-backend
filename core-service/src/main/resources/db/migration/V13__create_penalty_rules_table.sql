@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS tbl_penalties (
+CREATE TABLE IF NOT EXISTS tbl_penalty_rules (
     id UUID PRIMARY KEY,
     penalty_trigger VARCHAR(40) NOT NULL CHECK (penalty_trigger IN (
         'FIGHTING',
@@ -39,8 +39,8 @@ CREATE TABLE IF NOT EXISTS tbl_penalties (
     created_by_name VARCHAR(100),
     updated_by_name VARCHAR(100),
     school_id UUID NOT NULL REFERENCES tbl_schools (id),
-    CONSTRAINT uk_penalties_school_trigger_occurrence UNIQUE (school_id, penalty_trigger, occurrence_number)
+    CONSTRAINT uk_penalty_rules_school_trigger_occurrence UNIQUE (school_id, penalty_trigger, occurrence_number)
 );
 
-CREATE INDEX IF NOT EXISTS idx_penalties_school_id ON tbl_penalties (school_id);
-CREATE INDEX IF NOT EXISTS idx_penalties_penalty_trigger ON tbl_penalties (penalty_trigger);
+CREATE INDEX IF NOT EXISTS idx_penalty_rules_school_id ON tbl_penalty_rules (school_id);
+CREATE INDEX IF NOT EXISTS idx_penalty_rules_penalty_trigger ON tbl_penalty_rules (penalty_trigger);

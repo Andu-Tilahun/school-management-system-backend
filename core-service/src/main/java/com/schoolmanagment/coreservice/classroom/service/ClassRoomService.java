@@ -3,11 +3,14 @@ package com.schoolmanagment.coreservice.classroom.service;
 import com.schoolmanagment.coreservice.classroom.dto.ClassRoomDto;
 import com.schoolmanagment.coreservice.classroom.dto.ClassRoomFilterRequest;
 import com.schoolmanagment.coreservice.classroom.dto.ClassRoomRequest;
+import com.schoolmanagment.coreservice.classroom.entity.ClassRoom;
 import org.springframework.data.domain.Page;
 
 import java.util.UUID;
 
 public interface ClassRoomService {
+
+    ClassRoom findActiveClassRoomById(UUID id);
 
     Page<ClassRoomDto> getAllClassRooms(int page, int size);
 

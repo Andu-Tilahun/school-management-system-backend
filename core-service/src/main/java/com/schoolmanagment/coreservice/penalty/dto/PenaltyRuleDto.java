@@ -1,6 +1,6 @@
 package com.schoolmanagment.coreservice.penalty.dto;
 
-import com.schoolmanagment.coreservice.penalty.entity.Penalty;
+import com.schoolmanagment.coreservice.penalty.entity.PenaltyRule;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyType;
 import com.schoolmanagment.coreservice.penalty.enums.SourceModule;
@@ -16,7 +16,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class PenaltyDto {
+public class PenaltyRuleDto {
 
     private UUID id;
     private UUID schoolId;
@@ -28,18 +28,18 @@ public class PenaltyDto {
     private String createdByName;
     private String updatedByName;
 
-    public static PenaltyDto fromEntity(Penalty penalty) {
-        PenaltyTrigger penaltyTrigger = penalty.getPenaltyTrigger();
-        return PenaltyDto.builder()
-                .id(penalty.getId())
-                .schoolId(penalty.getSchoolId())
+    public static PenaltyRuleDto fromEntity(PenaltyRule penaltyRule) {
+        PenaltyTrigger penaltyTrigger = penaltyRule.getPenaltyTrigger();
+        return PenaltyRuleDto.builder()
+                .id(penaltyRule.getId())
+                .schoolId(penaltyRule.getSchoolId())
                 .penaltyTrigger(penaltyTrigger)
                 .sourceModule(penaltyTrigger != null ? penaltyTrigger.getSourceModule() : null)
-                .penaltyType(penalty.getPenaltyType())
-                .occurrenceNumber(penalty.getOccurrenceNumber())
-                .createdAt(penalty.getCreatedAt())
-                .createdByName(penalty.getCreatedByName())
-                .updatedByName(penalty.getUpdatedByName())
+                .penaltyType(penaltyRule.getPenaltyType())
+                .occurrenceNumber(penaltyRule.getOccurrenceNumber())
+                .createdAt(penaltyRule.getCreatedAt())
+                .createdByName(penaltyRule.getCreatedByName())
+                .updatedByName(penaltyRule.getUpdatedByName())
                 .build();
     }
 }

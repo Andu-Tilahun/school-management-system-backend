@@ -2,9 +2,8 @@ package com.schoolmanagment.coreservice.roomsection.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
-import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.classroom.entity.ClassRoom;
-import com.schoolmanagment.coreservice.classroom.repository.ClassRoomRepository;
+import com.schoolmanagment.coreservice.classroom.service.ClassRoomService;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.roomsection.dto.RoomSectionDto;
@@ -21,7 +20,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -31,7 +29,7 @@ public class RoomSectionServiceImpl implements RoomSectionService {
     private final RoomSectionRepository roomSectionRepository;
     private final RoomSectionMapper roomSectionMapper;
     private final ClassSectionService classSectionService;
-    private final ClassRoomRepository classRoomRepository;
+    private final ClassRoomService classRoomService;
 
     @Override
     @Transactional(readOnly = true)
@@ -58,12 +56,9 @@ public class RoomSectionServiceImpl implements RoomSectionService {
     @Override
     @Transactional
     public RoomSectionDto createRoomSection(RoomSectionRequest request) {
-        UUID schoolId = currentSchoolId();
         ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
-        ClassRoom room = resolveActiveClassRoom(request.getRoomId());
-        validateClassSectionBelongsToSchool(classSection, schoolId);
-        validateClassRoomBelongsToSchool(room, schoolId);
-        validateAssignmentNotTaken(schoolId, classSection.getId(), room.getId(), null);
+        ClassRoom room = classRoomService.findActiveClassRoomById(request.getRoomId());
+        validateAssignmentNotTaken(classSection.getSchoolId(), classSection.getId(), room.getId(), null);
         return roomSectionMapper.toDto(
                 roomSectionRepository.save(roomSectionMapper.toEntity(request, classSection, room)));
     }
@@ -73,9 +68,7 @@ public class RoomSectionServiceImpl implements RoomSectionService {
     public RoomSectionDto updateRoomSection(UUID id, RoomSectionRequest request) {
         RoomSection roomSection = findActiveRoomSectionById(id);
         ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
-        ClassRoom room = resolveActiveClassRoom(request.getRoomId());
-        validateClassSectionBelongsToSchool(classSection, roomSection.getSchoolId());
-        validateClassRoomBelongsToSchool(room, roomSection.getSchoolId());
+        ClassRoom room = classRoomService.findActiveClassRoomById(request.getRoomId());
         validateAssignmentNotTaken(roomSection.getSchoolId(), classSection.getId(), room.getId(), id);
         roomSectionMapper.updateEntity(roomSection, classSection, room);
         return roomSectionMapper.toDto(roomSectionRepository.save(roomSection));
@@ -94,23 +87,6 @@ public class RoomSectionServiceImpl implements RoomSectionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Room section not found with id: " + id));
     }
 
-    private ClassRoom resolveActiveClassRoom(UUID roomId) {
-        return classRoomRepository.findByIdAndActiveTrue(roomId)
-                .orElseThrow(() -> new ResourceNotFoundException("Classroom not found with id: " + roomId));
-    }
-
-    private void validateClassSectionBelongsToSchool(ClassSection classSection, UUID schoolId) {
-        if (!schoolId.equals(classSection.getSchoolId())) {
-            throw new BadRequestException("Class section does not belong to this school");
-        }
-    }
-
-    private void validateClassRoomBelongsToSchool(ClassRoom room, UUID schoolId) {
-        if (!schoolId.equals(room.getSchoolId())) {
-            throw new BadRequestException("Classroom does not belong to this school");
-        }
-    }
-
     private void validateAssignmentNotTaken(UUID schoolId, UUID classSectionId, UUID roomId, UUID excludeId) {
         boolean taken = excludeId == null
                 ? roomSectionRepository.existsBySchoolIdAndClassSection_IdAndRoom_Id(schoolId, classSectionId, roomId)
@@ -119,12 +95,5 @@ public class RoomSectionServiceImpl implements RoomSectionService {
         if (taken) {
             throw new BadRequestException("Room is already assigned to this class section in this school");
         }
-    }
-
-    private UUID currentSchoolId() {
-        return Optional.ofNullable(UserContext.current())
-                .flatMap(UserContext::getCurrentExternalId)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No schoolId on the current authentication — cannot save a school-scoped entity without one."));
     }
 }

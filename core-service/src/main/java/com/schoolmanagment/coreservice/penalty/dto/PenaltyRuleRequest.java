@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class PenaltyRequest {
+public class PenaltyRuleRequest {
 
     @NotNull(message = "Penalty trigger is required")
     private PenaltyTrigger penaltyTrigger;

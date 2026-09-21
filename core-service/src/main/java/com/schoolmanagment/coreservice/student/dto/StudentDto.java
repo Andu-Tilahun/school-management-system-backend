@@ -1,5 +1,6 @@
 package com.schoolmanagment.coreservice.student.dto;
 
+import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import com.schoolmanagment.coreservice.student.entity.StudentEmergencyContact;
 import com.schoolmanagment.coreservice.student.enums.Gender;
@@ -34,6 +35,7 @@ public class StudentDto {
     private String houseNumber;
     private String mobileNumber;
     private List<EmergencyContactDto> emergencyContacts;
+    private List<EnrollmentDto> enrollments;
     private LocalDateTime createdAt;
     private String createdByName;
     private String updatedByName;
@@ -53,6 +55,7 @@ public class StudentDto {
                 .houseNumber(student.getHouseNumber())
                 .mobileNumber(student.getMobileNumber())
                 .emergencyContacts(toEmergencyContactDtos(student))
+                .enrollments(toEnrollmentDtos(student))
                 .createdAt(student.getCreatedAt())
                 .createdByName(student.getCreatedByName())
                 .updatedByName(student.getUpdatedByName())
@@ -68,6 +71,17 @@ public class StudentDto {
                 .filter(link -> Boolean.TRUE.equals(link.getActive())
                         && Boolean.TRUE.equals(link.getEmergencyContact().getActive()))
                 .map(EmergencyContactDto::fromStudentEmergencyContact)
+                .toList();
+    }
+
+    private static List<EnrollmentDto> toEnrollmentDtos(Student student) {
+        List<Enrollment> enrollments = student.getEnrollments();
+        if (enrollments == null || !Hibernate.isInitialized(enrollments)) {
+            return null;
+        }
+        return enrollments.stream()
+                .filter(enrollment -> Boolean.TRUE.equals(enrollment.getActive()))
+                .map(EnrollmentDto::fromEntity)
                 .toList();
     }
 }

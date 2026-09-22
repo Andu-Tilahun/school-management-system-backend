@@ -1,8 +1,7 @@
 package com.schoolmanagment.coreservice.student.enums;
 
-public enum EnrollmentStatus {
+public enum EnrollmentTermStatus {
     ACTIVE,
-    PASSED,
-    FAILED,
-    TERMINATE
+    COMPLETED,
+    WITHDRAWN
 }

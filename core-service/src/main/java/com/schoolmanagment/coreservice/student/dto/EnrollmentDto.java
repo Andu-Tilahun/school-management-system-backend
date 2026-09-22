@@ -47,7 +47,6 @@ public class EnrollmentDto {
                 .gradeName(grade != null ? grade.getName() : null)
                 .academicYearId(academicYear != null ? academicYear.getId() : null)
                 .acYear(academicYear != null ? academicYear.getAcYear() : null)
-                .semester(academicYear != null ? academicYear.getSemester() : null)
                 .status(enrollment.getStatus())
                 .createdAt(enrollment.getCreatedAt())
                 .build();

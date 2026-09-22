@@ -17,8 +17,6 @@ public class AcademicYearFilterRequest {
 
     private String searchText;
 
-    private String semester;
-
     private Boolean active = true;
 
     private String sortBy;

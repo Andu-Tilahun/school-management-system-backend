@@ -117,9 +117,6 @@ public class StudentServiceImpl implements StudentService {
                     Hibernate.initialize(enrollment.getClassSection().getGrade());
                 }
             }
-            if (enrollment.getAcademicYear() != null) {
-                Hibernate.initialize(enrollment.getAcademicYear());
-            }
         }
     }
 

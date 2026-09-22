@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.student.entity;
 
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
@@ -34,12 +33,6 @@ public class Enrollment extends SchoolAuditable {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     private Student student;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "academic_year_id", nullable = false)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private AcademicYear academicYear;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

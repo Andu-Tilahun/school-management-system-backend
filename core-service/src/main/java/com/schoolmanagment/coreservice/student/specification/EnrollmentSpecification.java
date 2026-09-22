@@ -35,9 +35,6 @@ public class EnrollmentSpecification implements Specification<Enrollment> {
             if (filterRequest.getClassSectionId() != null) {
                 predicates.add(cb.equal(root.get("classSection").get("id"), filterRequest.getClassSectionId()));
             }
-            if (filterRequest.getAcademicYearId() != null) {
-                predicates.add(cb.equal(root.get("academicYear").get("id"), filterRequest.getAcademicYearId()));
-            }
             if (filterRequest.getStatus() != null) {
                 predicates.add(cb.equal(root.get("status"), filterRequest.getStatus()));
             }

@@ -2,7 +2,6 @@ package com.schoolmanagment.coreservice.student.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.academicyear.entity.Term;
 import com.schoolmanagment.coreservice.academicyear.helper.AcademicYearHelper;
 import com.schoolmanagment.coreservice.academicyear.repository.TermRepository;
@@ -66,10 +65,14 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public EnrollmentDto create(UUID studentId, EnrollmentRequest request) {
         Student student = studentService.findActiveStudentById(studentId);
         ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
-        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
-        validateEnrollmentNotTaken(student.getSchoolId(), student.getId(), academicYear.getId(), null);
-        Enrollment enrollment = enrollmentRepository.save(enrollmentMapper.toEntity(request, student, classSection, academicYear));
-        registerForTerm(enrollment.getId(), null);
+        Term term = AcademicYearHelper.getActiveTerm();
+        validateTermNotTaken(student.getSchoolId(), student.getId(), term.getId(), null);
+        Enrollment enrollment = enrollmentRepository
+                .findBySchoolIdAndStudent_IdAndActiveTrue(student.getSchoolId(), student.getId())
+                .orElseGet(() -> enrollmentMapper.toEntity(request, student, classSection));
+        enrollment.setClassSection(classSection);
+        enrollment = enrollmentRepository.save(enrollment);
+        registerForTerm(enrollment.getId(), term.getId());
         return enrollmentMapper.toDto(enrollment);
     }
 
@@ -78,9 +81,7 @@ public class EnrollmentServiceImpl implements EnrollmentService {
     public EnrollmentDto update(UUID studentId, UUID enrollmentId, EnrollmentRequest request) {
         Enrollment enrollment = findActiveEnrollmentForStudent(studentId, enrollmentId);
         ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
-        AcademicYear academicYear = AcademicYearHelper.getActiveAcademicYear();
-        validateEnrollmentNotTaken(enrollment.getSchoolId(), studentId, academicYear.getId(), enrollmentId);
-        enrollmentMapper.updateEntity(enrollment, request, classSection, academicYear);
+        enrollmentMapper.updateEntity(enrollment, request, classSection);
         return enrollmentMapper.toDto(enrollmentRepository.save(enrollment));
     }
 
@@ -159,13 +160,14 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         return enrollment;
     }
 
-    private void validateEnrollmentNotTaken(UUID schoolId, UUID studentId, UUID academicYearId, UUID excludeId) {
-        boolean taken = excludeId == null
-                ? enrollmentRepository.existsBySchoolIdAndStudent_IdAndAcademicYear_Id(schoolId, studentId, academicYearId)
-                : enrollmentRepository.existsBySchoolIdAndStudent_IdAndAcademicYear_IdAndIdNot(
-                schoolId, studentId, academicYearId, excludeId);
+    private void validateTermNotTaken(UUID schoolId, UUID studentId, UUID termId, UUID excludeEnrollmentId) {
+        boolean taken = excludeEnrollmentId == null
+                ? enrollmentTermRepository.existsByEnrollment_SchoolIdAndEnrollment_Student_IdAndTerm_Id(
+                schoolId, studentId, termId)
+                : enrollmentTermRepository.existsByEnrollment_SchoolIdAndEnrollment_Student_IdAndTerm_IdAndEnrollment_IdNot(
+                schoolId, studentId, termId, excludeEnrollmentId);
         if (taken) {
-            throw new BadRequestException("Student is already enrolled for this academic year in this school");
+            throw new BadRequestException("Student is already registered for this term in this school");
         }
     }
 }

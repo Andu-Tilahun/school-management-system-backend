@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.attendance.dto;
 
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.attendance.entity.Attendance;
 import com.schoolmanagment.coreservice.attendance.enums.AttendanceStatus;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
@@ -34,16 +33,13 @@ public class AttendanceDto {
     private SourceModule sourceModule;
     private LocalDate dateOccurred;
     private AttendanceStatus status;
-    private UUID academicYearId;
-    private String acYear;
-    private String semester;
+    private String remark;
     private LocalDateTime createdAt;
 
     public static AttendanceDto fromEntity(Attendance attendance) {
         Enrollment enrollment = attendance.getEnrollment();
         Student student = enrollment != null ? enrollment.getStudent() : null;
         ClassSection classSection = enrollment != null ? enrollment.getClassSection() : null;
-        AcademicYear academicYear = attendance.getAcademicYear();
         PenaltyTrigger penaltyTrigger = attendance.getPenaltyTrigger();
 
         return AttendanceDto.builder()
@@ -58,9 +54,7 @@ public class AttendanceDto {
                 .sourceModule(penaltyTrigger != null ? penaltyTrigger.getSourceModule() : null)
                 .dateOccurred(attendance.getDateOccurred())
                 .status(attendance.getStatus())
-                .academicYearId(academicYear != null ? academicYear.getId() : null)
-                .acYear(academicYear != null ? academicYear.getAcYear() : null)
-                .semester(academicYear != null ? academicYear.getSemester() : null)
+                .remark(attendance.getRemark())
                 .createdAt(attendance.getCreatedAt())
                 .build();
     }

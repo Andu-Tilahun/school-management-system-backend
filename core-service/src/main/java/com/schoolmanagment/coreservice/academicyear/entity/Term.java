@@ -9,7 +9,9 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tbl_terms")
+@Table(name = "tbl_terms", uniqueConstraints = {
+        @UniqueConstraint(name = "uk_terms_academic_year_semester", columnNames = {"academic_year_id", "semester"})
+})
 @Data
 @Builder
 @NoArgsConstructor

@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.attendance.entity;
 
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.attendance.enums.AttendanceStatus;
 import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
@@ -47,11 +46,8 @@ public class Attendance extends SchoolAuditable {
     @Column(nullable = false, length = 20)
     private AttendanceStatus status;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "academic_year_id", nullable = false)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private AcademicYear academicYear;
+    @Column(length = 500)
+    private String remark;
 
     @Column(nullable = false)
     @Builder.Default

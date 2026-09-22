@@ -3,11 +3,14 @@ package com.schoolmanagment.coreservice.academicyear.service;
 import com.schoolmanagment.coreservice.academicyear.dto.AcademicYearDto;
 import com.schoolmanagment.coreservice.academicyear.dto.AcademicYearFilterRequest;
 import com.schoolmanagment.coreservice.academicyear.dto.AcademicYearRequest;
+import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import org.springframework.data.domain.Page;
 
 import java.util.UUID;
 
 public interface AcademicYearService {
+
+    AcademicYear findActiveAcademicYearById(UUID id);
 
     Page<AcademicYearDto> getAllAcademicYears(int page, int size);
 

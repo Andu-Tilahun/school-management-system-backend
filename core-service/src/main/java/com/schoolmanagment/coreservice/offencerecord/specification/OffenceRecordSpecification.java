@@ -41,10 +41,6 @@ public class OffenceRecordSpecification implements Specification<OffenceRecord> 
             predicates.add(cb.equal(root.get("enrollment").get("id"), filterRequest.getEnrollmentId()));
         }
 
-        if (filterRequest.getAcademicYearId() != null) {
-            predicates.add(cb.equal(root.get("academicYear").get("id"), filterRequest.getAcademicYearId()));
-        }
-
         if (filterRequest.getPenaltyTrigger() != null) {
             predicates.add(cb.equal(root.get("penaltyTrigger"), filterRequest.getPenaltyTrigger()));
         }

@@ -1,9 +1,10 @@
 package com.schoolmanagment.coreservice.academicyear.repository;
 
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.academicyear.entity.Term;
+import com.schoolmanagment.coreservice.academicyear.enums.Semester;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,27 +15,25 @@ import java.util.UUID;
 
 public interface TermRepository extends JpaRepository<Term, UUID> {
 
-    @Query("""
-            SELECT t FROM Term t
-            WHERE t.academicYear.id = :academicYearId
-              AND t.active = true
-            ORDER BY t.sequenceOrder ASC
-            """)
-    List<Term> findActiveByAcademicYearOrderBySequence(
-            @Param("academicYearId") UUID academicYearId);
+    Page<Term> findByActiveTrue(Pageable pageable);
+
+    Page<Term> findByAcademicYearIdAndActiveTrue(UUID academicYearId, Pageable pageable);
+
+    Optional<Term> findByIdAndActiveTrue(UUID id);
+
+    Optional<Term> findByAcademicYearIdAndSemester(UUID academicYearId, Semester semester);
 
     @Query("""
             SELECT t FROM Term t
             WHERE t.academicYear.id = :academicYearId
-              AND t.sequenceOrder = :nextSequenceOrder
               AND t.active = true
+            ORDER BY t.startDate ASC, t.semester ASC
             """)
-    Optional<Term> findByAcademicYearAndSequenceOrder(
-            @Param("academicYearId") UUID academicYearId,
-            @Param("nextSequenceOrder") Integer nextSequenceOrder);
+    List<Term> findActiveByAcademicYear(@Param("academicYearId") UUID academicYearId);
 
-    boolean existsByAcademicYearIdAndNameIgnoreCase(UUID academicYearId, String name);
+    Optional<Term> findByAcademicYearIdAndSemesterAndActiveTrue(UUID academicYearId, Semester semester);
 
+    boolean existsByAcademicYearIdAndSemester(UUID academicYearId, Semester semester);
 
     @Query("""
             SELECT t FROM Term t
@@ -46,4 +45,3 @@ public interface TermRepository extends JpaRepository<Term, UUID> {
             @Param("academicYearId") UUID academicYearId,
             @Param("today") LocalDate today);
 }
-

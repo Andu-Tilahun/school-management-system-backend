@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.offencerecord.repository;
 
-import com.schoolmanagment.coreservice.attendance.entity.Attendance;
 import com.schoolmanagment.coreservice.offencerecord.entity.OffenceRecord;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import org.springframework.data.domain.Page;
@@ -23,8 +22,6 @@ public interface OffenceRecordRepository extends JpaRepository<OffenceRecord, UU
     Optional<OffenceRecord> findByIdAndActiveTrue(UUID id);
 
     List<OffenceRecord> findByEnrollment_IdAndActiveTrue(UUID enrollmentId);
-
-    List<OffenceRecord> findByAcademicYear_IdAndActiveTrue(UUID academicYearId);
 
     @Query("""
             SELECT a FROM OffenceRecord a

@@ -33,6 +33,7 @@ public class AcademicYear extends SchoolAuditable {
     private LocalDate endDate;
 
     @OneToMany(mappedBy = "academicYear", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("startDate ASC, semester ASC")
     @Builder.Default
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

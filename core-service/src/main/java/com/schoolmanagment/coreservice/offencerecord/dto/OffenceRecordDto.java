@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.offencerecord.dto;
 
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.offencerecord.entity.OffenceRecord;
 import com.schoolmanagment.coreservice.offencerecord.enums.OffenceRecordStatus;
@@ -34,16 +33,13 @@ public class OffenceRecordDto {
     private SourceModule sourceModule;
     private LocalDate dateOccurred;
     private OffenceRecordStatus status;
-    private UUID academicYearId;
-    private String acYear;
-    private String semester;
+    private String remark;
     private LocalDateTime createdAt;
 
     public static OffenceRecordDto fromEntity(OffenceRecord offenceRecord) {
         Enrollment enrollment = offenceRecord.getEnrollment();
         Student student = enrollment != null ? enrollment.getStudent() : null;
         ClassSection classSection = enrollment != null ? enrollment.getClassSection() : null;
-        AcademicYear academicYear = offenceRecord.getAcademicYear();
         PenaltyTrigger penaltyTrigger = offenceRecord.getPenaltyTrigger();
 
         return OffenceRecordDto.builder()
@@ -58,9 +54,7 @@ public class OffenceRecordDto {
                 .sourceModule(penaltyTrigger != null ? penaltyTrigger.getSourceModule() : null)
                 .dateOccurred(offenceRecord.getDateOccurred())
                 .status(offenceRecord.getStatus())
-                .academicYearId(academicYear != null ? academicYear.getId() : null)
-                .acYear(academicYear != null ? academicYear.getAcYear() : null)
-                .semester(academicYear != null ? academicYear.getSemester() : null)
+                .remark(offenceRecord.getRemark())
                 .createdAt(offenceRecord.getCreatedAt())
                 .build();
     }

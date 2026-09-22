@@ -19,7 +19,8 @@ public class AcademicYearSpecification implements Specification<AcademicYear> {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of(
             "acYear",
-            "semester",
+            "startDate",
+            "endDate",
             "createdAt",
             "id"
     );
@@ -40,10 +41,6 @@ public class AcademicYearSpecification implements Specification<AcademicYear> {
         if (filterRequest.getSearchText() != null && !filterRequest.getSearchText().isBlank()) {
             String likeValue = "%" + filterRequest.getSearchText().toLowerCase(Locale.ROOT) + "%";
             predicates.add(cb.like(cb.lower(root.get("acYear")), likeValue));
-        }
-
-        if (filterRequest.getSemester() != null && !filterRequest.getSemester().isBlank()) {
-            predicates.add(cb.equal(root.get("semester"), filterRequest.getSemester()));
         }
 
         applySorting(root, query, cb);

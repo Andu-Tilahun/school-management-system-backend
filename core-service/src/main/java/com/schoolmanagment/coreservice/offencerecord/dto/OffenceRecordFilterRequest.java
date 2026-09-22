@@ -22,8 +22,6 @@ public class OffenceRecordFilterRequest {
 
     private UUID studentId;
 
-    private UUID academicYearId;
-
     private PenaltyTrigger penaltyTrigger;
 
     private SourceModule sourceModule;

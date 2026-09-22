@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -53,10 +54,11 @@ public class AcademicYearServiceImpl implements AcademicYearService {
     @Transactional
     public AcademicYearDto createAcademicYear(AcademicYearRequest request) {
         UUID schoolId = currentSchoolId();
-        validateYearSemesterNotTaken(schoolId, request.getAcYear(), request.getSemester(), null);
+        validateYearNotTaken(schoolId, request.getAcYear(), null);
 
         AcademicYear academicYear = academicYearMapper.toEntity(request);
         academicYear.setSchoolId(schoolId);
+        validateDateRange(academicYear.getStartDate(), academicYear.getEndDate());
 
         if (Boolean.TRUE.equals(academicYear.getActive())) {
             deactivateOtherYears(schoolId, null);
@@ -69,13 +71,9 @@ public class AcademicYearServiceImpl implements AcademicYearService {
     @Transactional
     public AcademicYearDto updateAcademicYear(UUID id, AcademicYearRequest request) {
         AcademicYear academicYear = findActiveAcademicYearById(id);
-        validateYearSemesterNotTaken(
-                academicYear.getSchoolId(),
-                request.getAcYear(),
-                request.getSemester(),
-                id
-        );
+        validateYearNotTaken(academicYear.getSchoolId(), request.getAcYear(), id);
         academicYearMapper.updateEntity(academicYear, request);
+        validateDateRange(academicYear.getStartDate(), academicYear.getEndDate());
 
         if (Boolean.TRUE.equals(academicYear.getActive())) {
             deactivateOtherYears(academicYear.getSchoolId(), academicYear.getId());
@@ -92,20 +90,26 @@ public class AcademicYearServiceImpl implements AcademicYearService {
         academicYearRepository.save(academicYear);
     }
 
-    private AcademicYear findActiveAcademicYearById(UUID id) {
+    @Override
+    public AcademicYear findActiveAcademicYearById(UUID id) {
         return academicYearRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Academic year not found with id: " + id));
     }
 
-    private void validateYearSemesterNotTaken(UUID schoolId, String acYear, String semester, UUID excludeId) {
-        academicYearRepository.findBySchoolIdAndAcYearAndSemester(schoolId, acYear, semester)
+    private void validateYearNotTaken(UUID schoolId, String acYear, UUID excludeId) {
+        academicYearRepository.findBySchoolIdAndAcYear(schoolId, acYear)
                 .ifPresent(existing -> {
                     if (!existing.getId().equals(excludeId)) {
                         throw new BadRequestException(
-                                "Academic year '" + acYear + "' with semester '" + semester
-                                        + "' already exists in this school");
+                                "Academic year '" + acYear + "' already exists in this school");
                     }
                 });
+    }
+
+    private void validateDateRange(LocalDate startDate, LocalDate endDate) {
+        if (startDate != null && endDate != null && startDate.isAfter(endDate)) {
+            throw new BadRequestException("Academic year start date must be on or before the end date");
+        }
     }
 
     private void deactivateOtherYears(UUID schoolId, UUID excludeId) {

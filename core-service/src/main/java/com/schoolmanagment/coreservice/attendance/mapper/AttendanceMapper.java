@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.attendance.mapper;
 
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceDto;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceRequest;
 import com.schoolmanagment.coreservice.attendance.entity.Attendance;
@@ -14,31 +13,22 @@ public class AttendanceMapper {
         return AttendanceDto.fromEntity(attendance);
     }
 
-    public Attendance toEntity(
-            AttendanceRequest request,
-            Enrollment enrollment,
-            AcademicYear academicYear
-    ) {
+    public Attendance toEntity(AttendanceRequest request, Enrollment enrollment) {
         return Attendance.builder()
                 .enrollment(enrollment)
                 .penaltyTrigger(request.getPenaltyTrigger())
                 .dateOccurred(request.getDateOccurred())
                 .status(request.getStatus())
-                .academicYear(academicYear)
+                .remark(request.getRemark())
                 .active(true)
                 .build();
     }
 
-    public void updateEntity(
-            Attendance attendance,
-            AttendanceRequest request,
-            Enrollment enrollment,
-            AcademicYear academicYear
-    ) {
+    public void updateEntity(Attendance attendance, AttendanceRequest request, Enrollment enrollment) {
         attendance.setEnrollment(enrollment);
         attendance.setPenaltyTrigger(request.getPenaltyTrigger());
         attendance.setDateOccurred(request.getDateOccurred());
         attendance.setStatus(request.getStatus());
-        attendance.setAcademicYear(academicYear);
+        attendance.setRemark(request.getRemark());
     }
 }

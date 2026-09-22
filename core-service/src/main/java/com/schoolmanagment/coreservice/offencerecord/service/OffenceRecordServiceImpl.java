@@ -2,21 +2,20 @@ package com.schoolmanagment.coreservice.offencerecord.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordDto;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordFilterRequest;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordRequest;
 import com.schoolmanagment.coreservice.offencerecord.entity.OffenceRecord;
+import com.schoolmanagment.coreservice.offencerecord.entity.PenaltySourceOffenceRecord;
 import com.schoolmanagment.coreservice.offencerecord.mapper.OffenceRecordMapper;
 import com.schoolmanagment.coreservice.offencerecord.repository.OffenceRecordRepository;
+import com.schoolmanagment.coreservice.offencerecord.repository.PenaltySourceOffenceRecordRepository;
 import com.schoolmanagment.coreservice.offencerecord.specification.OffenceRecordSpecification;
 import com.schoolmanagment.coreservice.penalty.entity.Penalty;
 import com.schoolmanagment.coreservice.penalty.entity.PenaltyRule;
-import com.schoolmanagment.coreservice.offencerecord.entity.PenaltySourceOffenceRecord;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRepository;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRuleRepository;
-import com.schoolmanagment.coreservice.offencerecord.repository.PenaltySourceOffenceRecordRepository;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
@@ -69,8 +68,8 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
     @Transactional
     public OffenceRecordDto create(OffenceRecordRequest request) {
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        validateEnrollmentForOffence(enrollment, enrollment.getAcademicYear());
-        OffenceRecord offenceRecord = offenceRecordMapper.toEntity(request, enrollment, enrollment.getAcademicYear());
+        validateEnrollmentForOffence(enrollment);
+        OffenceRecord offenceRecord = offenceRecordMapper.toEntity(request, enrollment);
         reconcile(
                 offenceRecord.getEnrollment().getId(),
                 offenceRecord.getPenaltyTrigger());
@@ -82,8 +81,7 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
     public OffenceRecordDto update(UUID id, OffenceRecordRequest request) {
         OffenceRecord offenceRecord = findActiveOffenceRecordById(id);
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        validateEnrollmentForOffence(enrollment, enrollment.getAcademicYear());
-        offenceRecordMapper.updateEntity(offenceRecord, request, enrollment, enrollment.getAcademicYear());
+        offenceRecordMapper.updateEntity(offenceRecord, request, enrollment);
         reconcile(
                 offenceRecord.getEnrollment().getId(),
                 offenceRecord.getPenaltyTrigger());
@@ -120,12 +118,7 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
     }
 
-    private void validateEnrollmentForOffence(Enrollment enrollment, AcademicYear academicYear) {
-        AcademicYear enrollmentYear = enrollment.getAcademicYear();
-        if (enrollmentYear == null || !academicYear.getId().equals(enrollmentYear.getId())) {
-            throw new BadRequestException("Academic year must match the enrollment's academic year");
-        }
-
+    private void validateEnrollmentForOffence(Enrollment enrollment) {
         if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
             throw new BadRequestException("Cannot record an offence for a terminated enrollment");
         }

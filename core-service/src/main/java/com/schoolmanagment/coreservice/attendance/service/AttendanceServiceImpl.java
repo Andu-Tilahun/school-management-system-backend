@@ -2,7 +2,6 @@ package com.schoolmanagment.coreservice.attendance.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceDto;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceFilterRequest;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceRequest;
@@ -69,8 +68,8 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Transactional
     public AttendanceDto create(AttendanceRequest request) {
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        validateAttendanceRequest(request, enrollment, enrollment.getAcademicYear());
-        Attendance attendance = attendanceMapper.toEntity(request, enrollment, enrollment.getAcademicYear());
+        validateAttendanceRequest(request, enrollment);
+        Attendance attendance = attendanceMapper.toEntity(request, enrollment);
         reconcile(
                 attendance.getEnrollment().getId(),
                 attendance.getPenaltyTrigger());
@@ -82,8 +81,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     public AttendanceDto update(UUID id, AttendanceRequest request) {
         Attendance attendance = findActiveAttendanceById(id);
         Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        validateAttendanceRequest(request, enrollment, enrollment.getAcademicYear());
-        attendanceMapper.updateEntity(attendance, request, enrollment, enrollment.getAcademicYear());
+        attendanceMapper.updateEntity(attendance, request, enrollment);
         reconcile(
                 attendance.getEnrollment().getId(),
                 attendance.getPenaltyTrigger());
@@ -120,16 +118,7 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
     }
 
-    private void validateAttendanceRequest(
-            AttendanceRequest request,
-            Enrollment enrollment,
-            AcademicYear academicYear
-    ) {
-        AcademicYear enrollmentYear = enrollment.getAcademicYear();
-        if (!academicYear.getId().equals(enrollmentYear.getId())) {
-            throw new BadRequestException("Academic year must match the enrollment's academic year");
-        }
-
+    private void validateAttendanceRequest(AttendanceRequest request, Enrollment enrollment) {
         if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
             throw new BadRequestException("Cannot record attendance for a terminated enrollment");
         }

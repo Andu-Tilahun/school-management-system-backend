@@ -16,8 +16,6 @@ public class EnrollmentFilterRequest {
 
     private UUID classSectionId;
 
-    private UUID academicYearId;
-
     private EnrollmentStatus status;
 
     private int page = 0;

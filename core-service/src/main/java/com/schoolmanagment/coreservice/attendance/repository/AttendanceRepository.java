@@ -23,8 +23,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, UUID>, J
 
     List<Attendance> findByEnrollment_IdAndActiveTrue(UUID enrollmentId);
 
-    List<Attendance> findByAcademicYear_IdAndActiveTrue(UUID academicYearId);
-
     // Active attendance rows for a given enrollment + trigger — this is the
     // count reconciliation checks against. "Active" excludes soft-deleted
     // (teacher-removed) records, which is exactly what makes the

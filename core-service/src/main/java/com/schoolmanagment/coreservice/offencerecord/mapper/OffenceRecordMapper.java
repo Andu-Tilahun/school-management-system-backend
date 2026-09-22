@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.offencerecord.mapper;
 
-import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordDto;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordRequest;
 import com.schoolmanagment.coreservice.offencerecord.entity.OffenceRecord;
@@ -14,31 +13,22 @@ public class OffenceRecordMapper {
         return OffenceRecordDto.fromEntity(offenceRecord);
     }
 
-    public OffenceRecord toEntity(
-            OffenceRecordRequest request,
-            Enrollment enrollment,
-            AcademicYear academicYear
-    ) {
+    public OffenceRecord toEntity(OffenceRecordRequest request, Enrollment enrollment) {
         return OffenceRecord.builder()
                 .enrollment(enrollment)
                 .penaltyTrigger(request.getPenaltyTrigger())
                 .dateOccurred(request.getDateOccurred())
                 .status(request.getStatus())
-                .academicYear(academicYear)
+                .remark(request.getRemark())
                 .active(true)
                 .build();
     }
 
-    public void updateEntity(
-            OffenceRecord offenceRecord,
-            OffenceRecordRequest request,
-            Enrollment enrollment,
-            AcademicYear academicYear
-    ) {
+    public void updateEntity(OffenceRecord offenceRecord, OffenceRecordRequest request, Enrollment enrollment) {
         offenceRecord.setEnrollment(enrollment);
         offenceRecord.setPenaltyTrigger(request.getPenaltyTrigger());
         offenceRecord.setDateOccurred(request.getDateOccurred());
         offenceRecord.setStatus(request.getStatus());
-        offenceRecord.setAcademicYear(academicYear);
+        offenceRecord.setRemark(request.getRemark());
     }
 }

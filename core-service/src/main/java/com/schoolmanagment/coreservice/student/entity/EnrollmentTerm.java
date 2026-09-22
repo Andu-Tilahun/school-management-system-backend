@@ -10,10 +10,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
-@Table(name = "tbl_enrollment_terms", uniqueConstraints = {
-        // A student can't register for the same term twice under the same enrollment
-        @UniqueConstraint(columnNames = {"enrollment_id", "term_id"})
-})
+@Table(name = "tbl_enrollment_terms")
 @Data
 @Builder
 @NoArgsConstructor

@@ -16,13 +16,26 @@ public interface EnrollmentTermRepository extends JpaRepository<EnrollmentTerm, 
 
     boolean existsByEnrollmentIdAndTermId(UUID enrollmentId, UUID termId);
 
+    boolean existsByEnrollment_SchoolIdAndEnrollment_Student_IdAndTerm_Id(
+            UUID schoolId,
+            UUID studentId,
+            UUID termId
+    );
+
+    boolean existsByEnrollment_SchoolIdAndEnrollment_Student_IdAndTerm_IdAndEnrollment_IdNot(
+            UUID schoolId,
+            UUID studentId,
+            UUID termId,
+            UUID enrollmentId
+    );
+
     Optional<EnrollmentTerm> findByEnrollmentIdAndStatus(
             UUID enrollmentId, EnrollmentTermStatus status);
 
     @Query("""
             SELECT et FROM EnrollmentTerm et
             WHERE et.enrollment.id = :enrollmentId
-            ORDER BY et.term.sequenceOrder ASC
+            ORDER BY et.term.startDate ASC, et.term.semester ASC
             """)
     List<EnrollmentTerm> findByEnrollmentIdOrderByTermSequenceOrderAsc(
             @Param("enrollmentId") UUID enrollmentId);

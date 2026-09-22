@@ -4,6 +4,7 @@ import com.schoolmanagment.coreservice.offencerecord.enums.OffenceRecordStatus;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -24,4 +25,7 @@ public class OffenceRecordRequest {
 
     @NotNull(message = "Status is required")
     private OffenceRecordStatus status;
+
+    @Size(max = 500, message = "Remark must be at most 500 characters")
+    private String remark;
 }

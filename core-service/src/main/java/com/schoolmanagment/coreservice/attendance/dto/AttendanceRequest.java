@@ -4,6 +4,7 @@ import com.schoolmanagment.coreservice.attendance.enums.AttendanceStatus;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -24,4 +25,7 @@ public class AttendanceRequest {
 
     @NotNull(message = "Status is required")
     private AttendanceStatus status;
+
+    @Size(max = 500, message = "Remark must be at most 500 characters")
+    private String remark;
 }

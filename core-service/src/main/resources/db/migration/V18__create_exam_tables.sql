@@ -45,27 +45,6 @@ CREATE INDEX IF NOT EXISTS idx_enrollment_terms_enrollment_id ON tbl_enrollment_
 CREATE INDEX IF NOT EXISTS idx_enrollment_terms_term_id ON tbl_enrollment_terms (term_id);
 CREATE INDEX IF NOT EXISTS idx_enrollment_terms_status ON tbl_enrollment_terms (status);
 
-CREATE TABLE IF NOT EXISTS tbl_mark_weights (
-    id UUID PRIMARY KEY,
-    term_id UUID NOT NULL REFERENCES tbl_terms (id),
-    subject_id UUID NOT NULL REFERENCES tbl_subjects (id),
-    type VARCHAR(20) NOT NULL CHECK (type IN ('MIDTERM', 'FINAL', 'QUIZ', 'ASSIGNMENT')),
-    weight_percent DOUBLE PRECISION NOT NULL,
-    active BOOLEAN NOT NULL DEFAULT TRUE,
-    created_at TIMESTAMP,
-    updated_at TIMESTAMP,
-    created_by UUID,
-    updated_by UUID,
-    created_by_name VARCHAR(100),
-    updated_by_name VARCHAR(100),
-    school_id UUID NOT NULL REFERENCES tbl_schools (id),
-    CONSTRAINT uk_mark_weights_term_subject_type UNIQUE (term_id, subject_id, type)
-);
-
-CREATE INDEX IF NOT EXISTS idx_mark_weights_school_id ON tbl_mark_weights (school_id);
-CREATE INDEX IF NOT EXISTS idx_mark_weights_term_id ON tbl_mark_weights (term_id);
-CREATE INDEX IF NOT EXISTS idx_mark_weights_subject_id ON tbl_mark_weights (subject_id);
-
 CREATE TABLE IF NOT EXISTS tbl_student_marks (
     id UUID PRIMARY KEY,
     enrollment_term_id UUID NOT NULL REFERENCES tbl_enrollment_terms (id),
@@ -73,6 +52,7 @@ CREATE TABLE IF NOT EXISTS tbl_student_marks (
     type VARCHAR(20) NOT NULL CHECK (type IN ('MIDTERM', 'FINAL', 'QUIZ', 'ASSIGNMENT')),
     status VARCHAR(20) NOT NULL CHECK (status IN ('REGISTERED', 'GRADED', 'ABSENT', 'WITHDRAWN')),
     stud_mark DOUBLE PRECISION,
+    total_mark_weight DOUBLE PRECISION NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP,
     updated_at TIMESTAMP,

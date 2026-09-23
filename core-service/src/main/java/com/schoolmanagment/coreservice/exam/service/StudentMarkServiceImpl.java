@@ -3,14 +3,11 @@ package com.schoolmanagment.coreservice.exam.service;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkDto;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkRequest;
-import com.schoolmanagment.coreservice.exam.entity.MarkWeight;
 import com.schoolmanagment.coreservice.exam.entity.StudentMark;
 import com.schoolmanagment.coreservice.exam.entity.SubjectTotal;
 import com.schoolmanagment.coreservice.exam.enums.MarkStatus;
-import com.schoolmanagment.coreservice.exam.enums.MarkType;
 import com.schoolmanagment.coreservice.exam.enums.PassFailStatus;
 import com.schoolmanagment.coreservice.exam.mapper.StudentMarkMapper;
-import com.schoolmanagment.coreservice.exam.repository.MarkWeightRepository;
 import com.schoolmanagment.coreservice.exam.repository.StudentMarkRepository;
 import com.schoolmanagment.coreservice.exam.repository.SubjectTotalRepository;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
@@ -23,16 +20,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class StudentMarkServiceImpl implements StudentMarkService {
 
     private final StudentMarkRepository studentMarkRepository;
-    private final MarkWeightRepository markWeightRepository;
     private final SubjectTotalRepository subjectTotalRepository;
     private final SubjectRepository subjectRepository;
     private final EnrollmentTermRepository enrollmentTermRepository;
@@ -99,23 +93,15 @@ public class StudentMarkServiceImpl implements StudentMarkService {
         EnrollmentTerm enrollmentTerm = enrollmentTermRepository.findById(enrollmentTermId)
                 .orElseThrow(() -> new ResourceNotFoundException("EnrollmentTerm not found"));
 
-        UUID termId = enrollmentTerm.getTerm().getId();
-
         List<StudentMark> gradedMarks = studentMarkRepository
                 .findByEnrollmentTermIdAndSubjectIdAndStatusAndActiveTrue(
                         enrollmentTermId, subjectId, MarkStatus.GRADED);
-
-        List<MarkWeight> weights = markWeightRepository
-                .findByTermIdAndSubjectIdAndActiveTrue(termId, subjectId);
-
-        Map<MarkType, Double> weightByType = weights.stream()
-                .collect(Collectors.toMap(MarkWeight::getType, MarkWeight::getWeightPercent));
 
         double weightedSum = 0.0;
         double weightUsed = 0.0;
 
         for (StudentMark mark : gradedMarks) {
-            Double weight = weightByType.get(mark.getType());
+            Double weight = mark.getTotalMarkWeight();
             if (weight == null || mark.getStudMark() == null) {
                 continue;
             }

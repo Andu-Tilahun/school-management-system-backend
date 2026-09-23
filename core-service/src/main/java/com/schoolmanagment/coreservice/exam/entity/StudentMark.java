@@ -52,6 +52,9 @@ public class StudentMark extends SchoolAuditable {
     @Column(name = "stud_mark")
     private Double studMark; // null unless status == GRADED
 
+    @Column(name = "total_mark_weight", nullable = false)
+    private Double totalMarkWeight;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;

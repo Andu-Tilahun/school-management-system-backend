@@ -20,6 +20,9 @@ public class StudentMarkRequest {
     @NotNull
     private MarkType type;
 
+    @NotNull
+    private Double totalMarkWeight;
+
     private Double studMark;
 
     @Builder.Default

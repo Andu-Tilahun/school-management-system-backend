@@ -30,6 +30,7 @@ public class StudentMarkDto {
     private MarkType type;
     private MarkStatus status;
     private Double studMark;
+    private Double totalMarkWeight;
 
     private Boolean active;
 
@@ -46,6 +47,7 @@ public class StudentMarkDto {
                 .type(mark.getType())
                 .status(mark.getStatus())
                 .studMark(mark.getStudMark())
+                .totalMarkWeight(mark.getTotalMarkWeight())
                 .active(mark.getActive())
                 .build();
     }

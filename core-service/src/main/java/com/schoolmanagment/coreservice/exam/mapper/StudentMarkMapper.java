@@ -27,6 +27,7 @@ public class StudentMarkMapper {
                 .enrollmentTerm(enrollmentTerm)
                 .subject(subject)
                 .type(request.getType())
+                .totalMarkWeight(request.getTotalMarkWeight())
                 .status(MarkStatus.REGISTERED)
                 .active(true)
                 .build();

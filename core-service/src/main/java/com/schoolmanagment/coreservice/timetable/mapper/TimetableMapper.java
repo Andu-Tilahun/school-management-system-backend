@@ -3,6 +3,7 @@ package com.schoolmanagment.coreservice.timetable.mapper;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.teacher.entity.Teacher;
+import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableDto;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableRequest;
 import com.schoolmanagment.coreservice.timetable.entity.Timetable;
@@ -13,13 +14,15 @@ public class TimetableMapper {
 
     public TimetableDto toDto(Timetable timetable) {
         ClassSection classSection = timetable.getClassSection();
-        Subject subject = timetable.getSubject();
-        Teacher teacher = timetable.getTeacher();
+        TeacherSubjectAssignment assignment = timetable.getTeacherSubjectAssignment();
+        Subject subject = assignment != null ? assignment.getSubject() : null;
+        Teacher teacher = assignment != null ? assignment.getTeacher() : null;
         return TimetableDto.builder()
                 .id(timetable.getId())
                 .schoolId(timetable.getSchoolId())
                 .classSectionId(classSection != null ? classSection.getId() : null)
                 .classSectionName(classSection != null ? classSection.getName() : null)
+                .teacherSubjectAssignmentId(assignment != null ? assignment.getId() : null)
                 .subjectId(subject != null ? subject.getId() : null)
                 .subjectName(subject != null ? subject.getSubjectName() : null)
                 .subjectCode(subject != null ? subject.getSubjectCode() : null)
@@ -36,13 +39,11 @@ public class TimetableMapper {
     public Timetable toEntity(
             TimetableRequest request,
             ClassSection classSection,
-            Subject subject,
-            Teacher teacher
+            TeacherSubjectAssignment teacherSubjectAssignment
     ) {
         return Timetable.builder()
                 .classSection(classSection)
-                .subject(subject)
-                .teacher(teacher)
+                .teacherSubjectAssignment(teacherSubjectAssignment)
                 .day(request.getDay())
                 .period(request.getPeriod())
                 .active(true)
@@ -53,12 +54,10 @@ public class TimetableMapper {
             Timetable timetable,
             TimetableRequest request,
             ClassSection classSection,
-            Subject subject,
-            Teacher teacher
+            TeacherSubjectAssignment teacherSubjectAssignment
     ) {
         timetable.setClassSection(classSection);
-        timetable.setSubject(subject);
-        timetable.setTeacher(teacher);
+        timetable.setTeacherSubjectAssignment(teacherSubjectAssignment);
         timetable.setDay(request.getDay());
         timetable.setPeriod(request.getPeriod());
     }

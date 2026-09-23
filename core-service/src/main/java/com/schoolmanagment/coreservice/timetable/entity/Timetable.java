@@ -2,8 +2,7 @@ package com.schoolmanagment.coreservice.timetable.entity;
 
 import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
-import com.schoolmanagment.coreservice.subject.entity.Subject;
-import com.schoolmanagment.coreservice.teacher.entity.Teacher;
+import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
 import com.schoolmanagment.coreservice.timetable.enums.Day;
 import com.schoolmanagment.coreservice.timetable.enums.Period;
 import jakarta.persistence.*;
@@ -32,16 +31,10 @@ public class Timetable extends SchoolAuditable {
     private ClassSection classSection;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "subject_id", nullable = false)
+    @JoinColumn(name = "teacher_subject_assignment_id", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Subject subject;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "teacher_id", nullable = false)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private Teacher teacher;
+    private TeacherSubjectAssignment teacherSubjectAssignment;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)

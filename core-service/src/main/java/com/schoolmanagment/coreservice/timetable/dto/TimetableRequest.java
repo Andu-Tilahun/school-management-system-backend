@@ -17,11 +17,8 @@ public class TimetableRequest {
     @NotNull(message = "Class section is required")
     private UUID classSectionId;
 
-    @NotNull(message = "Subject is required")
-    private UUID subjectId;
-
-    @NotNull(message = "Teacher is required")
-    private UUID teacherId;
+    @NotNull(message = "Teacher subject assignment is required")
+    private UUID teacherSubjectAssignmentId;
 
     @NotNull(message = "Day is required")
     private Day day;

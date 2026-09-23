@@ -20,6 +20,7 @@ public class TimetableDto {
     private UUID schoolId;
     private UUID classSectionId;
     private String classSectionName;
+    private UUID teacherSubjectAssignmentId;
     private UUID subjectId;
     private String subjectName;
     private String subjectCode;

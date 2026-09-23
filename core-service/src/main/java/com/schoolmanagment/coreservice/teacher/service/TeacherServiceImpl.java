@@ -3,6 +3,7 @@ package com.schoolmanagment.coreservice.teacher.service;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
+import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import com.schoolmanagment.coreservice.subject.service.SubjectService;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherDto;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherFilterRequest;
@@ -84,6 +85,25 @@ public class TeacherServiceImpl implements TeacherService {
         List<TeacherSubjectAssignment> assignments = assignmentRepository.findByTeacherIdAndActiveTrue(id);
         assignments.forEach(assignment -> assignment.setActive(false));
         assignmentRepository.saveAll(assignments);
+    }
+
+    @Override
+    public TeacherSubjectAssignment findActiveTeacherSubjectAssignmentById(UUID id) {
+        TeacherSubjectAssignment assignment = assignmentRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Teacher subject assignment not found with id: " + id));
+        if (!Boolean.TRUE.equals(assignment.getActive())) {
+            throw new BadRequestException("Teacher subject assignment is not active");
+        }
+        Teacher teacher = assignment.getTeacher();
+        if (teacher == null || !Boolean.TRUE.equals(teacher.getActive())) {
+            throw new BadRequestException("Teacher is not active");
+        }
+        Subject subject = assignment.getSubject();
+        if (subject == null || subject.getStatus() != SubjectStatus.ACTIVE) {
+            throw new BadRequestException("Subject is not active");
+        }
+        return assignment;
     }
 
     private Teacher findActiveTeacherById(UUID id) {

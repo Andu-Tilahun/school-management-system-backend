@@ -9,6 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -30,6 +31,7 @@ public class TeacherDto {
     private Integer kebele;
     private String houseNumber;
     private String mobileNumber;
+    private List<TeacherSubjectAssignmentDto> subjectAssignments;
     private LocalDateTime createdAt;
     private String createdByName;
     private String updatedByName;

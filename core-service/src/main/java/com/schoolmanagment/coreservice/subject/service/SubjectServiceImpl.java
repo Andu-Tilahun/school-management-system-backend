@@ -9,6 +9,7 @@ import com.schoolmanagment.coreservice.subject.dto.SubjectDto;
 import com.schoolmanagment.coreservice.subject.dto.SubjectFilterRequest;
 import com.schoolmanagment.coreservice.subject.dto.SubjectRequest;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
+import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import com.schoolmanagment.coreservice.subject.mapper.SubjectMapper;
 import com.schoolmanagment.coreservice.subject.repository.SubjectRepository;
 import com.schoolmanagment.coreservice.subject.specification.SubjectSpecification;
@@ -25,6 +26,16 @@ public class SubjectServiceImpl implements SubjectService{
     private final SubjectRepository subjectRepository;
     private final SubjectMapper subjectMapper;
     private final GradeService gradeService;
+
+    @Override
+    public Subject findActiveSubjectById(UUID id) {
+        Subject subject = subjectRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Subject not found: " + id));
+        if (subject.getStatus() != SubjectStatus.ACTIVE) {
+            throw new BadRequestException("Subject is not active: " + subject.getSubjectName());
+        }
+        return subject;
+    }
 
     @Override
     public SubjectDto createSubject(SubjectRequest request) {

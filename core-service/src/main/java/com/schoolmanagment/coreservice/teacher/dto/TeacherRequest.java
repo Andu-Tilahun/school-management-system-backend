@@ -1,13 +1,15 @@
 package com.schoolmanagment.coreservice.teacher.dto;
 
 import com.schoolmanagment.coreservice.student.enums.Gender;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
 import lombok.Data;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 
 @Data
 public class TeacherRequest {
@@ -36,4 +38,7 @@ public class TeacherRequest {
 
     @NotBlank(message = "Mobile number is required")
     private String mobileNumber;
+
+    @NotEmpty(message = "At least one subject is required")
+    private List<UUID> subjectIds;
 }

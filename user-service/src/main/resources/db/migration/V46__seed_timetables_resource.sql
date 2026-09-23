@@ -1,0 +1,1 @@
+INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('TIMETABLES', 'Timetables', 'UI', '/timetables', '2026-05-02 11:09:26.275589', 'c7d8e9f0-a1b2-4c3d-8e4f-5a6b7c8d9e01');

@@ -5,10 +5,14 @@ import com.schoolmanagment.commonsecurity.util.UserContext;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.PrePersist;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Optional;
 import java.util.UUID;
 
+@Setter
+@Getter
 @MappedSuperclass
 public abstract class SchoolAuditable extends Auditable {
 
@@ -25,11 +29,4 @@ public abstract class SchoolAuditable extends Auditable {
         }
     }
 
-    public UUID getSchoolId() {
-        return schoolId;
-    }
-
-    public void setSchoolId(UUID schoolId) {
-        this.schoolId = schoolId;
-    }
 }

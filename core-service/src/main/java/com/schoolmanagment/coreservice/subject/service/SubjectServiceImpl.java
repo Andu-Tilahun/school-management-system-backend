@@ -3,6 +3,8 @@ package com.schoolmanagment.coreservice.subject.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.coreservice.grade.entity.Grade;
+import com.schoolmanagment.coreservice.grade.service.GradeService;
 import com.schoolmanagment.coreservice.subject.dto.SubjectDto;
 import com.schoolmanagment.coreservice.subject.dto.SubjectFilterRequest;
 import com.schoolmanagment.coreservice.subject.dto.SubjectRequest;
@@ -22,13 +24,15 @@ import java.util.UUID;
 public class SubjectServiceImpl implements SubjectService{
     private final SubjectRepository subjectRepository;
     private final SubjectMapper subjectMapper;
+    private final GradeService gradeService;
 
     @Override
     public SubjectDto createSubject(SubjectRequest request) {
-        if (subjectRepository.existsBySubjectCode(request.getSubjectCode())){
-            throw new BadRequestException("Subject code already exists: " + request.getSubjectCode());
+        Grade grade = gradeService.findActiveGradeById(request.getGradeId());
+        if (subjectRepository.existsByGrade_IdAndSubjectCode(grade.getId(), request.getSubjectCode())) {
+            throw new BadRequestException("Subject code already exists for this grade: " + request.getSubjectCode());
         }
-        Subject subject = subjectMapper.toEntity(request);
+        Subject subject = subjectMapper.toEntity(request, grade);
         return subjectMapper.toDto(subjectRepository.save(subject));
     }
 
@@ -52,11 +56,14 @@ public class SubjectServiceImpl implements SubjectService{
 
         Subject subject =subjectRepository.findById(id)
                 .orElseThrow(()->new ResourceNotFoundException("Subject not found: " + id));
-        if (!subject.getSubjectCode().equals(request.getSubjectCode())
-                && subjectRepository.existsBySubjectCode(request.getSubjectCode())) {
-            throw new BadRequestException("Subject code already exists: " + request.getSubjectCode());
+        Grade grade = gradeService.findActiveGradeById(request.getGradeId());
+
+        if (subjectRepository.existsByGrade_IdAndSubjectCodeAndIdNot(
+                grade.getId(), request.getSubjectCode(), id)) {
+            throw new BadRequestException("Subject code already exists for this grade: " + request.getSubjectCode());
         }
-        subjectMapper.updateEntity(subject, request);
+
+        subjectMapper.updateEntity(subject, request, grade);
         return subjectMapper.toDto(subjectRepository.save(subject));
 
     }

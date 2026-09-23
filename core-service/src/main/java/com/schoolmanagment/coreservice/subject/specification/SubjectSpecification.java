@@ -35,6 +35,10 @@ public class SubjectSpecification implements Specification<Subject> {
             predicates.add(cb.equal(root.get("schoolId"), filterRequest.getSchoolId()));
         }
 
+        if (filterRequest.getGradeId() != null) {
+            predicates.add(cb.equal(root.get("grade").get("id"), filterRequest.getGradeId()));
+        }
+
         if (filterRequest.getStatus() != null) {
             predicates.add(cb.equal(root.get("status"), filterRequest.getStatus()));
         }

@@ -1,9 +1,12 @@
 package com.schoolmanagment.coreservice.subject.dto;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -15,4 +18,7 @@ public class SubjectRequest {
 
     @NotBlank(message = "Subject name is required")
     private String subjectName;
+
+    @NotNull(message = "Grade is required")
+    private UUID gradeId;
 }

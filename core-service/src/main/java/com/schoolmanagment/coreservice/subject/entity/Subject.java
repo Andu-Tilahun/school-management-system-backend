@@ -1,6 +1,7 @@
 package com.schoolmanagment.coreservice.subject.entity;
 
 import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
+import com.schoolmanagment.coreservice.grade.entity.Grade;
 import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,6 +28,12 @@ public class Subject extends SchoolAuditable {
 
     @Column(name = "subject_name", nullable = false)
     private String subjectName;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "grade_id", nullable = false)
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private Grade grade;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)

@@ -13,6 +13,7 @@ import java.util.UUID;
 public class SubjectFilterRequest {
 
     private UUID schoolId;
+    private UUID gradeId;
     private String searchText;
     private SubjectStatus status;
     private String sortBy;

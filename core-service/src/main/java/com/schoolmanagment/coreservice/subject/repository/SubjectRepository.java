@@ -14,5 +14,7 @@ public interface SubjectRepository extends JpaRepository<Subject, UUID>, JpaSpec
 
     List<Subject> findByStatus(SubjectStatus status);
 
-    boolean existsBySubjectCode(String subjectCode);
+    boolean existsByGrade_IdAndSubjectCode(UUID gradeId, String subjectCode);
+
+    boolean existsByGrade_IdAndSubjectCodeAndIdNot(UUID gradeId, String subjectCode, UUID id);
 }

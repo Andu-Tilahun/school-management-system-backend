@@ -17,6 +17,8 @@ public class SubjectDto {
     private String schoolName;
     private String subjectCode;
     private String subjectName;
+    private UUID gradeId;
+    private String gradeName;
     private SubjectStatus status;
     private String createdByName;
     private String updatedByName;

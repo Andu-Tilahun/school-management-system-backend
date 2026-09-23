@@ -16,6 +16,7 @@ public class ClassSectionMapper {
                 .schoolId(classSection.getSchoolId())
                 .gradeId(grade != null ? grade.getId() : null)
                 .gradeName(grade != null ? grade.getName() : null)
+                .name(classSection.getName())
                 .createdAt(classSection.getCreatedAt())
                 .createdByName(classSection.getCreatedByName())
                 .updatedByName(classSection.getUpdatedByName())
@@ -25,11 +26,13 @@ public class ClassSectionMapper {
     public ClassSection toEntity(ClassSectionRequest request, Grade grade) {
         return ClassSection.builder()
                 .grade(grade)
+                .name(request.getName())
                 .active(true)
                 .build();
     }
 
-    public void updateEntity(ClassSection classSection, Grade grade) {
+    public void updateEntity(ClassSection classSection, ClassSectionRequest request, Grade grade) {
         classSection.setGrade(grade);
+        classSection.setName(request.getName());
     }
 }

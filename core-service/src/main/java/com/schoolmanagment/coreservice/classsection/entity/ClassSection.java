@@ -31,6 +31,9 @@ public class ClassSection extends SchoolAuditable {
     @ToString.Exclude
     private Grade grade;
 
+    @Column(nullable = false, length = 100)
+    private String name;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;

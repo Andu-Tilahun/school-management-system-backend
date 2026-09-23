@@ -19,6 +19,7 @@ import java.util.Set;
 public class ClassSectionSpecification implements Specification<ClassSection> {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of(
+            "name",
             "createdAt",
             "id"
     );
@@ -43,7 +44,10 @@ public class ClassSectionSpecification implements Specification<ClassSection> {
         if (filterRequest.getSearchText() != null && !filterRequest.getSearchText().isBlank()) {
             String likeValue = "%" + filterRequest.getSearchText().toLowerCase(Locale.ROOT) + "%";
             Join<Object, Object> grade = root.join("grade");
-            predicates.add(cb.like(cb.lower(grade.get("name")), likeValue));
+            predicates.add(cb.or(
+                    cb.like(cb.lower(root.get("name")), likeValue),
+                    cb.like(cb.lower(grade.get("name")), likeValue)
+            ));
         }
 
         applySorting(root, query, cb);

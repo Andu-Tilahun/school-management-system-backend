@@ -54,7 +54,7 @@ public class ClassSectionServiceImpl implements ClassSectionService {
     @Transactional
     public ClassSectionDto createClassSection(ClassSectionRequest request) {
         Grade grade = gradeService.findActiveGradeById(request.getGradeId());
-        validateSectionNotTaken(grade.getId(), null);
+        validateSectionNotTaken(grade.getId(), request.getName(), null);
         return classSectionMapper.toDto(classSectionRepository.save(classSectionMapper.toEntity(request, grade)));
     }
 
@@ -63,8 +63,8 @@ public class ClassSectionServiceImpl implements ClassSectionService {
     public ClassSectionDto updateClassSection(UUID id, ClassSectionRequest request) {
         ClassSection classSection = findActiveClassSectionById(id);
         Grade grade = gradeService.findActiveGradeById(request.getGradeId());
-        validateSectionNotTaken(grade.getId(), id);
-        classSectionMapper.updateEntity(classSection, grade);
+        validateSectionNotTaken(grade.getId(), request.getName(), id);
+        classSectionMapper.updateEntity(classSection, request, grade);
         return classSectionMapper.toDto(classSectionRepository.save(classSection));
     }
 
@@ -82,10 +82,10 @@ public class ClassSectionServiceImpl implements ClassSectionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Class section not found with id: " + id));
     }
 
-    private void validateSectionNotTaken(UUID gradeId, UUID excludeId) {
+    private void validateSectionNotTaken(UUID gradeId, String name, UUID excludeId) {
         boolean taken = excludeId == null
-                ? classSectionRepository.existsByGrade_Id(gradeId)
-                : classSectionRepository.existsByGrade_IdAndIdNot(gradeId, excludeId);
+                ? classSectionRepository.existsByGrade_IdAndNameIgnoreCase(gradeId, name)
+                : classSectionRepository.existsByGrade_IdAndNameIgnoreCaseAndIdNot(gradeId, name, excludeId);
         if (taken) {
             throw new BadRequestException("Class section already exists for this grade");
         }

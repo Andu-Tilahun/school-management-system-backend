@@ -20,6 +20,7 @@ public class ClassSectionDto {
     private UUID schoolId;
     private UUID gradeId;
     private String gradeName;
+    private String name;
     private LocalDateTime createdAt;
     private String createdByName;
     private String updatedByName;
@@ -31,6 +32,7 @@ public class ClassSectionDto {
                 .schoolId(classSection.getSchoolId())
                 .gradeId(grade != null ? grade.getId() : null)
                 .gradeName(grade != null ? grade.getName() : null)
+                .name(classSection.getName())
                 .createdAt(classSection.getCreatedAt())
                 .createdByName(classSection.getCreatedByName())
                 .updatedByName(classSection.getUpdatedByName())

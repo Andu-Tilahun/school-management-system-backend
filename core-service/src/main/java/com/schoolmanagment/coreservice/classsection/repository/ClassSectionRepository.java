@@ -18,9 +18,9 @@ public interface ClassSectionRepository extends JpaRepository<ClassSection, UUID
 
     Optional<ClassSection> findByIdAndActiveTrue(UUID id);
 
-    boolean existsByGrade_Id(UUID gradeId);
+    boolean existsByGrade_IdAndNameIgnoreCase(UUID gradeId, String name);
 
-    boolean existsByGrade_IdAndIdNot(UUID gradeId, UUID id);
+    boolean existsByGrade_IdAndNameIgnoreCaseAndIdNot(UUID gradeId, String name, UUID id);
 
     List<ClassSection> findByGrade_IdAndActiveTrue(UUID gradeId);
 }

@@ -2,6 +2,7 @@ package com.schoolmanagment.coreservice.timetable.controller;
 
 import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.commonsecurity.checker.RequiresPermission;
+import com.schoolmanagment.coreservice.classsection.dto.ClassSectionDto;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableDto;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableFilterRequest;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableRequest;
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -43,6 +45,24 @@ public class TimetableController {
         Page<TimetableDto> timetables = timetableService.filterTimetables(request);
         return ResponseEntity.ok(
                 ApiResponse.success(timetables, "Timetables retrieved successfully")
+        );
+    }
+
+    @GetMapping("/sections")
+    @RequiresPermission(resource = "TIMETABLES", scope = "READ")
+    public ResponseEntity<ApiResponse<List<ClassSectionDto>>> getSectionsForCurrentTeacher() {
+        List<ClassSectionDto> sections = timetableService.getSectionsForCurrentTeacher();
+        return ResponseEntity.ok(
+                ApiResponse.success(sections, "Class sections retrieved successfully")
+        );
+    }
+
+    @GetMapping("/teacher/{teacherId}/sections")
+    @RequiresPermission(resource = "TIMETABLES", scope = "READ")
+    public ResponseEntity<ApiResponse<List<ClassSectionDto>>> getSectionsByTeacher(@PathVariable UUID teacherId) {
+        List<ClassSectionDto> sections = timetableService.getSectionsByTeacher(teacherId);
+        return ResponseEntity.ok(
+                ApiResponse.success(sections, "Class sections retrieved successfully")
         );
     }
 

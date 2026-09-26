@@ -1,5 +1,6 @@
 package com.schoolmanagment.coreservice.timetable.repository;
 
+import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.timetable.entity.Timetable;
 import com.schoolmanagment.coreservice.timetable.enums.Day;
 import com.schoolmanagment.coreservice.timetable.enums.Period;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -51,4 +53,27 @@ public interface TimetableRepository extends JpaRepository<Timetable, UUID>, Jpa
             @Param("day") Day day,
             @Param("period") Period period,
             @Param("excludeId") UUID excludeId);
+
+    @Query("""
+            SELECT DISTINCT t.classSection.id
+            FROM Timetable t
+            WHERE t.teacherSubjectAssignment.teacher.id = :teacherId
+              AND t.active = true
+              AND t.classSection.active = true
+              AND t.teacherSubjectAssignment.active = true
+            """)
+    List<UUID> findActiveClassSectionIdsByTeacherId(@Param("teacherId") UUID teacherId);
+
+    @Query("""
+            SELECT DISTINCT section
+            FROM Timetable t
+            JOIN t.classSection section
+            JOIN FETCH section.grade
+            WHERE t.teacherSubjectAssignment.teacher.id = :teacherId
+              AND t.active = true
+              AND section.active = true
+              AND t.teacherSubjectAssignment.active = true
+            ORDER BY section.name ASC
+            """)
+    List<ClassSection> findActiveClassSectionsByTeacherId(@Param("teacherId") UUID teacherId);
 }

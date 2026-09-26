@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -41,6 +42,34 @@ public class StudentController {
             @Valid @RequestBody StudentFilterRequest request
     ) {
         Page<StudentDto> students = studentService.filterStudents(request);
+        return ResponseEntity.ok(
+                ApiResponse.success(students, "Students retrieved successfully")
+        );
+    }
+
+    @GetMapping("/by-timetable")
+    @RequiresPermission(resource = "STUDENTS", scope = "READ")
+    public ResponseEntity<ApiResponse<List<StudentDto>>> getStudentsByTimetable() {
+        List<StudentDto> students = studentService.getStudentsByTimetable();
+        return ResponseEntity.ok(
+                ApiResponse.success(students, "Students retrieved successfully")
+        );
+    }
+
+    @GetMapping("/by-homeroom")
+    @RequiresPermission(resource = "STUDENTS", scope = "READ")
+    public ResponseEntity<ApiResponse<List<StudentDto>>> getStudentsByHomeroom() {
+        List<StudentDto> students = studentService.getStudentsByHomeroom();
+        return ResponseEntity.ok(
+                ApiResponse.success(students, "Students retrieved successfully")
+        );
+    }
+
+    @GetMapping("/class-section/{classSectionId}")
+    @RequiresPermission(resource = "STUDENTS", scope = "READ")
+    public ResponseEntity<ApiResponse<List<StudentDto>>> getStudentsByClassSection(
+            @PathVariable UUID classSectionId) {
+        List<StudentDto> students = studentService.getStudentsByClassSection(classSectionId);
         return ResponseEntity.ok(
                 ApiResponse.success(students, "Students retrieved successfully")
         );

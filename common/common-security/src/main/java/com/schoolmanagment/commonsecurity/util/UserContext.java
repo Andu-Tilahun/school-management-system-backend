@@ -82,8 +82,17 @@ public class UserContext {
     public boolean hasSchoolAdminPolicy() {
         return hasPolicy(PolicyNames.SCHOOL_ADMIN_POLICY);
     }
+
     public boolean hasTenantManager() {
         return hasPolicy(PolicyNames.TENANT_MANAGER_POLICY);
+    }
+
+    public boolean hasEmergencyContactPolicy() {
+        return hasPolicy(PolicyNames.EMERGENCY_CONTACT_POLICY);
+    }
+
+    public boolean hasStudentPolicy() {
+        return hasPolicy(PolicyNames.STUDENT_POLICY);
     }
 
     public Optional<UUID> getCurrentExternalId() {

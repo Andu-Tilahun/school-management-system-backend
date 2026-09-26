@@ -3,14 +3,17 @@ package com.schoolmanagment.coreservice.student.dto;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.grade.entity.Grade;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
+import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.Hibernate;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -26,6 +29,7 @@ public class EnrollmentDto {
     private UUID gradeId;
     private String gradeName;
     private EnrollmentStatus status;
+    private List<EnrollmentTermDto> enrollmentTerms;
     private LocalDateTime createdAt;
 
     public static EnrollmentDto fromEntity(Enrollment enrollment) {
@@ -41,7 +45,19 @@ public class EnrollmentDto {
                 .gradeId(grade != null ? grade.getId() : null)
                 .gradeName(grade != null ? grade.getName() : null)
                 .status(enrollment.getStatus())
+                .enrollmentTerms(toEnrollmentTermDtos(enrollment))
                 .createdAt(enrollment.getCreatedAt())
                 .build();
+    }
+
+    private static List<EnrollmentTermDto> toEnrollmentTermDtos(Enrollment enrollment) {
+        List<EnrollmentTerm> enrollmentTerms = enrollment.getEnrollmentTerms();
+        if (enrollmentTerms == null || !Hibernate.isInitialized(enrollmentTerms)) {
+            return null;
+        }
+        return enrollmentTerms.stream()
+                .filter(enrollmentTerm -> Boolean.TRUE.equals(enrollmentTerm.getActive()))
+                .map(EnrollmentTermDto::fromEntity)
+                .toList();
     }
 }

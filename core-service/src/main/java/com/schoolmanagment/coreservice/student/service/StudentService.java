@@ -6,6 +6,7 @@ import com.schoolmanagment.coreservice.student.dto.StudentRequest;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface StudentService {
@@ -23,4 +24,10 @@ public interface StudentService {
     StudentDto updateStudent(UUID id, StudentRequest request);
 
     void deleteStudent(UUID id);
+
+    List<StudentDto> getStudentsByTimetable();
+
+    List<StudentDto> getStudentsByHomeroom();
+
+    List<StudentDto> getStudentsByClassSection(UUID classSectionId);
 }

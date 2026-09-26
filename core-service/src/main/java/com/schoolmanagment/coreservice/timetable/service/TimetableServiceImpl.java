@@ -2,7 +2,10 @@ package com.schoolmanagment.coreservice.timetable.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.commonsecurity.util.UserContext;
+import com.schoolmanagment.coreservice.classsection.dto.ClassSectionDto;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
+import com.schoolmanagment.coreservice.classsection.mapper.ClassSectionMapper;
 import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
@@ -24,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -32,6 +36,7 @@ public class TimetableServiceImpl implements TimetableService {
 
     private final TimetableRepository timetableRepository;
     private final TimetableMapper timetableMapper;
+    private final ClassSectionMapper classSectionMapper;
     private final ClassSectionService classSectionService;
     private final TeacherService teacherService;
 
@@ -98,6 +103,23 @@ public class TimetableServiceImpl implements TimetableService {
             throw new BadRequestException(
                     "This teacher or class section was just booked for this day and period");
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClassSectionDto> getSectionsByTeacher(UUID teacherId) {
+        teacherService.getTeacherById(teacherId);
+        return timetableRepository.findActiveClassSectionsByTeacherId(teacherId).stream()
+                .map(classSectionMapper::toDto)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClassSectionDto> getSectionsForCurrentTeacher() {
+        UUID teacherId = UserContext.current().getCurrentExternalId()
+                .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
+        return getSectionsByTeacher(teacherId);
     }
 
     @Override

@@ -15,6 +15,10 @@ public class StudentFilterRequest {
 
     private UUID schoolId;
 
+    private UUID studentId;
+
+    private UUID classSectionId;
+
     private String searchText;
 
     private String sortBy;

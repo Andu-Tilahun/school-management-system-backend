@@ -6,6 +6,8 @@ import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -42,4 +44,11 @@ public class Enrollment extends SchoolAuditable {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @OneToMany(mappedBy = "enrollment", fetch = FetchType.LAZY)
+    @OrderBy("registeredAt ASC")
+    @Builder.Default
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    private List<EnrollmentTerm> enrollmentTerms = new ArrayList<>();
 }

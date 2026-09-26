@@ -52,6 +52,7 @@ INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('971b52a8-da22-4
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('90399595-22ad-4e5c-bfa1-f6fb215c2a4e', '9cd6da93-36f0-49b7-a923-857c06f78b58');
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('90399595-22ad-4e5c-bfa1-f6fb215c2a4e', '09cb27d2-c7a8-4bd3-9d17-aa5b93786333');
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('90399595-22ad-4e5c-bfa1-f6fb215c2a4e', 'cd29816f-ec74-4720-8833-18ce2e169102');
+INSERT INTO permission_policies (permission_id, policy_id) VALUES ('19eece24-30bf-42a4-98c0-f70d9425a77b', '9cd6da93-36f0-49b7-a923-857c06f78b58');
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('19eece24-30bf-42a4-98c0-f70d9425a77b', 'cd29816f-ec74-4720-8833-18ce2e169102');
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('0d050ab8-93b6-4674-8b84-0465506383b6', 'cd29816f-ec74-4720-8833-18ce2e169102');
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('bfa0b6ff-29dc-4a5c-9e29-1a08936538a7', 'cd29816f-ec74-4720-8833-18ce2e169102');

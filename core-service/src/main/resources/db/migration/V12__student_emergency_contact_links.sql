@@ -26,118 +26,139 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_student_emergency_contacts_one_primary
     ON tbl_student_emergency_contacts (student_id)
     WHERE is_primary IS TRUE AND active IS TRUE;
 
-INSERT INTO tbl_student_emergency_contacts (
-    id,
-    student_id,
-    emergency_contact_id,
-    relationship,
-    is_primary,
-    active,
-    created_at,
-    updated_at,
-    created_by,
-    updated_by,
-    created_by_name,
-    updated_by_name,
-    school_id
-)
-SELECT
-    gen_random_uuid(),
-    student_id,
-    id,
-    'OTHER',
-    FALSE,
-    active,
-    created_at,
-    updated_at,
-    created_by,
-    updated_by,
-    created_by_name,
-    updated_by_name,
-    school_id
-FROM tbl_emergency_contacts
-WHERE student_id IS NOT NULL
-ON CONFLICT (student_id, emergency_contact_id) DO NOTHING;
+-- Databases created from the current V11 already store the student link on
+-- tbl_student_emergency_contacts. The statements below only apply when an older
+-- tbl_emergency_contacts still has student_id. An unqualified student_id in
+-- INSERT ... SELECT is resolved against the insert target and PostgreSQL rejects it.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'tbl_emergency_contacts'
+          AND column_name = 'student_id'
+    ) THEN
+        INSERT INTO tbl_student_emergency_contacts (
+            id,
+            student_id,
+            emergency_contact_id,
+            relationship,
+            is_primary,
+            active,
+            created_at,
+            updated_at,
+            created_by,
+            updated_by,
+            created_by_name,
+            updated_by_name,
+            school_id
+        )
+        SELECT
+            gen_random_uuid(),
+            ec.student_id,
+            ec.id,
+            'OTHER',
+            FALSE,
+            ec.active,
+            ec.created_at,
+            ec.updated_at,
+            ec.created_by,
+            ec.updated_by,
+            ec.created_by_name,
+            ec.updated_by_name,
+            ec.school_id
+        FROM tbl_emergency_contacts ec
+        WHERE ec.student_id IS NOT NULL
+        ON CONFLICT (student_id, emergency_contact_id) DO NOTHING;
 
-UPDATE tbl_student_emergency_contacts sec
-SET is_primary = TRUE
-WHERE sec.id IN (
-    SELECT DISTINCT ON (student_id) id
-    FROM tbl_student_emergency_contacts
-    WHERE active IS TRUE
-    ORDER BY student_id, created_at NULLS LAST, id
-);
+        UPDATE tbl_student_emergency_contacts sec
+        SET is_primary = TRUE
+        WHERE sec.id IN (
+            SELECT DISTINCT ON (student_id) id
+            FROM tbl_student_emergency_contacts
+            WHERE active IS TRUE
+            ORDER BY student_id, created_at NULLS LAST, id
+        );
 
-UPDATE tbl_emergency_contacts
-SET email = LOWER(TRIM(email))
-WHERE email IS NOT NULL AND TRIM(email) <> '';
+        UPDATE tbl_emergency_contacts
+        SET email = LOWER(TRIM(email))
+        WHERE email IS NOT NULL AND TRIM(email) <> '';
 
-UPDATE tbl_emergency_contacts
-SET email = 'migrated-' || id::text || '@unknown.local'
-WHERE email IS NULL OR TRIM(email) = '';
+        UPDATE tbl_emergency_contacts
+        SET email = 'migrated-' || id::text || '@unknown.local'
+        WHERE email IS NULL OR TRIM(email) = '';
 
-WITH ranked AS (
-    SELECT
-        id,
-        school_id,
-        email,
-        ROW_NUMBER() OVER (PARTITION BY school_id, email ORDER BY created_at NULLS LAST, id) AS rn
-    FROM tbl_emergency_contacts
-),
-dupes AS (
-    SELECT
-        r.id AS dupe_id,
-        k.id AS keeper_id
-    FROM ranked r
-    JOIN ranked k
-      ON k.school_id = r.school_id
-     AND k.email = r.email
-     AND k.rn = 1
-    WHERE r.rn > 1
-)
-UPDATE tbl_student_emergency_contacts sec
-SET emergency_contact_id = d.keeper_id
-FROM dupes d
-WHERE sec.emergency_contact_id = d.dupe_id
-  AND NOT EXISTS (
-      SELECT 1
-      FROM tbl_student_emergency_contacts existing
-      WHERE existing.student_id = sec.student_id
-        AND existing.emergency_contact_id = d.keeper_id
-  );
+        WITH ranked AS (
+            SELECT
+                id,
+                school_id,
+                email,
+                ROW_NUMBER() OVER (PARTITION BY school_id, email ORDER BY created_at NULLS LAST, id) AS rn
+            FROM tbl_emergency_contacts
+        ),
+        dupes AS (
+            SELECT
+                r.id AS dupe_id,
+                k.id AS keeper_id
+            FROM ranked r
+            JOIN ranked k
+              ON k.school_id = r.school_id
+             AND k.email = r.email
+             AND k.rn = 1
+            WHERE r.rn > 1
+        )
+        UPDATE tbl_student_emergency_contacts sec
+        SET emergency_contact_id = d.keeper_id
+        FROM dupes d
+        WHERE sec.emergency_contact_id = d.dupe_id
+          AND NOT EXISTS (
+              SELECT 1
+              FROM tbl_student_emergency_contacts existing
+              WHERE existing.student_id = sec.student_id
+                AND existing.emergency_contact_id = d.keeper_id
+          );
 
-WITH ranked AS (
-    SELECT
-        id,
-        school_id,
-        email,
-        ROW_NUMBER() OVER (PARTITION BY school_id, email ORDER BY created_at NULLS LAST, id) AS rn
-    FROM tbl_emergency_contacts
-),
-dupes AS (
-    SELECT r.id AS dupe_id
-    FROM ranked r
-    WHERE r.rn > 1
-)
-DELETE FROM tbl_student_emergency_contacts sec
-USING dupes d
-WHERE sec.emergency_contact_id = d.dupe_id;
+        WITH ranked AS (
+            SELECT
+                id,
+                school_id,
+                email,
+                ROW_NUMBER() OVER (PARTITION BY school_id, email ORDER BY created_at NULLS LAST, id) AS rn
+            FROM tbl_emergency_contacts
+        ),
+        dupes AS (
+            SELECT r.id AS dupe_id
+            FROM ranked r
+            WHERE r.rn > 1
+        )
+        DELETE FROM tbl_student_emergency_contacts sec
+        USING dupes d
+        WHERE sec.emergency_contact_id = d.dupe_id;
 
-WITH ranked AS (
-    SELECT
-        id,
-        ROW_NUMBER() OVER (PARTITION BY school_id, email ORDER BY created_at NULLS LAST, id) AS rn
-    FROM tbl_emergency_contacts
-)
-DELETE FROM tbl_emergency_contacts
-WHERE id IN (SELECT id FROM ranked WHERE rn > 1);
+        WITH ranked AS (
+            SELECT
+                id,
+                ROW_NUMBER() OVER (PARTITION BY school_id, email ORDER BY created_at NULLS LAST, id) AS rn
+            FROM tbl_emergency_contacts
+        )
+        DELETE FROM tbl_emergency_contacts
+        WHERE id IN (SELECT id FROM ranked WHERE rn > 1);
 
-ALTER TABLE tbl_emergency_contacts DROP COLUMN IF EXISTS student_id;
+        ALTER TABLE tbl_emergency_contacts DROP COLUMN student_id;
 
-DROP INDEX IF EXISTS idx_emergency_contacts_student_id;
+        DROP INDEX IF EXISTS idx_emergency_contacts_student_id;
 
-ALTER TABLE tbl_emergency_contacts
-    ALTER COLUMN email SET NOT NULL;
+        ALTER TABLE tbl_emergency_contacts
+            ALTER COLUMN email SET NOT NULL;
 
-ALTER TABLE tbl_emergency_contacts
-    ADD CONSTRAINT uk_emergency_contacts_school_email UNIQUE (school_id, email);
+        IF NOT EXISTS (
+            SELECT 1
+            FROM pg_constraint
+            WHERE conname = 'uk_emergency_contacts_school_email'
+        ) THEN
+            ALTER TABLE tbl_emergency_contacts
+                ADD CONSTRAINT uk_emergency_contacts_school_email UNIQUE (school_id, email);
+        END IF;
+    END IF;
+END $$;

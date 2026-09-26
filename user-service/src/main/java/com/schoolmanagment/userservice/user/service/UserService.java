@@ -62,6 +62,9 @@ public class UserService {
 
         Set<Group> groups = new HashSet<>(resolveGroups(request.getGroupIds()));
         Set<Policy> policies = resolvePolicies(request.getPolicyIds());
+        if (policies.isEmpty()) {
+            throw new BadRequestException("A policy is required when creating a user");
+        }
         UUID externalId = applyHierarchyAndGroups(groups, policies, request.getExternalId(), null);
 
         User user = User.builder()
@@ -297,6 +300,10 @@ public class UserService {
                         || (!selfUpdate && assignedNames.contains(PolicyNames.SCHOOL_ADMIN_POLICY))) {
                     throw new BadRequestException("School Admin cannot assign admin policies");
                 }
+                if (!selfUpdate && !isSchoolUserPolicy(assignedNames)) {
+                    throw new BadRequestException(
+                            "Assign a Teacher, Student, or Emergency Contact policy");
+                }
                 requestedExternalId = ctx.getCurrentExternalId()
                         .orElseThrow(() -> new BadRequestException(
                                 "School Admin users must have an externalId"));
@@ -309,6 +316,16 @@ public class UserService {
 
         addMatchingPolicyGroups(groups, policies);
         return requestedExternalId;
+    }
+
+    private static boolean isSchoolUserPolicy(Set<String> assignedNames) {
+        if (assignedNames == null || assignedNames.isEmpty()) {
+            return false;
+        }
+        return assignedNames.stream().allMatch(name ->
+                PolicyNames.TEACHER_POLICY.equals(name)
+                        || PolicyNames.STUDENT_POLICY.equals(name)
+                        || PolicyNames.EMERGENCY_CONTACT_POLICY.equals(name));
     }
 
     private Set<String> collectAssignedPolicyNames(Set<Group> groups, Set<Policy> policies) {

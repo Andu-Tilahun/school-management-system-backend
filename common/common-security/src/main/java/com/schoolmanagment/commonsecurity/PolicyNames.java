@@ -7,5 +7,5 @@ public final class PolicyNames {
     public static final String SCHOOL_ADMIN_POLICY = "SCHOOL_ADMIN_POLICY";
     public static final String EMERGENCY_CONTACT_POLICY = "EMERGENCY_CONTACT_POLICY";
     public static final String STUDENT_POLICY = "STUDENT_POLICY";
-
+    public static final String TEACHER_POLICY = "TEACHER_POLICY";
 }

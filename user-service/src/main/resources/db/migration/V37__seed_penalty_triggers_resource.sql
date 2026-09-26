@@ -1,1 +1,2 @@
-INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('PENALTY', 'Penalty Triggers', 'UI', '/penalty', '2026-05-02 11:09:26.275589', 'f3a4b5c6-d7e8-4f90-a123-23456789f012');
+INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('PENALTY', 'Penalty Rules', 'UI', '/penalty', '2026-05-02 11:09:26.275589', 'f3a4b5c6-d7e8-4f90-a123-23456789f012');
+INSERT INTO resources (name, description, type, uri_pattern, created_at, id) VALUES ('PENALTIES', 'Penalties', 'UI', '/penalties', '2026-05-02 11:09:26.275589', 'c8d9e0f1-a2b3-4456-b789-0abcdef12345');

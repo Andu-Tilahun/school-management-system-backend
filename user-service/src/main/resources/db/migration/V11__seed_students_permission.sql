@@ -8,5 +8,12 @@ INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('e3f4a5b6-c7d8-4
 INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('e3f4a5b6-c7d8-4e9f-a0b1-c2d3e4f5a6b7', 'b37caad4-8ae8-4aff-aeff-6b93f8c2560c');
 INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('e3f4a5b6-c7d8-4e9f-a0b1-c2d3e4f5a6b7', 'e1da5d22-aa98-4849-b178-64d945475730');
 
-INSERT INTO permission_policies (permission_id, policy_id) VALUES ('e3f4a5b6-c7d8-4e9f-a0b1-c2d3e4f5a6b7', '9cd6da93-36f0-49b7-a923-857c06f78b58');
 INSERT INTO permission_policies (permission_id, policy_id) VALUES ('e3f4a5b6-c7d8-4e9f-a0b1-c2d3e4f5a6b7', 'cd29816f-ec74-4720-8833-18ce2e169102');
+
+INSERT INTO permissions (name, description, created_at, id, resource_id) VALUES ('STUDENTS_VIEW', 'View: Students', '2026-05-02 11:09:26.275589', 'f0e1d2c3-b4a5-4968-8709-1a2b3c4d5e6f', 'd8e7f6a5-b4c3-4d2e-9f1a-0b2c3d4e5f6a');
+INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('f0e1d2c3-b4a5-4968-8709-1a2b3c4d5e6f', '8fe9c10f-5f7a-467d-b479-a44dde150cc7');
+INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('f0e1d2c3-b4a5-4968-8709-1a2b3c4d5e6f', '84543f6e-8a3a-44bc-b390-02049ba0035b');
+INSERT INTO permission_scopes (permission_id, scope_id) VALUES ('f0e1d2c3-b4a5-4968-8709-1a2b3c4d5e6f', 'e1da5d22-aa98-4849-b178-64d945475730');
+INSERT INTO permission_policies (permission_id, policy_id) VALUES ('f0e1d2c3-b4a5-4968-8709-1a2b3c4d5e6f', 'aa0e1111-2222-4333-8444-555566667701');
+INSERT INTO permission_policies (permission_id, policy_id) VALUES ('f0e1d2c3-b4a5-4968-8709-1a2b3c4d5e6f', 'aa0e1111-2222-4333-8444-555566667702');
+INSERT INTO permission_policies (permission_id, policy_id) VALUES ('f0e1d2c3-b4a5-4968-8709-1a2b3c4d5e6f', 'aa0e1111-2222-4333-8444-555566667703');

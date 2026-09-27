@@ -42,4 +42,21 @@ public interface EnrollmentTermRepository extends JpaRepository<EnrollmentTerm, 
 
     List<EnrollmentTerm> findAllByStatus(EnrollmentTermStatus status);
 
+    @Query("""
+            SELECT et FROM EnrollmentTerm et
+            JOIN FETCH et.enrollment e
+            JOIN FETCH e.student s
+            JOIN FETCH et.term t
+            JOIN FETCH t.academicYear
+            WHERE et.active = true
+              AND (:enrollmentId IS NULL OR e.id = :enrollmentId)
+              AND (:studentId IS NULL OR s.id = :studentId)
+              AND (:schoolId IS NULL OR et.schoolId = :schoolId)
+            ORDER BY t.startDate ASC, t.semester ASC
+            """)
+    List<EnrollmentTerm> findActiveForMarkLookup(
+            @Param("enrollmentId") UUID enrollmentId,
+            @Param("studentId") UUID studentId,
+            @Param("schoolId") UUID schoolId);
+
 }

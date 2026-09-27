@@ -2,18 +2,27 @@ package com.schoolmanagment.coreservice.exam.controller;
 
 import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.commonsecurity.checker.RequiresPermission;
+import com.schoolmanagment.coreservice.exam.dto.GradeStudentMarkRequest;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkDto;
+import com.schoolmanagment.coreservice.exam.dto.StudentMarkFilterRequest;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkRequest;
 import com.schoolmanagment.coreservice.exam.service.StudentMarkService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping(value = "/api/core/student-marks", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -21,6 +30,38 @@ import org.springframework.web.bind.annotation.RestController;
 public class StudentMarkController {
 
     private final StudentMarkService studentMarkService;
+
+    @GetMapping
+    @RequiresPermission(resource = "STUDENT_MARKS", scope = "READ")
+    public ResponseEntity<ApiResponse<Page<StudentMarkDto>>> list(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        Page<StudentMarkDto> marks = studentMarkService.list(page, size);
+        return ResponseEntity.ok(
+                ApiResponse.success(marks, "Student marks retrieved successfully")
+        );
+    }
+
+    @PostMapping("/filter")
+    @RequiresPermission(resource = "STUDENT_MARKS", scope = "READ")
+    public ResponseEntity<ApiResponse<Page<StudentMarkDto>>> filter(
+            @Valid @RequestBody StudentMarkFilterRequest request
+    ) {
+        Page<StudentMarkDto> marks = studentMarkService.filter(request);
+        return ResponseEntity.ok(
+                ApiResponse.success(marks, "Student marks retrieved successfully")
+        );
+    }
+
+    @GetMapping("/{id}")
+    @RequiresPermission(resource = "STUDENT_MARKS", scope = "READ")
+    public ResponseEntity<ApiResponse<StudentMarkDto>> getById(@PathVariable UUID id) {
+        StudentMarkDto studentMark = studentMarkService.getById(id);
+        return ResponseEntity.ok(
+                ApiResponse.success(studentMark, "Student mark retrieved successfully")
+        );
+    }
 
     @PostMapping
     @RequiresPermission(resource = "STUDENT_MARKS", scope = "CREATE")
@@ -30,6 +71,27 @@ public class StudentMarkController {
         StudentMarkDto studentMark = studentMarkService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(
                 ApiResponse.success(studentMark, "Student mark registered successfully")
+        );
+    }
+
+    @PostMapping("/{id}/grade")
+    @RequiresPermission(resource = "STUDENT_MARKS", scope = "UPDATE")
+    public ResponseEntity<ApiResponse<StudentMarkDto>> grade(
+            @PathVariable UUID id,
+            @Valid @RequestBody GradeStudentMarkRequest request
+    ) {
+        StudentMarkDto studentMark = studentMarkService.grade(id, request);
+        return ResponseEntity.ok(
+                ApiResponse.success(studentMark, "Student mark graded successfully")
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    @RequiresPermission(resource = "STUDENT_MARKS", scope = "DELETE")
+    public ResponseEntity<ApiResponse<Void>> delete(@PathVariable UUID id) {
+        studentMarkService.delete(id);
+        return ResponseEntity.ok(
+                ApiResponse.success("Student mark deleted successfully")
         );
     }
 }

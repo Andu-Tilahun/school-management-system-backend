@@ -1,7 +1,11 @@
 package com.schoolmanagment.coreservice.exam.service;
 
+import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.commonsecurity.util.UserContext;
+import com.schoolmanagment.coreservice.exam.dto.GradeStudentMarkRequest;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkDto;
+import com.schoolmanagment.coreservice.exam.dto.StudentMarkFilterRequest;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkRequest;
 import com.schoolmanagment.coreservice.exam.entity.StudentMark;
 import com.schoolmanagment.coreservice.exam.entity.SubjectTotal;
@@ -10,12 +14,16 @@ import com.schoolmanagment.coreservice.exam.enums.PassFailStatus;
 import com.schoolmanagment.coreservice.exam.mapper.StudentMarkMapper;
 import com.schoolmanagment.coreservice.exam.repository.StudentMarkRepository;
 import com.schoolmanagment.coreservice.exam.repository.SubjectTotalRepository;
+import com.schoolmanagment.coreservice.exam.specification.StudentMarkSpecification;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentTermRepository;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.repository.SubjectRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +39,35 @@ public class StudentMarkServiceImpl implements StudentMarkService {
     private final SubjectRepository subjectRepository;
     private final EnrollmentTermRepository enrollmentTermRepository;
     private final StudentMarkMapper studentMarkMapper;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<StudentMarkDto> list(int page, int size) {
+        StudentMarkFilterRequest request = StudentMarkFilterRequest.builder()
+                .page(page)
+                .size(size)
+                .sortBy("id")
+                .sortDirection("DESC")
+                .build();
+        return filter(request);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<StudentMarkDto> filter(StudentMarkFilterRequest request) {
+        StudentMarkFilterRequest effective = request != null ? request : new StudentMarkFilterRequest();
+        int page = Math.max(effective.getPage(), 0);
+        int size = effective.getSize() > 0 ? effective.getSize() : 10;
+        Pageable pageable = PageRequest.of(page, size);
+        return studentMarkRepository.findAll(new StudentMarkSpecification(effective), pageable)
+                .map(studentMarkMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public StudentMarkDto getById(UUID id) {
+        return studentMarkMapper.toDto(findActiveById(id));
+    }
 
     @Override
     @Transactional
@@ -49,7 +86,7 @@ public class StudentMarkServiceImpl implements StudentMarkService {
                 .orElseThrow(() -> new ResourceNotFoundException("Subject not found"));
 
         studentMarkRepository
-                .findByEnrollmentTermIdAndSubjectIdAndType(
+                .findByEnrollmentTermIdAndSubjectIdAndTypeAndActiveTrue(
                         enrollmentTerm.getId(), subject.getId(), request.getType())
                 .ifPresent(existing -> {
                     throw new IllegalStateException(
@@ -84,6 +121,47 @@ public class StudentMarkServiceImpl implements StudentMarkService {
         return studentMarkMapper.toDto(saved);
     }
 
+    @Override
+    @Transactional
+    public StudentMarkDto grade(UUID id, GradeStudentMarkRequest request) {
+        StudentMark mark = findActiveById(id);
+        if (mark.getStatus() == MarkStatus.WITHDRAWN) {
+            throw new BadRequestException("Cannot grade a withdrawn mark");
+        }
+        mark.setStudMark(request.getStudMark());
+        mark.setStatus(MarkStatus.GRADED);
+        StudentMark saved = studentMarkRepository.save(mark);
+        recalculate(saved.getEnrollmentTerm().getId(), saved.getSubject().getId());
+        return studentMarkMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional
+    public void delete(UUID id) {
+        StudentMark mark = findActiveById(id);
+        UUID enrollmentTermId = mark.getEnrollmentTerm().getId();
+        UUID subjectId = mark.getSubject().getId();
+        boolean affectsTotal = mark.getStatus() == MarkStatus.GRADED || mark.getStatus() == MarkStatus.ABSENT;
+        mark.setActive(false);
+        studentMarkRepository.save(mark);
+        if (affectsTotal) {
+            recalculate(enrollmentTermId, subjectId);
+        }
+    }
+
+    private StudentMark findActiveById(UUID id) {
+        StudentMark mark = studentMarkRepository.findByIdAndActiveTrue(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Student mark not found with id: " + id));
+        if (UserContext.current().hasSchoolAdminPolicy()) {
+            UserContext.current().getCurrentExternalId().ifPresent(schoolId -> {
+                if (mark.getSchoolId() != null && !schoolId.equals(mark.getSchoolId())) {
+                    throw new ResourceNotFoundException("Student mark not found with id: " + id);
+                }
+            });
+        }
+        return mark;
+    }
+
     @Transactional
     public SubjectTotal recalculate(UUID enrollmentTermId, UUID subjectId) {
 
@@ -110,8 +188,13 @@ public class StudentMarkServiceImpl implements StudentMarkService {
         }
 
         if (weightUsed == 0.0) {
-            throw new IllegalStateException(
-                    "No graded marks with defined weights exist yet for this subject/term");
+            subjectTotalRepository
+                    .findByEnrollmentTermIdAndSubjectId(enrollmentTermId, subjectId)
+                    .ifPresent(existing -> {
+                        existing.setActive(false);
+                        subjectTotalRepository.save(existing);
+                    });
+            return null;
         }
 
         double totalMark = weightedSum / weightUsed;
@@ -128,6 +211,7 @@ public class StudentMarkServiceImpl implements StudentMarkService {
                         .active(true)
                         .build());
 
+        subjectTotal.setActive(true);
         subjectTotal.setTotalMark(totalMark);
         subjectTotal.setStatus(status);
 

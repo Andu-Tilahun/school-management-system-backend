@@ -2,6 +2,7 @@ package com.schoolmanagment.coreservice.student.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.academicyear.entity.Term;
 import com.schoolmanagment.coreservice.academicyear.helper.AcademicYearHelper;
 import com.schoolmanagment.coreservice.academicyear.repository.TermRepository;
@@ -91,6 +92,21 @@ public class EnrollmentServiceImpl implements EnrollmentService {
         Enrollment enrollment = findActiveEnrollmentForStudent(studentId, enrollmentId);
         enrollment.setActive(false);
         enrollmentRepository.save(enrollment);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnrollmentTermDto> listTerms(UUID enrollmentId, UUID studentId) {
+        if (enrollmentId == null && studentId == null) {
+            return List.of();
+        }
+        UUID schoolId = null;
+        if (UserContext.current().hasSchoolAdminPolicy()) {
+            schoolId = UserContext.current().getCurrentExternalId().orElse(null);
+        }
+        return enrollmentTermMapper.toDtoList(
+                enrollmentTermRepository.findActiveForMarkLookup(enrollmentId, studentId, schoolId)
+        );
     }
 
     @Transactional

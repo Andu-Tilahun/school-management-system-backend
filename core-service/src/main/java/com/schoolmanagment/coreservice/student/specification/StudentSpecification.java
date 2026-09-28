@@ -34,23 +34,10 @@ public class StudentSpecification implements Specification<Student> {
 
         predicates.add(cb.isTrue(root.get("active")));
 
-        if (UserContext.current().hasSchoolAdminPolicy() || UserContext.current().hasStudentPolicy() ||
-                UserContext.current().hasEmergencyContactPolicy()) {
 
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        }
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
 
-        if (UserContext.current().hasStudentPolicy()) {
-
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("id"), externalId)));
-        }
-
-        if (UserContext.current().hasEmergencyContactPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(linkedToEmergencyContact(root, query, cb, externalId)));
-        }
 
         if (filterRequest.getStudentId() != null) {
             predicates.add(cb.equal(root.get("id"), filterRequest.getStudentId()));

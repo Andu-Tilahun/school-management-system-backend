@@ -1,6 +1,7 @@
 package com.schoolmanagment.coreservice.student.repository;
 
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
+import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -41,6 +42,22 @@ public interface EnrollmentTermRepository extends JpaRepository<EnrollmentTerm, 
             @Param("enrollmentId") UUID enrollmentId);
 
     List<EnrollmentTerm> findAllByStatus(EnrollmentTermStatus status);
+
+    @Query("""
+            SELECT et FROM EnrollmentTerm et
+            JOIN et.enrollment e
+            WHERE e.student.id = :studentId
+              AND e.schoolId = :schoolId
+              AND e.active = true
+              AND e.status = :enrollmentStatus
+              AND et.active = true
+              AND et.status = :status
+            """)
+    List<EnrollmentTerm> findActiveByStudentIdAndSchoolId(
+            @Param("studentId") UUID studentId,
+            @Param("schoolId") UUID schoolId,
+            @Param("enrollmentStatus") EnrollmentStatus enrollmentStatus,
+            @Param("status") EnrollmentTermStatus status);
 
     @Query("""
             SELECT et FROM EnrollmentTerm et

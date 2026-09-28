@@ -32,16 +32,27 @@ public class TeacherMapper {
                 .build();
     }
 
-    private List<TeacherSubjectAssignmentDto> toDto(List<TeacherSubjectAssignment> assignments) {
+    public List<TeacherSubjectAssignmentDto> toAssignmentDtos(List<TeacherSubjectAssignment> assignments) {
+        if (assignments == null || assignments.isEmpty()) {
+            return List.of();
+        }
         return assignments.stream()
-                .map(assignment -> TeacherSubjectAssignmentDto.builder()
-                        .id(assignment.getId())
-                        .subjectId(assignment.getSubject().getId())
-                        .subjectCode(assignment.getSubject().getSubjectCode())
-                        .subjectName(assignment.getSubject().getSubjectName())
-                        .active(assignment.getActive())
-                        .build())
+                .map(this::toAssignmentDto)
                 .toList();
+    }
+
+    private List<TeacherSubjectAssignmentDto> toDto(List<TeacherSubjectAssignment> assignments) {
+        return toAssignmentDtos(assignments);
+    }
+
+    private TeacherSubjectAssignmentDto toAssignmentDto(TeacherSubjectAssignment assignment) {
+        return TeacherSubjectAssignmentDto.builder()
+                .id(assignment.getId())
+                .subjectId(assignment.getSubject().getId())
+                .subjectCode(assignment.getSubject().getSubjectCode())
+                .subjectName(assignment.getSubject().getSubjectName())
+                .active(assignment.getActive())
+                .build();
     }
 
     public Teacher toEntity(TeacherRequest request) {

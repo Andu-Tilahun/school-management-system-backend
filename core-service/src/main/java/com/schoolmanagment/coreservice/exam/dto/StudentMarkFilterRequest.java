@@ -15,8 +15,6 @@ import java.util.UUID;
 @AllArgsConstructor
 public class StudentMarkFilterRequest {
 
-    private UUID enrollmentTermId;
-
     private UUID studentId;
 
     private UUID subjectId;
@@ -27,9 +25,9 @@ public class StudentMarkFilterRequest {
 
     private String sortBy;
 
-    private String sortDirection;
+    private String sortDirection = "DESC";
 
-    private int page;
+    private int page = 0;
 
-    private int size;
+    private int size = 10;
 }

@@ -35,10 +35,9 @@ public class PenaltyRuleSpecification implements Specification<PenaltyRule> {
 
         predicates.add(cb.isTrue(root.get("active")));
 
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        }
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+
 
         if (filterRequest.getPenaltyTrigger() != null) {
             predicates.add(cb.equal(root.get("penaltyTrigger"), filterRequest.getPenaltyTrigger()));

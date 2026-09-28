@@ -12,12 +12,10 @@ import java.util.UUID;
 
 public interface StudentMarkRepository extends JpaRepository<StudentMark, UUID>, JpaSpecificationExecutor<StudentMark> {
 
-    Optional<StudentMark> findByIdAndActiveTrue(UUID id);
-
     List<StudentMark> findByEnrollmentTermIdAndSubjectIdAndStatusAndActiveTrue(
             UUID enrollmentTermId, UUID subjectId, MarkStatus status);
 
-    Optional<StudentMark> findByEnrollmentTermIdAndSubjectIdAndTypeAndActiveTrue(
+    Optional<StudentMark> findByEnrollmentTermIdAndSubjectIdAndType(
             UUID enrollmentTermId, UUID subjectId, MarkType type);
 
     List<StudentMark> findByEnrollmentTermIdAndActiveTrue(UUID enrollmentTermId);

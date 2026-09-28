@@ -1,15 +1,11 @@
 package com.schoolmanagment.coreservice.timetable.specification;
 
+import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableFilterRequest;
 import com.schoolmanagment.coreservice.timetable.entity.Timetable;
 import com.schoolmanagment.coreservice.timetable.enums.Day;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -34,13 +30,8 @@ public class TimetableSpecification implements Specification<Timetable> {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
         predicates.add(cb.isTrue(root.get("active")));
+        applyCallerScope(root, cb, predicates);
 
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        } else if (filterRequest.getSchoolId() != null) {
-            predicates.add(cb.equal(root.get("schoolId"), filterRequest.getSchoolId()));
-        }
 
         if (filterRequest.getClassSectionId() != null) {
             predicates.add(cb.equal(root.get("classSection").get("id"), filterRequest.getClassSectionId()));
@@ -96,6 +87,20 @@ public class TimetableSpecification implements Specification<Timetable> {
         }
 
         return cb.and(predicates.toArray(new Predicate[0]));
+    }
+
+    private void applyCallerScope(Root<Timetable> root, CriteriaBuilder cb, ArrayList<Predicate> predicates) {
+        UserContext context = UserContext.current();
+        if (context.hasPolicy(PolicyNames.TEACHER_POLICY)) {
+            context.getCurrentExternalId().ifPresentOrElse(
+                    teacherId -> predicates.add(cb.equal(
+                            root.get("teacherSubjectAssignment").get("teacher").get("id"),
+                            teacherId)),
+                    () -> predicates.add(cb.disjunction()));
+            return;
+        }
+        context.getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
     }
 
     private void applySorting(Root<Timetable> root, CriteriaQuery<?> query, CriteriaBuilder cb) {

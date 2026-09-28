@@ -28,12 +28,9 @@ public class SubjectSpecification implements Specification<Subject> {
     public Predicate toPredicate(Root<Subject> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        } else if (filterRequest.getSchoolId() != null) {
-            predicates.add(cb.equal(root.get("schoolId"), filterRequest.getSchoolId()));
-        }
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+
 
         if (filterRequest.getGradeId() != null) {
             predicates.add(cb.equal(root.get("grade").get("id"), filterRequest.getGradeId()));

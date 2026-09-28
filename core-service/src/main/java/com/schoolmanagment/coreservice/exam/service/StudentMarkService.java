@@ -1,24 +1,26 @@
 package com.schoolmanagment.coreservice.exam.service;
 
-import com.schoolmanagment.coreservice.exam.dto.GradeStudentMarkRequest;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkDto;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkFilterRequest;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkRequest;
+import com.schoolmanagment.coreservice.student.dto.StudentDto;
+import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface StudentMarkService {
 
-    Page<StudentMarkDto> list(int page, int size);
+    StudentMarkDto register(StudentMarkRequest request);
 
     Page<StudentMarkDto> filter(StudentMarkFilterRequest request);
 
-    StudentMarkDto getById(UUID id);
+    List<TeacherSubjectAssignmentDto> getSubjectsForCurrentTeacher();
 
-    StudentMarkDto register(StudentMarkRequest request);
+    List<TeacherSubjectAssignmentDto> getSubjectsForCurrentStudent();
 
-    StudentMarkDto grade(UUID id, GradeStudentMarkRequest request);
+    List<StudentDto> getStudentsForCurrentEmergencyContact();
 
-    void delete(UUID id);
+    List<TeacherSubjectAssignmentDto> getSubjectsForEmergencyContactStudent(UUID studentId);
 }

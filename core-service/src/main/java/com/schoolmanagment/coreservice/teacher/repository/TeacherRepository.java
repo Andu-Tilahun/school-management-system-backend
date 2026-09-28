@@ -1,7 +1,6 @@
 package com.schoolmanagment.coreservice.teacher.repository;
 
 import com.schoolmanagment.coreservice.teacher.entity.Teacher;
-import com.schoolmanagment.coreservice.teacher.entity.Teacher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

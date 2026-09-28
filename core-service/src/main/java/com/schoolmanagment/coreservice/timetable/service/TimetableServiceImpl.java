@@ -8,6 +8,7 @@ import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.classsection.mapper.ClassSectionMapper;
 import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
+import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
 import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
 import com.schoolmanagment.coreservice.teacher.service.TeacherService;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableDto;
@@ -117,9 +118,28 @@ public class TimetableServiceImpl implements TimetableService {
     @Override
     @Transactional(readOnly = true)
     public List<ClassSectionDto> getSectionsForCurrentTeacher() {
-        UUID teacherId = UserContext.current().getCurrentExternalId()
+        return getSectionsByTeacher(currentTeacherId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherSubjectAssignmentDto> getAssignedSubjectsForCurrentTeacher() {
+        return teacherService.getAssignedSubjects();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClassSectionDto> getSectionsForCurrentTeacherAndSubject(UUID subjectId) {
+        return timetableRepository
+                .findActiveClassSectionsByTeacherIdAndSubjectId(currentTeacherId(), subjectId)
+                .stream()
+                .map(classSectionMapper::toDto)
+                .toList();
+    }
+
+    private UUID currentTeacherId() {
+        return UserContext.current().getCurrentExternalId()
                 .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
-        return getSectionsByTeacher(teacherId);
     }
 
     @Override

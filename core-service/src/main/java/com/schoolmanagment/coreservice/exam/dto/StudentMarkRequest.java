@@ -12,7 +12,7 @@ import java.util.UUID;
 public class StudentMarkRequest {
 
     @NotNull
-    private UUID enrollmentTermId;
+    private UUID studentId;
 
     @NotNull
     private UUID subjectId;

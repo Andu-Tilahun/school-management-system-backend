@@ -3,7 +3,7 @@ package com.schoolmanagment.coreservice.offencerecord.entity;
 import com.schoolmanagment.coreservice.auditable.SchoolAuditable;
 import com.schoolmanagment.coreservice.offencerecord.enums.OffenceRecordStatus;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
-import com.schoolmanagment.coreservice.student.entity.Enrollment;
+import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -30,10 +30,10 @@ public class OffenceRecord extends SchoolAuditable {
     private UUID id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "enrollment_id", nullable = false)
+    @JoinColumn(name = "enrollment_term_id", nullable = false)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private Enrollment enrollment;
+    private EnrollmentTerm enrollmentTerm;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "penalty_trigger", nullable = false, length = 40)

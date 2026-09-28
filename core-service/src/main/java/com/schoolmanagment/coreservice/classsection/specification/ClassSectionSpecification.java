@@ -3,11 +3,7 @@ package com.schoolmanagment.coreservice.classsection.specification;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.classsection.dto.ClassSectionFilterRequest;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -32,10 +28,9 @@ public class ClassSectionSpecification implements Specification<ClassSection> {
 
         predicates.add(cb.isTrue(root.get("active")));
 
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        }
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+
 
         if (filterRequest.getGradeId() != null) {
             predicates.add(cb.equal(root.get("grade").get("id"), filterRequest.getGradeId()));

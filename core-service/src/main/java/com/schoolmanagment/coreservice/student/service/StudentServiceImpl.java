@@ -128,12 +128,7 @@ public class StudentServiceImpl implements StudentService {
     @Transactional(readOnly = true)
     public List<StudentDto> getStudentsByClassSection(UUID classSectionId) {
         classSectionService.findActiveClassSectionById(classSectionId);
-        StudentFilterRequest filter = StudentFilterRequest.builder()
-                .classSectionId(classSectionId)
-                .build();
-        return studentRepository.findAll(new StudentSpecification(filter)).stream()
-                .map(studentMapper::toDto)
-                .toList();
+        return findStudentsByClassSections(List.of(classSectionId));
     }
 
     @Override

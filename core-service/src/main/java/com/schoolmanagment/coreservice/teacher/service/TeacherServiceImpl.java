@@ -2,12 +2,14 @@ package com.schoolmanagment.coreservice.teacher.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import com.schoolmanagment.coreservice.subject.service.SubjectService;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherDto;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherFilterRequest;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherRequest;
+import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
 import com.schoolmanagment.coreservice.teacher.entity.Teacher;
 import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
 import com.schoolmanagment.coreservice.teacher.mapper.TeacherMapper;
@@ -88,6 +90,14 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<TeacherSubjectAssignmentDto> getAssignedSubjects() {
+        Teacher teacher = currentLoggedInTeacher();
+        return teacherMapper.toAssignmentDtos(
+                assignmentRepository.findActiveByTeacherIdWithSubject(teacher.getId(), SubjectStatus.ACTIVE));
+    }
+
+    @Override
     public TeacherSubjectAssignment findActiveTeacherSubjectAssignmentById(UUID id) {
         TeacherSubjectAssignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -104,6 +114,12 @@ public class TeacherServiceImpl implements TeacherService {
             throw new BadRequestException("Subject is not active");
         }
         return assignment;
+    }
+
+    private Teacher currentLoggedInTeacher() {
+        UUID teacherId = UserContext.current().getCurrentExternalId()
+                .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
+        return findActiveTeacherById(teacherId);
     }
 
     private Teacher findActiveTeacherById(UUID id) {

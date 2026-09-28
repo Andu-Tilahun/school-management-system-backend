@@ -20,9 +20,8 @@ import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.repository.SubjectRepository;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
 import com.schoolmanagment.coreservice.teacher.entity.Teacher;
-import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
 import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
-import com.schoolmanagment.coreservice.teacher.repository.TeacherSubjectAssignmentRepository;
+import com.schoolmanagment.coreservice.teacher.service.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,7 +38,7 @@ public class StudentMarkServiceImpl implements StudentMarkService {
     private final SubjectRepository subjectRepository;
     private final EnrollmentTermRepository enrollmentTermRepository;
     private final TeacherRepository teacherRepository;
-    private final TeacherSubjectAssignmentRepository teacherSubjectAssignmentRepository;
+    private final TeacherService teacherService;
     private final StudentMarkMapper studentMarkMapper;
 
     @Override
@@ -95,10 +94,7 @@ public class StudentMarkServiceImpl implements StudentMarkService {
     @Override
     @Transactional(readOnly = true)
     public List<TeacherSubjectAssignmentDto> getSubjectsForCurrentTeacher() {
-        Teacher teacher = currentTeacher();
-        return teacherSubjectAssignmentRepository.findByTeacherIdAndActiveTrue(teacher.getId()).stream()
-                .map(this::toAssignmentDto)
-                .toList();
+        return teacherService.getAssignedSubjects();
     }
 
     private EnrollmentTerm resolveActiveEnrollmentTerm(UUID studentId) {
@@ -130,17 +126,6 @@ public class StudentMarkServiceImpl implements StudentMarkService {
                     "No schoolId on the current teacher — cannot save a school-scoped entity without one.");
         }
         return schoolId;
-    }
-
-    private TeacherSubjectAssignmentDto toAssignmentDto(TeacherSubjectAssignment assignment) {
-        Subject subject = assignment.getSubject();
-        return TeacherSubjectAssignmentDto.builder()
-                .id(assignment.getId())
-                .subjectId(subject.getId())
-                .subjectCode(subject.getSubjectCode())
-                .subjectName(subject.getSubjectName())
-                .active(assignment.getActive())
-                .build();
     }
 
     @Transactional

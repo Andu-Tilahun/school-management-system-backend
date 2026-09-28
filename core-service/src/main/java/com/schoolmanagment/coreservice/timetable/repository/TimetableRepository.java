@@ -76,4 +76,20 @@ public interface TimetableRepository extends JpaRepository<Timetable, UUID>, Jpa
             ORDER BY section.name ASC
             """)
     List<ClassSection> findActiveClassSectionsByTeacherId(@Param("teacherId") UUID teacherId);
+
+    @Query("""
+            SELECT DISTINCT section
+            FROM Timetable t
+            JOIN t.classSection section
+            JOIN FETCH section.grade
+            WHERE t.teacherSubjectAssignment.teacher.id = :teacherId
+              AND t.teacherSubjectAssignment.subject.id = :subjectId
+              AND t.active = true
+              AND section.active = true
+              AND t.teacherSubjectAssignment.active = true
+            ORDER BY section.name ASC
+            """)
+    List<ClassSection> findActiveClassSectionsByTeacherIdAndSubjectId(
+            @Param("teacherId") UUID teacherId,
+            @Param("subjectId") UUID subjectId);
 }

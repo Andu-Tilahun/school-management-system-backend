@@ -26,4 +26,6 @@ public interface TimetableService {
     List<ClassSectionDto> getSectionsByTeacher(UUID teacherId);
 
     List<ClassSectionDto> getSectionsForCurrentTeacher();
+
+    List<ClassSectionDto> getSectionsForCurrentTeacherAndSubject(UUID subjectId);
 }

@@ -21,11 +21,11 @@ public interface OffenceRecordRepository extends JpaRepository<OffenceRecord, UU
 
     Optional<OffenceRecord> findByIdAndActiveTrue(UUID id);
 
-    List<OffenceRecord> findByEnrollment_IdAndActiveTrue(UUID enrollmentId);
+    List<OffenceRecord> findByEnrollmentTerm_IdAndActiveTrue(UUID enrollmentTermId);
 
     @Query("""
             SELECT a FROM OffenceRecord a
-            WHERE a.enrollment.id = :enrollmentId
+            WHERE a.enrollmentTerm.enrollment.id = :enrollmentId
               AND a.penaltyTrigger = :trigger
               AND a.active = true
             """)
@@ -33,6 +33,6 @@ public interface OffenceRecordRepository extends JpaRepository<OffenceRecord, UU
             @Param("enrollmentId") UUID enrollmentId,
             @Param("trigger") PenaltyTrigger trigger);
 
-    List<OffenceRecord> findByEnrollmentIdAndPenaltyTrigger(
+    List<OffenceRecord> findByEnrollmentTerm_Enrollment_IdAndPenaltyTrigger(
             UUID enrollmentId, PenaltyTrigger trigger);
 }

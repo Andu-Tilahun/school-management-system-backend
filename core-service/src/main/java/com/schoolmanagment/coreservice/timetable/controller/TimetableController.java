@@ -57,6 +57,17 @@ public class TimetableController {
         );
     }
 
+    @GetMapping("/subjects/{subjectId}/sections")
+    @RequiresPermission(resource = "TIMETABLES", scope = "READ")
+    public ResponseEntity<ApiResponse<List<ClassSectionDto>>> getSectionsForCurrentTeacherAndSubject(
+            @PathVariable UUID subjectId
+    ) {
+        List<ClassSectionDto> sections = timetableService.getSectionsForCurrentTeacherAndSubject(subjectId);
+        return ResponseEntity.ok(
+                ApiResponse.success(sections, "Class sections retrieved successfully")
+        );
+    }
+
     @GetMapping("/teacher/{teacherId}/sections")
     @RequiresPermission(resource = "TIMETABLES", scope = "READ")
     public ResponseEntity<ApiResponse<List<ClassSectionDto>>> getSectionsByTeacher(@PathVariable UUID teacherId) {

@@ -16,9 +16,12 @@ import com.schoolmanagment.coreservice.penalty.entity.PenaltyRule;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRepository;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRuleRepository;
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
+import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
-import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
+import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
+import com.schoolmanagment.coreservice.student.repository.EnrollmentTermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,7 +38,7 @@ import java.util.UUID;
 public class OffenceRecordServiceImpl implements OffenceRecordService {
 
     private final OffenceRecordRepository offenceRecordRepository;
-    private final EnrollmentRepository enrollmentRepository;
+    private final EnrollmentTermRepository enrollmentTermRepository;
     private final OffenceRecordMapper offenceRecordMapper;
     private final PenaltyRuleRepository penaltyRuleRepository;
     private final PenaltyRepository penaltyRepository;
@@ -67,25 +70,31 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
     @Override
     @Transactional
     public OffenceRecordDto create(OffenceRecordRequest request) {
-        Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        validateEnrollmentForOffence(enrollment);
-        OffenceRecord offenceRecord = offenceRecordMapper.toEntity(request, enrollment);
+        EnrollmentTerm enrollmentTerm = resolveActiveEnrollmentTerm(request.getStudentId());
+        validateEnrollmentForOffence(enrollmentTerm);
+        OffenceRecord offenceRecord = offenceRecordMapper.toEntity(request, enrollmentTerm);
+        OffenceRecord saved = offenceRecordRepository.save(offenceRecord);
         reconcile(
-                offenceRecord.getEnrollment().getId(),
-                offenceRecord.getPenaltyTrigger());
-        return offenceRecordMapper.toDto(offenceRecordRepository.save(offenceRecord));
+                saved.getEnrollmentTerm().getEnrollment().getId(),
+                saved.getPenaltyTrigger());
+        return offenceRecordMapper.toDto(saved);
     }
 
     @Override
     @Transactional
     public OffenceRecordDto update(UUID id, OffenceRecordRequest request) {
         OffenceRecord offenceRecord = findActiveOffenceRecordById(id);
-        Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        offenceRecordMapper.updateEntity(offenceRecord, request, enrollment);
-        reconcile(
-                offenceRecord.getEnrollment().getId(),
-                offenceRecord.getPenaltyTrigger());
-        return offenceRecordMapper.toDto(offenceRecordRepository.save(offenceRecord));
+        UUID previousEnrollmentId = offenceRecord.getEnrollmentTerm().getEnrollment().getId();
+        PenaltyTrigger previousTrigger = offenceRecord.getPenaltyTrigger();
+        EnrollmentTerm enrollmentTerm = resolveActiveEnrollmentTerm(request.getStudentId());
+        offenceRecordMapper.updateEntity(offenceRecord, request, enrollmentTerm);
+        OffenceRecord saved = offenceRecordRepository.save(offenceRecord);
+        UUID enrollmentId = saved.getEnrollmentTerm().getEnrollment().getId();
+        if (!previousEnrollmentId.equals(enrollmentId) || previousTrigger != saved.getPenaltyTrigger()) {
+            reconcile(previousEnrollmentId, previousTrigger);
+        }
+        reconcile(enrollmentId, saved.getPenaltyTrigger());
+        return offenceRecordMapper.toDto(saved);
     }
 
     @Override
@@ -103,7 +112,7 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
         offenceRecord.setActive(false);
         offenceRecordRepository.save(offenceRecord);
         reconcile(
-                offenceRecord.getEnrollment().getId(),
+                offenceRecord.getEnrollmentTerm().getEnrollment().getId(),
                 offenceRecord.getPenaltyTrigger());
         return offenceRecordMapper.toDto(offenceRecord);
     }
@@ -113,14 +122,35 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
                 .orElseThrow(() -> new ResourceNotFoundException("Offence record not found with id: " + id));
     }
 
-    private Enrollment resolveActiveEnrollment(UUID enrollmentId) {
-        return enrollmentRepository.findByIdAndActiveTrue(enrollmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
+    private EnrollmentTerm resolveActiveEnrollmentTerm(UUID studentId) {
+        List<EnrollmentTerm> enrollmentTerms = enrollmentTermRepository.findActiveByStudentIdAndSchoolId(
+                studentId,
+                currentSchoolId(),
+                EnrollmentStatus.ACTIVE,
+                EnrollmentTermStatus.ACTIVE);
+        if (enrollmentTerms.isEmpty()) {
+            throw new ResourceNotFoundException("Active enrollment term not found for student: " + studentId);
+        }
+        if (enrollmentTerms.size() > 1) {
+            throw new BadRequestException("Student has more than one active enrollment term: " + studentId);
+        }
+        return enrollmentTerms.get(0);
     }
 
-    private void validateEnrollmentForOffence(Enrollment enrollment) {
+    private UUID currentSchoolId() {
+        return Optional.ofNullable(UserContext.current())
+                .flatMap(UserContext::getCurrentExternalId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No schoolId on the current authentication — cannot save a school-scoped entity without one."));
+    }
+
+    private void validateEnrollmentForOffence(EnrollmentTerm enrollmentTerm) {
+        Enrollment enrollment = enrollmentTerm.getEnrollment();
         if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
             throw new BadRequestException("Cannot record an offence for a terminated enrollment");
+        }
+        if (enrollmentTerm.getStatus() != EnrollmentTermStatus.ACTIVE) {
+            throw new BadRequestException("Cannot record an offence for a non-active enrollment term");
         }
     }
 
@@ -143,7 +173,7 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
             if (shouldExist && existing.isEmpty()) {
                 Penalty penalty = Penalty.builder()
                         .penaltyRule(rule)
-                        .enrollment(activeRecords.get(0).getEnrollment())
+                        .enrollment(activeRecords.get(0).getEnrollmentTerm().getEnrollment())
                         .occurrenceCountAtTrigger(currentCount)
                         .build();
                 penaltyRepository.save(penalty);

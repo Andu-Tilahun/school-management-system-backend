@@ -21,15 +21,11 @@ public interface AttendanceRepository extends JpaRepository<Attendance, UUID>, J
 
     Optional<Attendance> findByIdAndActiveTrue(UUID id);
 
-    List<Attendance> findByEnrollment_IdAndActiveTrue(UUID enrollmentId);
+    List<Attendance> findByEnrollmentTerm_IdAndActiveTrue(UUID enrollmentTermId);
 
-    // Active attendance rows for a given enrollment + trigger — this is the
-    // count reconciliation checks against. "Active" excludes soft-deleted
-    // (teacher-removed) records, which is exactly what makes the
-    // reconciliation logic self-correcting.
     @Query("""
             SELECT a FROM Attendance a
-            WHERE a.enrollment.id = :enrollmentId
+            WHERE a.enrollmentTerm.enrollment.id = :enrollmentId
               AND a.penaltyTrigger = :trigger
               AND a.active = true
             """)
@@ -37,7 +33,6 @@ public interface AttendanceRepository extends JpaRepository<Attendance, UUID>, J
             @Param("enrollmentId") UUID enrollmentId,
             @Param("trigger") PenaltyTrigger trigger);
 
-    // Convenience for reporting/admin screens — full history including inactive.
-    List<Attendance> findByEnrollmentIdAndPenaltyTrigger(
+    List<Attendance> findByEnrollmentTerm_Enrollment_IdAndPenaltyTrigger(
             UUID enrollmentId, PenaltyTrigger trigger);
 }

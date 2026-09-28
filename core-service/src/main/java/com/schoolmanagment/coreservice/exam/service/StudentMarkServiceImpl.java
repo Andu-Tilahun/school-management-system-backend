@@ -1,6 +1,8 @@
 package com.schoolmanagment.coreservice.exam.service;
 
+import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkDto;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkRequest;
 import com.schoolmanagment.coreservice.exam.entity.StudentMark;
@@ -11,10 +13,16 @@ import com.schoolmanagment.coreservice.exam.mapper.StudentMarkMapper;
 import com.schoolmanagment.coreservice.exam.repository.StudentMarkRepository;
 import com.schoolmanagment.coreservice.exam.repository.SubjectTotalRepository;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
+import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentTermRepository;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.repository.SubjectRepository;
+import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
+import com.schoolmanagment.coreservice.teacher.entity.Teacher;
+import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
+import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
+import com.schoolmanagment.coreservice.teacher.repository.TeacherSubjectAssignmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -30,15 +38,15 @@ public class StudentMarkServiceImpl implements StudentMarkService {
     private final SubjectTotalRepository subjectTotalRepository;
     private final SubjectRepository subjectRepository;
     private final EnrollmentTermRepository enrollmentTermRepository;
+    private final TeacherRepository teacherRepository;
+    private final TeacherSubjectAssignmentRepository teacherSubjectAssignmentRepository;
     private final StudentMarkMapper studentMarkMapper;
 
     @Override
     @Transactional
     public StudentMarkDto register(StudentMarkRequest request) {
 
-        EnrollmentTerm enrollmentTerm = enrollmentTermRepository
-                .findById(request.getEnrollmentTermId())
-                .orElseThrow(() -> new ResourceNotFoundException("EnrollmentTerm not found"));
+        EnrollmentTerm enrollmentTerm = resolveActiveEnrollmentTerm(request.getStudentId());
 
         if (enrollmentTerm.getStatus() != EnrollmentTermStatus.ACTIVE) {
             throw new IllegalStateException(
@@ -82,6 +90,57 @@ public class StudentMarkServiceImpl implements StudentMarkService {
         }
 
         return studentMarkMapper.toDto(saved);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherSubjectAssignmentDto> getSubjectsForCurrentTeacher() {
+        Teacher teacher = currentTeacher();
+        return teacherSubjectAssignmentRepository.findByTeacherIdAndActiveTrue(teacher.getId()).stream()
+                .map(this::toAssignmentDto)
+                .toList();
+    }
+
+    private EnrollmentTerm resolveActiveEnrollmentTerm(UUID studentId) {
+        List<EnrollmentTerm> enrollmentTerms = enrollmentTermRepository.findActiveByStudentIdAndSchoolId(
+                studentId,
+                currentSchoolId(),
+                EnrollmentStatus.ACTIVE,
+                EnrollmentTermStatus.ACTIVE);
+        if (enrollmentTerms.isEmpty()) {
+            throw new ResourceNotFoundException("Active enrollment term not found for student: " + studentId);
+        }
+        if (enrollmentTerms.size() > 1) {
+            throw new BadRequestException("Student has more than one active enrollment term: " + studentId);
+        }
+        return enrollmentTerms.get(0);
+    }
+
+    private Teacher currentTeacher() {
+        UUID teacherId = UserContext.current().getCurrentExternalId()
+                .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
+        return teacherRepository.findByIdAndActiveTrue(teacherId)
+                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
+    }
+
+    private UUID currentSchoolId() {
+        UUID schoolId = currentTeacher().getSchoolId();
+        if (schoolId == null) {
+            throw new IllegalStateException(
+                    "No schoolId on the current teacher — cannot save a school-scoped entity without one.");
+        }
+        return schoolId;
+    }
+
+    private TeacherSubjectAssignmentDto toAssignmentDto(TeacherSubjectAssignment assignment) {
+        Subject subject = assignment.getSubject();
+        return TeacherSubjectAssignmentDto.builder()
+                .id(assignment.getId())
+                .subjectId(subject.getId())
+                .subjectCode(subject.getSubjectCode())
+                .subjectName(subject.getSubjectName())
+                .active(assignment.getActive())
+                .build();
     }
 
     @Transactional

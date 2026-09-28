@@ -17,9 +17,12 @@ import com.schoolmanagment.coreservice.penalty.enums.SourceModule;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRepository;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRuleRepository;
 import com.schoolmanagment.coreservice.attendance.repository.PenaltySourceAttendanceRepository;
+import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
+import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
-import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
+import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
+import com.schoolmanagment.coreservice.student.repository.EnrollmentTermRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -36,7 +39,7 @@ import java.util.UUID;
 public class AttendanceServiceImpl implements AttendanceService {
 
     private final AttendanceRepository attendanceRepository;
-    private final EnrollmentRepository enrollmentRepository;
+    private final EnrollmentTermRepository enrollmentTermRepository;
     private final AttendanceMapper attendanceMapper;
     private final PenaltyRuleRepository penaltyRuleRepository;
     private final PenaltyRepository penaltyRepository;
@@ -67,25 +70,31 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional
     public AttendanceDto create(AttendanceRequest request) {
-        Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        validateAttendanceRequest(request, enrollment);
-        Attendance attendance = attendanceMapper.toEntity(request, enrollment);
+        EnrollmentTerm enrollmentTerm = resolveActiveEnrollmentTerm(request.getStudentId());
+        validateAttendanceRequest(request, enrollmentTerm);
+        Attendance attendance = attendanceMapper.toEntity(request, enrollmentTerm);
+        Attendance saved = attendanceRepository.save(attendance);
         reconcile(
-                attendance.getEnrollment().getId(),
-                attendance.getPenaltyTrigger());
-        return attendanceMapper.toDto(attendanceRepository.save(attendance));
+                saved.getEnrollmentTerm().getEnrollment().getId(),
+                saved.getPenaltyTrigger());
+        return attendanceMapper.toDto(saved);
     }
 
     @Override
     @Transactional
     public AttendanceDto update(UUID id, AttendanceRequest request) {
         Attendance attendance = findActiveAttendanceById(id);
-        Enrollment enrollment = resolveActiveEnrollment(request.getEnrollmentId());
-        attendanceMapper.updateEntity(attendance, request, enrollment);
-        reconcile(
-                attendance.getEnrollment().getId(),
-                attendance.getPenaltyTrigger());
-        return attendanceMapper.toDto(attendanceRepository.save(attendance));
+        UUID previousEnrollmentId = attendance.getEnrollmentTerm().getEnrollment().getId();
+        PenaltyTrigger previousTrigger = attendance.getPenaltyTrigger();
+        EnrollmentTerm enrollmentTerm = resolveActiveEnrollmentTerm(request.getStudentId());
+        attendanceMapper.updateEntity(attendance, request, enrollmentTerm);
+        Attendance saved = attendanceRepository.save(attendance);
+        UUID enrollmentId = saved.getEnrollmentTerm().getEnrollment().getId();
+        if (!previousEnrollmentId.equals(enrollmentId) || previousTrigger != saved.getPenaltyTrigger()) {
+            reconcile(previousEnrollmentId, previousTrigger);
+        }
+        reconcile(enrollmentId, saved.getPenaltyTrigger());
+        return attendanceMapper.toDto(saved);
     }
 
     @Override
@@ -103,7 +112,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         attendance.setActive(false);
         attendanceRepository.save(attendance);
         reconcile(
-                attendance.getEnrollment().getId(),
+                attendance.getEnrollmentTerm().getEnrollment().getId(),
                 attendance.getPenaltyTrigger());
         return attendanceMapper.toDto(attendance);
     }
@@ -113,14 +122,35 @@ public class AttendanceServiceImpl implements AttendanceService {
                 .orElseThrow(() -> new ResourceNotFoundException("Attendance not found with id: " + id));
     }
 
-    private Enrollment resolveActiveEnrollment(UUID enrollmentId) {
-        return enrollmentRepository.findByIdAndActiveTrue(enrollmentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Enrollment not found with id: " + enrollmentId));
+    private EnrollmentTerm resolveActiveEnrollmentTerm(UUID studentId) {
+        List<EnrollmentTerm> enrollmentTerms = enrollmentTermRepository.findActiveByStudentIdAndSchoolId(
+                studentId,
+                currentSchoolId(),
+                EnrollmentStatus.ACTIVE,
+                EnrollmentTermStatus.ACTIVE);
+        if (enrollmentTerms.isEmpty()) {
+            throw new ResourceNotFoundException("Active enrollment term not found for student: " + studentId);
+        }
+        if (enrollmentTerms.size() > 1) {
+            throw new BadRequestException("Student has more than one active enrollment term: " + studentId);
+        }
+        return enrollmentTerms.get(0);
     }
 
-    private void validateAttendanceRequest(AttendanceRequest request, Enrollment enrollment) {
+    private UUID currentSchoolId() {
+        return Optional.ofNullable(UserContext.current())
+                .flatMap(UserContext::getCurrentExternalId)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No schoolId on the current authentication — cannot save a school-scoped entity without one."));
+    }
+
+    private void validateAttendanceRequest(AttendanceRequest request, EnrollmentTerm enrollmentTerm) {
+        Enrollment enrollment = enrollmentTerm.getEnrollment();
         if (enrollment.getStatus() != EnrollmentStatus.ACTIVE) {
             throw new BadRequestException("Cannot record attendance for a terminated enrollment");
+        }
+        if (enrollmentTerm.getStatus() != EnrollmentTermStatus.ACTIVE) {
+            throw new BadRequestException("Cannot record attendance for a non-active enrollment term");
         }
 
         PenaltyTrigger penaltyTrigger = request.getPenaltyTrigger();
@@ -149,7 +179,7 @@ public class AttendanceServiceImpl implements AttendanceService {
 
                 Penalty penalty = Penalty.builder()
                         .penaltyRule(rule)
-                        .enrollment(activeRecords.get(0).getEnrollment())
+                        .enrollment(activeRecords.get(0).getEnrollmentTerm().getEnrollment())
                         .occurrenceCountAtTrigger(currentCount)
                         .build();
                 penaltyRepository.save(penalty);

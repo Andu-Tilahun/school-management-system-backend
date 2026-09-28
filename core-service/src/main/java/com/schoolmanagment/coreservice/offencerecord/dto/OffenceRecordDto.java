@@ -6,6 +6,7 @@ import com.schoolmanagment.coreservice.offencerecord.enums.OffenceRecordStatus;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import com.schoolmanagment.coreservice.penalty.enums.SourceModule;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
+import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,6 +25,7 @@ public class OffenceRecordDto {
 
     private UUID id;
     private UUID schoolId;
+    private UUID enrollmentTermId;
     private UUID enrollmentId;
     private UUID studentId;
     private String studentFirstName;
@@ -37,7 +39,8 @@ public class OffenceRecordDto {
     private LocalDateTime createdAt;
 
     public static OffenceRecordDto fromEntity(OffenceRecord offenceRecord) {
-        Enrollment enrollment = offenceRecord.getEnrollment();
+        EnrollmentTerm enrollmentTerm = offenceRecord.getEnrollmentTerm();
+        Enrollment enrollment = enrollmentTerm != null ? enrollmentTerm.getEnrollment() : null;
         Student student = enrollment != null ? enrollment.getStudent() : null;
         ClassSection classSection = enrollment != null ? enrollment.getClassSection() : null;
         PenaltyTrigger penaltyTrigger = offenceRecord.getPenaltyTrigger();
@@ -45,6 +48,7 @@ public class OffenceRecordDto {
         return OffenceRecordDto.builder()
                 .id(offenceRecord.getId())
                 .schoolId(offenceRecord.getSchoolId())
+                .enrollmentTermId(enrollmentTerm != null ? enrollmentTerm.getId() : null)
                 .enrollmentId(enrollment != null ? enrollment.getId() : null)
                 .studentId(student != null ? student.getId() : null)
                 .studentFirstName(student != null ? student.getFirstName() : null)

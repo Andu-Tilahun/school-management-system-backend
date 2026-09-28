@@ -13,8 +13,8 @@ import java.util.UUID;
 @Data
 public class OffenceRecordRequest {
 
-    @NotNull(message = "Enrollment is required")
-    private UUID enrollmentId;
+    @NotNull(message = "Student is required")
+    private UUID studentId;
 
     @NotNull(message = "Penalty trigger is required")
     private PenaltyTrigger penaltyTrigger;

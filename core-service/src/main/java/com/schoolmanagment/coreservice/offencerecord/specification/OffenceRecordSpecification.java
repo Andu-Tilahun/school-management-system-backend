@@ -38,7 +38,9 @@ public class OffenceRecordSpecification implements Specification<OffenceRecord> 
         }
 
         if (filterRequest.getEnrollmentId() != null) {
-            predicates.add(cb.equal(root.get("enrollment").get("id"), filterRequest.getEnrollmentId()));
+            predicates.add(cb.equal(
+                    root.get("enrollmentTerm").get("enrollment").get("id"),
+                    filterRequest.getEnrollmentId()));
         }
 
         if (filterRequest.getPenaltyTrigger() != null) {
@@ -50,7 +52,9 @@ public class OffenceRecordSpecification implements Specification<OffenceRecord> 
         }
 
         if (filterRequest.getStudentId() != null) {
-            predicates.add(cb.equal(root.get("enrollment").get("student").get("id"), filterRequest.getStudentId()));
+            predicates.add(cb.equal(
+                    root.get("enrollmentTerm").get("enrollment").get("student").get("id"),
+                    filterRequest.getStudentId()));
         }
 
         if (filterRequest.getSourceModule() != null) {

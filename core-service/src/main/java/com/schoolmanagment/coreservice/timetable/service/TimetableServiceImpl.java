@@ -117,9 +117,22 @@ public class TimetableServiceImpl implements TimetableService {
     @Override
     @Transactional(readOnly = true)
     public List<ClassSectionDto> getSectionsForCurrentTeacher() {
-        UUID teacherId = UserContext.current().getCurrentExternalId()
+        return getSectionsByTeacher(currentTeacherId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ClassSectionDto> getSectionsForCurrentTeacherAndSubject(UUID subjectId) {
+        return timetableRepository
+                .findActiveClassSectionsByTeacherIdAndSubjectId(currentTeacherId(), subjectId)
+                .stream()
+                .map(classSectionMapper::toDto)
+                .toList();
+    }
+
+    private UUID currentTeacherId() {
+        return UserContext.current().getCurrentExternalId()
                 .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
-        return getSectionsByTeacher(teacherId);
     }
 
     @Override

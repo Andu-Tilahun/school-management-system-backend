@@ -37,6 +37,10 @@ public class AttendanceSpecification implements Specification<Attendance> {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
         predicates.add(cb.isTrue(root.get("active")));
+
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+
         applyCallerScope(root, query, cb, predicates);
 
 
@@ -91,14 +95,11 @@ public class AttendanceSpecification implements Specification<Attendance> {
                     () -> predicates.add(cb.disjunction()));
             return;
         }
-        if (context.hasPolicy(PolicyNames.TEACHER_POLICY)) {
+        if (context.hasTeacherPolicy()) {
             context.getCurrentExternalId().ifPresentOrElse(
                     teacherId -> predicates.add(enrolledInTeacherHomeroom(root, query, cb, teacherId)),
                     () -> predicates.add(cb.disjunction()));
-            return;
         }
-        context.getCurrentExternalId()
-                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
     }
 
     /**

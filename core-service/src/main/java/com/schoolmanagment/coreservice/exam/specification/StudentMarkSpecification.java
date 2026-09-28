@@ -38,6 +38,10 @@ public class StudentMarkSpecification implements Specification<StudentMark> {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
         predicates.add(cb.isTrue(root.get("active")));
+
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+
         applyPolicyScope(root, query, cb, predicates);
 
         if (filterRequest.getStudentId() != null) {
@@ -82,7 +86,7 @@ public class StudentMarkSpecification implements Specification<StudentMark> {
                     () -> predicates.add(cb.disjunction()));
             return;
         }
-        if (context.hasPolicy(PolicyNames.TEACHER_POLICY)) {
+        if (context.hasTeacherPolicy()) {
             context.getCurrentExternalId().ifPresentOrElse(
                     teacherId -> predicates.add(taughtByTeacher(root, query, cb, teacherId)),
                     () -> predicates.add(cb.disjunction()));

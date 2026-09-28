@@ -33,10 +33,9 @@ public class AcademicYearSpecification implements Specification<AcademicYear> {
 
         predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
 
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        }
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+
 
         if (filterRequest.getSearchText() != null && !filterRequest.getSearchText().isBlank()) {
             String likeValue = "%" + filterRequest.getSearchText().toLowerCase(Locale.ROOT) + "%";

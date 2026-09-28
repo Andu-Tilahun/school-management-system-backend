@@ -95,6 +95,10 @@ public class UserContext {
         return hasPolicy(PolicyNames.STUDENT_POLICY);
     }
 
+    public boolean hasTeacherPolicy() {
+        return hasPolicy(PolicyNames.TEACHER_POLICY);
+    }
+
     public Optional<UUID> getCurrentExternalId() {
         return currentAuthDetails().map(JwtAuthDetails::externalId);
     }

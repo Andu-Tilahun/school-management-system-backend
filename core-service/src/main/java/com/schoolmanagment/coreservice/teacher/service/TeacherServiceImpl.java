@@ -3,6 +3,12 @@ package com.schoolmanagment.coreservice.teacher.service;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.commonsecurity.util.UserContext;
+import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
+import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
+import com.schoolmanagment.coreservice.student.repository.EmergencyContactRepository;
+import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
+import com.schoolmanagment.coreservice.student.repository.StudentEmergencyContactRepository;
+import com.schoolmanagment.coreservice.student.repository.StudentRepository;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import com.schoolmanagment.coreservice.subject.service.SubjectService;
@@ -16,6 +22,7 @@ import com.schoolmanagment.coreservice.teacher.mapper.TeacherMapper;
 import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
 import com.schoolmanagment.coreservice.teacher.repository.TeacherSubjectAssignmentRepository;
 import com.schoolmanagment.coreservice.teacher.specification.TeacherSpecification;
+import com.schoolmanagment.coreservice.timetable.repository.TimetableRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,6 +40,11 @@ public class TeacherServiceImpl implements TeacherService {
     private final TeacherSubjectAssignmentRepository assignmentRepository;
     private final SubjectService subjectService;
     private final TeacherMapper teacherMapper;
+    private final StudentRepository studentRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final TimetableRepository timetableRepository;
+    private final StudentEmergencyContactRepository studentEmergencyContactRepository;
+    private final EmergencyContactRepository emergencyContactRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -98,6 +110,28 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<TeacherSubjectAssignmentDto> getSubjectsForCurrentStudent() {
+        UUID studentId = currentStudentId();
+        studentRepository.findByIdAndActiveTrue(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+        return subjectsForStudent(studentId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherSubjectAssignmentDto> getSubjectsByStudentId(UUID studentId) {
+        UUID emergencyContactId = currentEmergencyContactId();
+        if (!studentEmergencyContactRepository
+                .existsByStudent_IdAndEmergencyContact_IdAndActiveTrue(studentId, emergencyContactId)) {
+            throw new BadRequestException("Student is not linked to the logged-in emergency contact");
+        }
+        studentRepository.findByIdAndActiveTrue(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+        return subjectsForStudent(studentId);
+    }
+
+    @Override
     public TeacherSubjectAssignment findActiveTeacherSubjectAssignmentById(UUID id) {
         TeacherSubjectAssignment assignment = assignmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -114,6 +148,44 @@ public class TeacherServiceImpl implements TeacherService {
             throw new BadRequestException("Subject is not active");
         }
         return assignment;
+    }
+
+    private List<TeacherSubjectAssignmentDto> subjectsForStudent(UUID studentId) {
+        return enrollmentRepository
+                .findActiveClassSectionIdByStudentId(studentId, EnrollmentStatus.ACTIVE)
+                .map(classSectionId -> timetableRepository
+                        .findActiveSubjectsByClassSectionId(classSectionId, SubjectStatus.ACTIVE)
+                        .stream()
+                        .map(this::toSubjectDto)
+                        .toList())
+                .orElseGet(List::of);
+    }
+
+    private TeacherSubjectAssignmentDto toSubjectDto(Subject subject) {
+        return TeacherSubjectAssignmentDto.builder()
+                .id(subject.getId())
+                .subjectId(subject.getId())
+                .subjectCode(subject.getSubjectCode())
+                .subjectName(subject.getSubjectName())
+                .active(subject.getStatus() == SubjectStatus.ACTIVE)
+                .build();
+    }
+
+    private UUID currentStudentId() {
+        return UserContext.current().getCurrentExternalId()
+                .orElseThrow(() -> new BadRequestException("Logged-in student has no external id"));
+    }
+
+    private UUID currentEmergencyContactId() {
+        UUID emergencyContactId = UserContext.current().getCurrentExternalId()
+                .orElseThrow(() -> new BadRequestException("Logged-in emergency contact has no external id"));
+        EmergencyContact contact = emergencyContactRepository.findById(emergencyContactId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Emergency contact not found with id: " + emergencyContactId));
+        if (!Boolean.TRUE.equals(contact.getActive())) {
+            throw new BadRequestException("Emergency contact is not active");
+        }
+        return emergencyContactId;
     }
 
     private Teacher currentLoggedInTeacher() {

@@ -30,4 +30,6 @@ public interface StudentService {
     List<StudentDto> getStudentsByHomeroom();
 
     List<StudentDto> getStudentsByClassSection(UUID classSectionId);
+
+    List<StudentDto> getStudentsForCurrentEmergencyContact();
 }

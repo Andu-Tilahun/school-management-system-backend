@@ -16,6 +16,10 @@ public interface TeacherService {
 
     List<TeacherSubjectAssignmentDto> getAssignedSubjects();
 
+    List<TeacherSubjectAssignmentDto> getSubjectsForCurrentStudent();
+
+    List<TeacherSubjectAssignmentDto> getSubjectsByStudentId(UUID studentId);
+
     Page<TeacherDto> getAllTeachers(int page, int size);
 
     Page<TeacherDto> filterTeachers(TeacherFilterRequest request);

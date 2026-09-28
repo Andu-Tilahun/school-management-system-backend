@@ -5,6 +5,7 @@ import com.schoolmanagment.commonsecurity.checker.RequiresPermission;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherDto;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherFilterRequest;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherRequest;
+import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
 import com.schoolmanagment.coreservice.teacher.service.TeacherService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +15,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -45,6 +47,7 @@ public class TeacherController {
                 ApiResponse.success(teachers, "Teachers retrieved successfully")
         );
     }
+
 
     @GetMapping("/{id}")
     @RequiresPermission(resource = "TEACHERS", scope = "READ")
@@ -84,6 +87,35 @@ public class TeacherController {
         teacherService.deleteTeacher(id);
         return ResponseEntity.ok(
                 ApiResponse.success("Teacher deleted successfully")
+        );
+    }
+
+    @GetMapping("/subjects")
+    @RequiresPermission(resource = "TEACHERS", scope = "READ")
+    public ResponseEntity<ApiResponse<List<TeacherSubjectAssignmentDto>>> getAssignedSubjectsForCurrentTeacher() {
+        List<TeacherSubjectAssignmentDto> subjects = teacherService.getAssignedSubjects();
+        return ResponseEntity.ok(
+                ApiResponse.success(subjects, "Assigned subjects retrieved successfully")
+        );
+    }
+
+    @GetMapping("/my-subjects")
+    @RequiresPermission(resource = "TEACHERS", scope = "READ")
+    public ResponseEntity<ApiResponse<List<TeacherSubjectAssignmentDto>>> getSubjectsForCurrentStudent() {
+        List<TeacherSubjectAssignmentDto> subjects = teacherService.getSubjectsForCurrentStudent();
+        return ResponseEntity.ok(
+                ApiResponse.success(subjects, "Subjects retrieved successfully")
+        );
+    }
+
+    @GetMapping("/students/{studentId}/subjects")
+    @RequiresPermission(resource = "TEACHERS", scope = "READ")
+    public ResponseEntity<ApiResponse<List<TeacherSubjectAssignmentDto>>> getSubjectsByStudentId(
+            @PathVariable UUID studentId
+    ) {
+        List<TeacherSubjectAssignmentDto> subjects = teacherService.getSubjectsByStudentId(studentId);
+        return ResponseEntity.ok(
+                ApiResponse.success(subjects, "Subjects retrieved successfully")
         );
     }
 }

@@ -6,7 +6,6 @@ import com.schoolmanagment.coreservice.attendance.dto.AttendanceDto;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceFilterRequest;
 import com.schoolmanagment.coreservice.attendance.dto.AttendanceRequest;
 import com.schoolmanagment.coreservice.attendance.service.AttendanceService;
-import com.schoolmanagment.coreservice.student.dto.StudentDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -45,15 +43,6 @@ public class AttendanceController {
         Page<AttendanceDto> records = attendanceService.filter(request);
         return ResponseEntity.ok(
                 ApiResponse.success(records, "Attendances retrieved successfully")
-        );
-    }
-
-    @GetMapping("/my-students")
-    @RequiresPermission(resource = "ATTENDANCE", scope = "READ")
-    public ResponseEntity<ApiResponse<List<StudentDto>>> getStudentsForCurrentEmergencyContact() {
-        List<StudentDto> students = attendanceService.getStudentsForCurrentEmergencyContact();
-        return ResponseEntity.ok(
-                ApiResponse.success(students, "Students retrieved successfully")
         );
     }
 

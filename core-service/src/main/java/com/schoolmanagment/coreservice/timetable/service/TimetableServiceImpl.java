@@ -8,7 +8,6 @@ import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.classsection.mapper.ClassSectionMapper;
 import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
-import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
 import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
 import com.schoolmanagment.coreservice.teacher.service.TeacherService;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableDto;
@@ -119,12 +118,6 @@ public class TimetableServiceImpl implements TimetableService {
     @Transactional(readOnly = true)
     public List<ClassSectionDto> getSectionsForCurrentTeacher() {
         return getSectionsByTeacher(currentTeacherId());
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<TeacherSubjectAssignmentDto> getAssignedSubjectsForCurrentTeacher() {
-        return teacherService.getAssignedSubjects();
     }
 
     @Override

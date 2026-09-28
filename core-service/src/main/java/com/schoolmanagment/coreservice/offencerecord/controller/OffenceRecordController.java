@@ -6,7 +6,6 @@ import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordDto;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordFilterRequest;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordRequest;
 import com.schoolmanagment.coreservice.offencerecord.service.OffenceRecordService;
-import com.schoolmanagment.coreservice.student.dto.StudentDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -15,7 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -45,15 +43,6 @@ public class OffenceRecordController {
         Page<OffenceRecordDto> records = offenceRecordService.filter(request);
         return ResponseEntity.ok(
                 ApiResponse.success(records, "Offence records retrieved successfully")
-        );
-    }
-
-    @GetMapping("/my-students")
-    @RequiresPermission(resource = "OFFENCE_RECORDS", scope = "READ")
-    public ResponseEntity<ApiResponse<List<StudentDto>>> getStudentsForCurrentEmergencyContact() {
-        List<StudentDto> students = offenceRecordService.getStudentsForCurrentEmergencyContact();
-        return ResponseEntity.ok(
-                ApiResponse.success(students, "Students retrieved successfully")
         );
     }
 

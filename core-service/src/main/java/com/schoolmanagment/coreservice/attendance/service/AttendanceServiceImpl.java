@@ -18,15 +18,11 @@ import com.schoolmanagment.coreservice.penalty.repository.PenaltyRepository;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRuleRepository;
 import com.schoolmanagment.coreservice.attendance.repository.PenaltySourceAttendanceRepository;
 import com.schoolmanagment.commonsecurity.util.UserContext;
-import com.schoolmanagment.coreservice.student.dto.StudentDto;
-import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
-import com.schoolmanagment.coreservice.student.repository.EmergencyContactRepository;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentTermRepository;
-import com.schoolmanagment.coreservice.student.repository.StudentEmergencyContactRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -48,8 +44,6 @@ public class AttendanceServiceImpl implements AttendanceService {
     private final PenaltyRuleRepository penaltyRuleRepository;
     private final PenaltyRepository penaltyRepository;
     private final PenaltySourceAttendanceRepository sourceRepository;
-    private final StudentEmergencyContactRepository studentEmergencyContactRepository;
-    private final EmergencyContactRepository emergencyContactRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -65,15 +59,6 @@ public class AttendanceServiceImpl implements AttendanceService {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
         return attendanceRepository.findAll(new AttendanceSpecification(request), pageable)
                 .map(attendanceMapper::toDto);
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public List<StudentDto> getStudentsForCurrentEmergencyContact() {
-        UUID emergencyContactId = currentEmergencyContactId();
-        return studentEmergencyContactRepository.findActiveStudentsByEmergencyContactId(emergencyContactId).stream()
-                .map(StudentDto::fromEntity)
-                .toList();
     }
 
     @Override
@@ -213,17 +198,5 @@ public class AttendanceServiceImpl implements AttendanceService {
                 penaltyRepository.save(penalty);
             }
         }
-    }
-
-    private UUID currentEmergencyContactId() {
-        UUID emergencyContactId = UserContext.current().getCurrentExternalId()
-                .orElseThrow(() -> new BadRequestException("Logged-in emergency contact has no external id"));
-        EmergencyContact contact = emergencyContactRepository.findById(emergencyContactId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Emergency contact not found with id: " + emergencyContactId));
-        if (!Boolean.TRUE.equals(contact.getActive())) {
-            throw new BadRequestException("Emergency contact is not active");
-        }
-        return emergencyContactId;
     }
 }

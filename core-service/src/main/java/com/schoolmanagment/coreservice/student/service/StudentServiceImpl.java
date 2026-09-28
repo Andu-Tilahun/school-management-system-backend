@@ -9,12 +9,15 @@ import com.schoolmanagment.coreservice.student.dto.EmergencyContactRequest;
 import com.schoolmanagment.coreservice.student.dto.StudentDto;
 import com.schoolmanagment.coreservice.student.dto.StudentFilterRequest;
 import com.schoolmanagment.coreservice.student.dto.StudentRequest;
+import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.entity.Student;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.mapper.StudentMapper;
+import com.schoolmanagment.coreservice.student.repository.EmergencyContactRepository;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
+import com.schoolmanagment.coreservice.student.repository.StudentEmergencyContactRepository;
 import com.schoolmanagment.coreservice.student.repository.StudentRepository;
 import com.schoolmanagment.coreservice.student.specification.StudentSpecification;
 import com.schoolmanagment.coreservice.teacher.entity.Teacher;
@@ -44,6 +47,8 @@ public class StudentServiceImpl implements StudentService {
     private final TeacherRepository teacherRepository;
     private final TimetableRepository timetableRepository;
     private final ClassSectionHomeroomRepository classSectionHomeroomRepository;
+    private final StudentEmergencyContactRepository studentEmergencyContactRepository;
+    private final EmergencyContactRepository emergencyContactRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -132,6 +137,15 @@ public class StudentServiceImpl implements StudentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<StudentDto> getStudentsForCurrentEmergencyContact() {
+        UUID emergencyContactId = currentEmergencyContactId();
+        return studentEmergencyContactRepository.findActiveStudentsByEmergencyContactId(emergencyContactId).stream()
+                .map(studentMapper::toDto)
+                .toList();
+    }
+
+    @Override
     public Student findActiveStudentById(UUID id) {
         return studentRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + id));
@@ -169,6 +183,18 @@ public class StudentServiceImpl implements StudentService {
                 }
             }
         }
+    }
+
+    private UUID currentEmergencyContactId() {
+        UUID emergencyContactId = UserContext.current().getCurrentExternalId()
+                .orElseThrow(() -> new BadRequestException("Logged-in emergency contact has no external id"));
+        EmergencyContact contact = emergencyContactRepository.findById(emergencyContactId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Emergency contact not found with id: " + emergencyContactId));
+        if (!Boolean.TRUE.equals(contact.getActive())) {
+            throw new BadRequestException("Emergency contact is not active");
+        }
+        return emergencyContactId;
     }
 
     private Teacher currentTeacher() {

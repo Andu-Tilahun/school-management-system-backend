@@ -75,6 +75,15 @@ public class StudentController {
         );
     }
 
+    @GetMapping("/my-students")
+    @RequiresPermission(resource = "STUDENTS", scope = "READ")
+    public ResponseEntity<ApiResponse<List<StudentDto>>> getStudentsForCurrentEmergencyContact() {
+        List<StudentDto> students = studentService.getStudentsForCurrentEmergencyContact();
+        return ResponseEntity.ok(
+                ApiResponse.success(students, "Students retrieved successfully")
+        );
+    }
+
     @GetMapping("/{id}")
     @RequiresPermission(resource = "STUDENTS", scope = "READ")
     public ResponseEntity<ApiResponse<StudentDto>> getStudentById(@PathVariable UUID id) {

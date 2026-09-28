@@ -32,10 +32,9 @@ public class OffenceRecordSpecification implements Specification<OffenceRecord> 
 
         predicates.add(cb.isTrue(root.get("active")));
 
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        }
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+
 
         if (filterRequest.getEnrollmentId() != null) {
             predicates.add(cb.equal(

@@ -31,10 +31,9 @@ public class GradeSpecification implements Specification<Grade> {
 
         predicates.add(cb.isTrue(root.get("active")));
 
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        }
+
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
 
         if (filterRequest.getSearchText() != null && !filterRequest.getSearchText().isBlank()) {
             String likeValue = "%" + filterRequest.getSearchText().toLowerCase(Locale.ROOT) + "%";

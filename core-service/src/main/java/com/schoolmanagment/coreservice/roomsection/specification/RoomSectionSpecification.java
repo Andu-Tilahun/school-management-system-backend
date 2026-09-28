@@ -3,11 +3,7 @@ package com.schoolmanagment.coreservice.roomsection.specification;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.roomsection.dto.RoomSectionFilterRequest;
 import com.schoolmanagment.coreservice.roomsection.entity.RoomSection;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -31,10 +27,9 @@ public class RoomSectionSpecification implements Specification<RoomSection> {
 
         predicates.add(cb.isTrue(root.get("active")));
 
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        }
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+
 
         if (filterRequest.getClassSectionId() != null) {
             predicates.add(cb.equal(root.get("classSection").get("id"), filterRequest.getClassSectionId()));

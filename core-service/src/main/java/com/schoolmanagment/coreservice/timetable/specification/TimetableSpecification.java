@@ -4,12 +4,7 @@ import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableFilterRequest;
 import com.schoolmanagment.coreservice.timetable.entity.Timetable;
 import com.schoolmanagment.coreservice.timetable.enums.Day;
-import jakarta.persistence.criteria.CriteriaBuilder;
-import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Expression;
-import jakarta.persistence.criteria.Join;
-import jakarta.persistence.criteria.Predicate;
-import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -35,12 +30,9 @@ public class TimetableSpecification implements Specification<Timetable> {
 
         predicates.add(cb.isTrue(root.get("active")));
 
-        if (UserContext.current().hasSchoolAdminPolicy()) {
-            UserContext.current().getCurrentExternalId()
-                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
-        } else if (filterRequest.getSchoolId() != null) {
-            predicates.add(cb.equal(root.get("schoolId"), filterRequest.getSchoolId()));
-        }
+        UserContext.current().getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+
 
         if (filterRequest.getClassSectionId() != null) {
             predicates.add(cb.equal(root.get("classSection").get("id"), filterRequest.getClassSectionId()));

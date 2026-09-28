@@ -1,10 +1,11 @@
-package com.schoolmanagment.coreservice.offencerecord.specification;
+package com.schoolmanagment.coreservice.exam.specification;
 
+import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.util.UserContext;
-import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordFilterRequest;
-import com.schoolmanagment.coreservice.offencerecord.entity.OffenceRecord;
-import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
+import com.schoolmanagment.coreservice.exam.dto.StudentMarkFilterRequest;
+import com.schoolmanagment.coreservice.exam.entity.StudentMark;
 import com.schoolmanagment.coreservice.student.entity.StudentEmergencyContact;
+import com.schoolmanagment.coreservice.timetable.entity.Timetable;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Path;
@@ -15,52 +16,44 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
 @RequiredArgsConstructor
-public class OffenceRecordSpecification implements Specification<OffenceRecord> {
+public class StudentMarkSpecification implements Specification<StudentMark> {
 
     private static final Set<String> SORTABLE_FIELDS = Set.of(
-            "dateOccurred",
+            "id",
             "createdAt",
-            "id"
+            "type",
+            "status",
+            "studMark",
+            "totalMarkWeight"
     );
 
-    private final OffenceRecordFilterRequest filterRequest;
+    private final StudentMarkFilterRequest filterRequest;
 
     @Override
-    public Predicate toPredicate(Root<OffenceRecord> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    public Predicate toPredicate(Root<StudentMark> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
         predicates.add(cb.isTrue(root.get("active")));
-        applyCallerScope(root, query, cb, predicates);
+        applyPolicyScope(root, query, cb, predicates);
 
-
-        if (filterRequest.getEnrollmentId() != null) {
-            predicates.add(cb.equal(
-                    root.get("enrollmentTerm").get("enrollment").get("id"),
-                    filterRequest.getEnrollmentId()));
+        if (filterRequest.getStudentId() != null) {
+            predicates.add(cb.equal(studentId(root), filterRequest.getStudentId()));
         }
 
-        if (filterRequest.getPenaltyTrigger() != null) {
-            predicates.add(cb.equal(root.get("penaltyTrigger"), filterRequest.getPenaltyTrigger()));
+        if (filterRequest.getSubjectId() != null) {
+            predicates.add(cb.equal(root.get("subject").get("id"), filterRequest.getSubjectId()));
+        }
+
+        if (filterRequest.getType() != null) {
+            predicates.add(cb.equal(root.get("type"), filterRequest.getType()));
         }
 
         if (filterRequest.getStatus() != null) {
             predicates.add(cb.equal(root.get("status"), filterRequest.getStatus()));
-        }
-
-        if (filterRequest.getStudentId() != null) {
-            predicates.add(cb.equal(
-                    root.get("enrollmentTerm").get("enrollment").get("student").get("id"),
-                    filterRequest.getStudentId()));
-        }
-
-        if (filterRequest.getSourceModule() != null) {
-            List<PenaltyTrigger> triggers = PenaltyTrigger.valuesFor(filterRequest.getSourceModule());
-            predicates.add(root.get("penaltyTrigger").in(triggers));
         }
 
         if (query.getResultType() != Long.class && query.getResultType() != long.class) {
@@ -70,8 +63,8 @@ public class OffenceRecordSpecification implements Specification<OffenceRecord> 
         return cb.and(predicates.toArray(new Predicate[0]));
     }
 
-    private void applyCallerScope(
-            Root<OffenceRecord> root,
+    private void applyPolicyScope(
+            Root<StudentMark> root,
             CriteriaQuery<?> query,
             CriteriaBuilder cb,
             ArrayList<Predicate> predicates
@@ -89,12 +82,41 @@ public class OffenceRecordSpecification implements Specification<OffenceRecord> 
                     () -> predicates.add(cb.disjunction()));
             return;
         }
-        context.getCurrentExternalId()
-                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+        if (context.hasPolicy(PolicyNames.TEACHER_POLICY)) {
+            context.getCurrentExternalId().ifPresentOrElse(
+                    teacherId -> predicates.add(taughtByTeacher(root, query, cb, teacherId)),
+                    () -> predicates.add(cb.disjunction()));
+            return;
+        }
+        if (context.hasSchoolAdminPolicy()) {
+            context.getCurrentExternalId().ifPresent(
+                    schoolId -> predicates.add(cb.equal(root.get("schoolId"), schoolId)));
+        }
+    }
+
+    private Predicate taughtByTeacher(
+            Root<StudentMark> root,
+            CriteriaQuery<?> query,
+            CriteriaBuilder cb,
+            UUID teacherId
+    ) {
+        Subquery<UUID> subquery = query.subquery(UUID.class);
+        Root<Timetable> timetable = subquery.from(Timetable.class);
+        subquery.select(timetable.get("id"));
+        subquery.where(
+                cb.equal(
+                        timetable.get("classSection"),
+                        root.get("enrollmentTerm").get("enrollment").get("classSection")),
+                cb.equal(timetable.get("teacherSubjectAssignment").get("teacher").get("id"), teacherId),
+                cb.equal(timetable.get("teacherSubjectAssignment").get("subject"), root.get("subject")),
+                cb.isTrue(timetable.get("active")),
+                cb.isTrue(timetable.get("teacherSubjectAssignment").get("active"))
+        );
+        return cb.exists(subquery);
     }
 
     private Predicate linkedToEmergencyContact(
-            Root<OffenceRecord> root,
+            Root<StudentMark> root,
             CriteriaQuery<?> query,
             CriteriaBuilder cb,
             UUID emergencyContactId
@@ -111,14 +133,14 @@ public class OffenceRecordSpecification implements Specification<OffenceRecord> 
         return cb.exists(subquery);
     }
 
-    private Path<UUID> studentId(Root<OffenceRecord> root) {
+    private Path<UUID> studentId(Root<StudentMark> root) {
         return root.get("enrollmentTerm").get("enrollment").get("student").get("id");
     }
 
-    private void applySorting(Root<OffenceRecord> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
+    private void applySorting(Root<StudentMark> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         String sortBy = filterRequest.getSortBy();
         if (sortBy == null || sortBy.isBlank() || !SORTABLE_FIELDS.contains(sortBy)) {
-            sortBy = "dateOccurred";
+            sortBy = "id";
         }
 
         boolean ascending = "ASC".equalsIgnoreCase(filterRequest.getSortDirection());

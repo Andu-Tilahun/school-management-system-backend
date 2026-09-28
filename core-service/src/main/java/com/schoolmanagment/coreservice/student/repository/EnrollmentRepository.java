@@ -24,6 +24,18 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, UUID>, J
     Optional<Enrollment> findBySchoolIdAndStudent_IdAndActiveTrue(UUID schoolId, UUID studentId);
 
     @Query("""
+            SELECT e.classSection.id
+            FROM Enrollment e
+            WHERE e.student.id = :studentId
+              AND e.active = true
+              AND e.status = :status
+              AND e.classSection.active = true
+            """)
+    Optional<UUID> findActiveClassSectionIdByStudentId(
+            @Param("studentId") UUID studentId,
+            @Param("status") EnrollmentStatus status);
+
+    @Query("""
             SELECT DISTINCT s
             FROM Enrollment e
             JOIN e.student s

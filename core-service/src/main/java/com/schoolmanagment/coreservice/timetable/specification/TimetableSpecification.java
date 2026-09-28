@@ -1,5 +1,6 @@
 package com.schoolmanagment.coreservice.timetable.specification;
 
+import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableFilterRequest;
 import com.schoolmanagment.coreservice.timetable.entity.Timetable;
@@ -29,9 +30,7 @@ public class TimetableSpecification implements Specification<Timetable> {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
         predicates.add(cb.isTrue(root.get("active")));
-
-        UserContext.current().getCurrentExternalId()
-                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+        applyCallerScope(root, cb, predicates);
 
 
         if (filterRequest.getClassSectionId() != null) {
@@ -88,6 +87,20 @@ public class TimetableSpecification implements Specification<Timetable> {
         }
 
         return cb.and(predicates.toArray(new Predicate[0]));
+    }
+
+    private void applyCallerScope(Root<Timetable> root, CriteriaBuilder cb, ArrayList<Predicate> predicates) {
+        UserContext context = UserContext.current();
+        if (context.hasPolicy(PolicyNames.TEACHER_POLICY)) {
+            context.getCurrentExternalId().ifPresentOrElse(
+                    teacherId -> predicates.add(cb.equal(
+                            root.get("teacherSubjectAssignment").get("teacher").get("id"),
+                            teacherId)),
+                    () -> predicates.add(cb.disjunction()));
+            return;
+        }
+        context.getCurrentExternalId()
+                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
     }
 
     private void applySorting(Root<Timetable> root, CriteriaQuery<?> query, CriteriaBuilder cb) {

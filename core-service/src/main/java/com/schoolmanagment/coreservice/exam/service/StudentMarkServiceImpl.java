@@ -4,6 +4,7 @@ import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkDto;
+import com.schoolmanagment.coreservice.exam.dto.StudentMarkFilterRequest;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkRequest;
 import com.schoolmanagment.coreservice.exam.entity.StudentMark;
 import com.schoolmanagment.coreservice.exam.entity.SubjectTotal;
@@ -11,18 +12,30 @@ import com.schoolmanagment.coreservice.exam.enums.MarkStatus;
 import com.schoolmanagment.coreservice.exam.enums.PassFailStatus;
 import com.schoolmanagment.coreservice.exam.mapper.StudentMarkMapper;
 import com.schoolmanagment.coreservice.exam.repository.StudentMarkRepository;
+import com.schoolmanagment.coreservice.exam.specification.StudentMarkSpecification;
 import com.schoolmanagment.coreservice.exam.repository.SubjectTotalRepository;
+import com.schoolmanagment.coreservice.student.dto.StudentDto;
+import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
+import com.schoolmanagment.coreservice.student.repository.EmergencyContactRepository;
+import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentTermRepository;
+import com.schoolmanagment.coreservice.student.repository.StudentEmergencyContactRepository;
+import com.schoolmanagment.coreservice.student.repository.StudentRepository;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
+import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import com.schoolmanagment.coreservice.subject.repository.SubjectRepository;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
 import com.schoolmanagment.coreservice.teacher.entity.Teacher;
 import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
 import com.schoolmanagment.coreservice.teacher.service.TeacherService;
+import com.schoolmanagment.coreservice.timetable.repository.TimetableRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +50,11 @@ public class StudentMarkServiceImpl implements StudentMarkService {
     private final SubjectTotalRepository subjectTotalRepository;
     private final SubjectRepository subjectRepository;
     private final EnrollmentTermRepository enrollmentTermRepository;
+    private final EnrollmentRepository enrollmentRepository;
+    private final StudentRepository studentRepository;
+    private final StudentEmergencyContactRepository studentEmergencyContactRepository;
+    private final EmergencyContactRepository emergencyContactRepository;
+    private final TimetableRepository timetableRepository;
     private final TeacherRepository teacherRepository;
     private final TeacherService teacherService;
     private final StudentMarkMapper studentMarkMapper;
@@ -93,8 +111,58 @@ public class StudentMarkServiceImpl implements StudentMarkService {
 
     @Override
     @Transactional(readOnly = true)
+    public Page<StudentMarkDto> filter(StudentMarkFilterRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        return studentMarkRepository.findAll(new StudentMarkSpecification(request), pageable)
+                .map(studentMarkMapper::toDto);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<TeacherSubjectAssignmentDto> getSubjectsForCurrentTeacher() {
         return teacherService.getAssignedSubjects();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherSubjectAssignmentDto> getSubjectsForCurrentStudent() {
+        UUID studentId = currentStudentId();
+        studentRepository.findByIdAndActiveTrue(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+        return subjectsForStudent(studentId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<StudentDto> getStudentsForCurrentEmergencyContact() {
+        UUID emergencyContactId = currentEmergencyContactId();
+        return studentEmergencyContactRepository.findActiveStudentsByEmergencyContactId(emergencyContactId).stream()
+                .map(StudentDto::fromEntity)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherSubjectAssignmentDto> getSubjectsForEmergencyContactStudent(UUID studentId) {
+        UUID emergencyContactId = currentEmergencyContactId();
+        if (!studentEmergencyContactRepository
+                .existsByStudent_IdAndEmergencyContact_IdAndActiveTrue(studentId, emergencyContactId)) {
+            throw new BadRequestException("Student is not linked to the logged-in emergency contact");
+        }
+        studentRepository.findByIdAndActiveTrue(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+        return subjectsForStudent(studentId);
+    }
+
+    private List<TeacherSubjectAssignmentDto> subjectsForStudent(UUID studentId) {
+        return enrollmentRepository
+                .findActiveClassSectionIdByStudentId(studentId, EnrollmentStatus.ACTIVE)
+                .map(classSectionId -> timetableRepository
+                        .findActiveSubjectsByClassSectionId(classSectionId, SubjectStatus.ACTIVE)
+                        .stream()
+                        .map(this::toSubjectDto)
+                        .toList())
+                .orElseGet(List::of);
     }
 
     private EnrollmentTerm resolveActiveEnrollmentTerm(UUID studentId) {
@@ -110,6 +178,33 @@ public class StudentMarkServiceImpl implements StudentMarkService {
             throw new BadRequestException("Student has more than one active enrollment term: " + studentId);
         }
         return enrollmentTerms.get(0);
+    }
+
+    private TeacherSubjectAssignmentDto toSubjectDto(Subject subject) {
+        return TeacherSubjectAssignmentDto.builder()
+                .id(subject.getId())
+                .subjectId(subject.getId())
+                .subjectCode(subject.getSubjectCode())
+                .subjectName(subject.getSubjectName())
+                .active(subject.getStatus() == SubjectStatus.ACTIVE)
+                .build();
+    }
+
+    private UUID currentEmergencyContactId() {
+        UUID emergencyContactId = UserContext.current().getCurrentExternalId()
+                .orElseThrow(() -> new BadRequestException("Logged-in emergency contact has no external id"));
+        EmergencyContact contact = emergencyContactRepository.findById(emergencyContactId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Emergency contact not found with id: " + emergencyContactId));
+        if (!Boolean.TRUE.equals(contact.getActive())) {
+            throw new BadRequestException("Emergency contact is not active");
+        }
+        return emergencyContactId;
+    }
+
+    private UUID currentStudentId() {
+        return UserContext.current().getCurrentExternalId()
+                .orElseThrow(() -> new BadRequestException("Logged-in student has no external id"));
     }
 
     private Teacher currentTeacher() {

@@ -102,7 +102,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional(readOnly = true)
     public List<TeacherSubjectAssignmentDto> getAssignedSubjects() {
-        Teacher teacher = currentLoggedInTeacher();
+        Teacher teacher = findActiveTeacherById(currentLoggedInUserId());
         return teacherMapper.toAssignmentDtos(
                 assignmentRepository.findActiveByTeacherIdWithSubject(teacher.getId(), SubjectStatus.ACTIVE));
     }
@@ -110,7 +110,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional(readOnly = true)
     public List<TeacherSubjectAssignmentDto> getSubjectsForCurrentStudent() {
-        UUID studentId = currentStudentId();
+        UUID studentId = currentLoggedInUserId();
         studentService.findActiveStudentById(studentId);
         return subjectsForStudent(studentId);
     }
@@ -118,7 +118,8 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional(readOnly = true)
     public List<TeacherSubjectAssignmentDto> getSubjectsByStudentId(UUID studentId) {
-        UUID emergencyContactId = currentEmergencyContactId();
+        UUID emergencyContactId = currentLoggedInUserId();
+        emergencyContactService.findActiveEmergencyContactById(emergencyContactId);
         if (!emergencyContactService.isStudentLinkedToEmergencyContact(studentId, emergencyContactId)) {
             throw new BadRequestException("Student is not linked to the logged-in emergency contact");
         }
@@ -164,22 +165,9 @@ public class TeacherServiceImpl implements TeacherService {
                 .build();
     }
 
-    private UUID currentStudentId() {
+    private UUID currentLoggedInUserId() {
         return UserContext.current().getCurrentExternalId()
-                .orElseThrow(() -> new BadRequestException("Logged-in student has no external id"));
-    }
-
-    private UUID currentEmergencyContactId() {
-        UUID emergencyContactId = UserContext.current().getCurrentExternalId()
-                .orElseThrow(() -> new BadRequestException("Logged-in emergency contact has no external id"));
-        emergencyContactService.findActiveEmergencyContactById(emergencyContactId);
-        return emergencyContactId;
-    }
-
-    private Teacher currentLoggedInTeacher() {
-        UUID teacherId = UserContext.current().getCurrentExternalId()
-                .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
-        return findActiveTeacherById(teacherId);
+                .orElseThrow(() -> new BadRequestException("Logged-in user has no external id"));
     }
 
     @Override

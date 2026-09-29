@@ -16,7 +16,9 @@ public class SchoolTenantIdentifierResolver
     public UUID resolveCurrentTenantIdentifier() {
         UserContext context = UserContext.current();
 
-        if (isTenantLevel(context)) {
+        // Hibernate resolves a tenant while the EntityManagerFactory and repositories
+        // are created, before any request has a security context.
+        if (context == null || !context.isAuthenticated() || isTenantLevel(context)) {
             return UNSCOPED;
         }
 
@@ -32,14 +34,10 @@ public class SchoolTenantIdentifierResolver
 
     @Override
     public boolean isRoot(UUID tenantId) {
-        return isTenantLevel(UserContext.current());
+        return UNSCOPED.equals(tenantId);
     }
 
-
     private static boolean isTenantLevel(UserContext context) {
-        if (context == null) {
-            throw new IllegalStateException("No user context set for this request");
-        }
         return context.hasAdminPolicy() || context.hasTenantManager();
     }
 }

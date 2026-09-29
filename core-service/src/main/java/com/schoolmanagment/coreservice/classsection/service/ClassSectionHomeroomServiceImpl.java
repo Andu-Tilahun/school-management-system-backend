@@ -8,7 +8,7 @@ import com.schoolmanagment.coreservice.classsection.mapper.ClassSectionHomeroomM
 import com.schoolmanagment.coreservice.classsection.repository.ClassSectionHomeroomRepository;
 import com.schoolmanagment.coreservice.classsection.repository.ClassSectionRepository;
 import com.schoolmanagment.coreservice.teacher.entity.Teacher;
-import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
+import com.schoolmanagment.coreservice.teacher.service.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +23,7 @@ public class ClassSectionHomeroomServiceImpl implements ClassSectionHomeroomServ
 
     private final ClassSectionHomeroomRepository classSectionHomeroomRepository;
     private final ClassSectionRepository classSectionRepository;
-    private final TeacherRepository teacherRepository;
+    private final TeacherService teacherService;
     private final ClassSectionHomeroomMapper classSectionHomeroomMapper;
 
     @Override
@@ -32,8 +32,7 @@ public class ClassSectionHomeroomServiceImpl implements ClassSectionHomeroomServ
         ClassSection classSection = classSectionRepository.findByIdAndActiveTrue(classSectionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Class section not found with id: " + classSectionId));
 
-        Teacher newTeacher = teacherRepository.findByIdAndActiveTrue(newTeacherId)
-                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + newTeacherId));
+        Teacher newTeacher = teacherService.findActiveTeacherById(newTeacherId);
 
         Optional<ClassSectionHomeroom> current =
                 classSectionHomeroomRepository.findByClassSectionIdAndActiveTrue(classSectionId);
@@ -79,5 +78,11 @@ public class ClassSectionHomeroomServiceImpl implements ClassSectionHomeroomServ
     public List<ClassSectionHomeroomDto> getByTeacher(UUID teacherId) {
         return classSectionHomeroomMapper.toDtoList(
                 classSectionHomeroomRepository.findByTeacherIdAndActiveTrue(teacherId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UUID> findActiveClassSectionIdsByTeacherId(UUID teacherId) {
+        return classSectionHomeroomRepository.findActiveClassSectionIdsByTeacherId(teacherId);
     }
 }

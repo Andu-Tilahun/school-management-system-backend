@@ -4,9 +4,11 @@ import com.schoolmanagment.coreservice.student.dto.EnrollmentDto;
 import com.schoolmanagment.coreservice.student.dto.EnrollmentFilterRequest;
 import com.schoolmanagment.coreservice.student.dto.EnrollmentRequest;
 import com.schoolmanagment.coreservice.student.dto.EnrollmentTermDto;
+import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface EnrollmentService {
@@ -22,4 +24,10 @@ public interface EnrollmentService {
     void delete(UUID studentId, UUID enrollmentId);
 
     List<EnrollmentTermDto> listTerms(UUID enrollmentId, UUID studentId);
+
+    Optional<UUID> findActiveClassSectionIdByStudentId(UUID studentId);
+
+    List<EnrollmentTerm> findActiveEnrollmentTermsByStudentIdAndSchoolId(UUID studentId, UUID schoolId);
+
+    EnrollmentTerm findEnrollmentTermById(UUID id);
 }

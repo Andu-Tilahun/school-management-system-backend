@@ -3,7 +3,7 @@ package com.schoolmanagment.coreservice.student.service;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.commonsecurity.util.UserContext;
-import com.schoolmanagment.coreservice.classsection.repository.ClassSectionHomeroomRepository;
+import com.schoolmanagment.coreservice.classsection.service.ClassSectionHomeroomService;
 import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.student.dto.EmergencyContactRequest;
 import com.schoolmanagment.coreservice.student.dto.StudentDto;
@@ -21,10 +21,11 @@ import com.schoolmanagment.coreservice.student.repository.StudentEmergencyContac
 import com.schoolmanagment.coreservice.student.repository.StudentRepository;
 import com.schoolmanagment.coreservice.student.specification.StudentSpecification;
 import com.schoolmanagment.coreservice.teacher.entity.Teacher;
-import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
-import com.schoolmanagment.coreservice.timetable.repository.TimetableRepository;
+import com.schoolmanagment.coreservice.teacher.service.TeacherService;
+import com.schoolmanagment.coreservice.timetable.service.TimetableService;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.Hibernate;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -44,9 +45,12 @@ public class StudentServiceImpl implements StudentService {
     private final StudentMapper studentMapper;
     private final EmergencyContactService emergencyContactService;
     private final ClassSectionService classSectionService;
-    private final TeacherRepository teacherRepository;
-    private final TimetableRepository timetableRepository;
-    private final ClassSectionHomeroomRepository classSectionHomeroomRepository;
+    @Lazy
+    private final TeacherService teacherService;
+    @Lazy
+    private final TimetableService timetableService;
+    @Lazy
+    private final ClassSectionHomeroomService classSectionHomeroomService;
     private final StudentEmergencyContactRepository studentEmergencyContactRepository;
     private final EmergencyContactRepository emergencyContactRepository;
 
@@ -118,7 +122,7 @@ public class StudentServiceImpl implements StudentService {
     public List<StudentDto> getStudentsByTimetable() {
         Teacher teacher = currentTeacher();
         return findStudentsByClassSections(
-                timetableRepository.findActiveClassSectionIdsByTeacherId(teacher.getId()));
+                timetableService.findActiveClassSectionIdsByTeacherId(teacher.getId()));
     }
 
     @Override
@@ -126,7 +130,7 @@ public class StudentServiceImpl implements StudentService {
     public List<StudentDto> getStudentsByHomeroom() {
         Teacher teacher = currentTeacher();
         return findStudentsByClassSections(
-                classSectionHomeroomRepository.findActiveClassSectionIdsByTeacherId(teacher.getId()));
+                classSectionHomeroomService.findActiveClassSectionIdsByTeacherId(teacher.getId()));
     }
 
     @Override
@@ -200,8 +204,7 @@ public class StudentServiceImpl implements StudentService {
     private Teacher currentTeacher() {
         UUID teacherId = UserContext.current().getCurrentExternalId()
                 .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
-        return teacherRepository.findByIdAndActiveTrue(teacherId)
-                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
+        return teacherService.findActiveTeacherById(teacherId);
     }
 
     private List<StudentDto> findStudentsByClassSections(Collection<UUID> classSectionIds) {

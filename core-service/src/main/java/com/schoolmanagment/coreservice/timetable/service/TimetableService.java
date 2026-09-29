@@ -1,6 +1,7 @@
 package com.schoolmanagment.coreservice.timetable.service;
 
 import com.schoolmanagment.coreservice.classsection.dto.ClassSectionDto;
+import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableDto;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableFilterRequest;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableRequest;
@@ -28,4 +29,8 @@ public interface TimetableService {
     List<ClassSectionDto> getSectionsForCurrentTeacher();
 
     List<ClassSectionDto> getSectionsForCurrentTeacherAndSubject(UUID subjectId);
+
+    List<Subject> findActiveSubjectsByClassSectionId(UUID classSectionId);
+
+    List<UUID> findActiveClassSectionIdsByTeacherId(UUID teacherId);
 }

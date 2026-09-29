@@ -89,6 +89,12 @@ public class PenaltyRuleServiceImpl implements PenaltyRuleService {
                 .orElseThrow(() -> new ResourceNotFoundException("Penalty rule not found with id: " + id));
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<PenaltyRule> findActiveByTrigger(PenaltyTrigger trigger) {
+        return penaltyRuleRepository.findActiveByTrigger(trigger);
+    }
+
     private void validateOccurrenceNotTaken(
             UUID schoolId, PenaltyTrigger penaltyTrigger, Integer occurrenceNumber, UUID excludeId) {
         boolean taken = excludeId == null

@@ -3,12 +3,9 @@ package com.schoolmanagment.coreservice.teacher.service;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.commonsecurity.util.UserContext;
-import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
-import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
-import com.schoolmanagment.coreservice.student.repository.EmergencyContactRepository;
-import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
-import com.schoolmanagment.coreservice.student.repository.StudentEmergencyContactRepository;
-import com.schoolmanagment.coreservice.student.repository.StudentRepository;
+import com.schoolmanagment.coreservice.student.service.EmergencyContactService;
+import com.schoolmanagment.coreservice.student.service.EnrollmentService;
+import com.schoolmanagment.coreservice.student.service.StudentService;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import com.schoolmanagment.coreservice.subject.service.SubjectService;
@@ -22,8 +19,9 @@ import com.schoolmanagment.coreservice.teacher.mapper.TeacherMapper;
 import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
 import com.schoolmanagment.coreservice.teacher.repository.TeacherSubjectAssignmentRepository;
 import com.schoolmanagment.coreservice.teacher.specification.TeacherSpecification;
-import com.schoolmanagment.coreservice.timetable.repository.TimetableRepository;
+import com.schoolmanagment.coreservice.timetable.service.TimetableService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,11 +38,11 @@ public class TeacherServiceImpl implements TeacherService {
     private final TeacherSubjectAssignmentRepository assignmentRepository;
     private final SubjectService subjectService;
     private final TeacherMapper teacherMapper;
-    private final StudentRepository studentRepository;
-    private final EnrollmentRepository enrollmentRepository;
-    private final TimetableRepository timetableRepository;
-    private final StudentEmergencyContactRepository studentEmergencyContactRepository;
-    private final EmergencyContactRepository emergencyContactRepository;
+    private final StudentService studentService;
+    private final EnrollmentService enrollmentService;
+    @Lazy
+    private final TimetableService timetableService;
+    private final EmergencyContactService emergencyContactService;
 
     @Override
     @Transactional(readOnly = true)
@@ -113,8 +111,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Transactional(readOnly = true)
     public List<TeacherSubjectAssignmentDto> getSubjectsForCurrentStudent() {
         UUID studentId = currentStudentId();
-        studentRepository.findByIdAndActiveTrue(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+        studentService.findActiveStudentById(studentId);
         return subjectsForStudent(studentId);
     }
 
@@ -122,12 +119,10 @@ public class TeacherServiceImpl implements TeacherService {
     @Transactional(readOnly = true)
     public List<TeacherSubjectAssignmentDto> getSubjectsByStudentId(UUID studentId) {
         UUID emergencyContactId = currentEmergencyContactId();
-        if (!studentEmergencyContactRepository
-                .existsByStudent_IdAndEmergencyContact_IdAndActiveTrue(studentId, emergencyContactId)) {
+        if (!emergencyContactService.isStudentLinkedToEmergencyContact(studentId, emergencyContactId)) {
             throw new BadRequestException("Student is not linked to the logged-in emergency contact");
         }
-        studentRepository.findByIdAndActiveTrue(studentId)
-                .orElseThrow(() -> new ResourceNotFoundException("Student not found with id: " + studentId));
+        studentService.findActiveStudentById(studentId);
         return subjectsForStudent(studentId);
     }
 
@@ -151,10 +146,8 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     private List<TeacherSubjectAssignmentDto> subjectsForStudent(UUID studentId) {
-        return enrollmentRepository
-                .findActiveClassSectionIdByStudentId(studentId, EnrollmentStatus.ACTIVE)
-                .map(classSectionId -> timetableRepository
-                        .findActiveSubjectsByClassSectionId(classSectionId, SubjectStatus.ACTIVE)
+        return enrollmentService.findActiveClassSectionIdByStudentId(studentId)
+                .map(classSectionId -> timetableService.findActiveSubjectsByClassSectionId(classSectionId)
                         .stream()
                         .map(this::toSubjectDto)
                         .toList())
@@ -179,12 +172,7 @@ public class TeacherServiceImpl implements TeacherService {
     private UUID currentEmergencyContactId() {
         UUID emergencyContactId = UserContext.current().getCurrentExternalId()
                 .orElseThrow(() -> new BadRequestException("Logged-in emergency contact has no external id"));
-        EmergencyContact contact = emergencyContactRepository.findById(emergencyContactId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Emergency contact not found with id: " + emergencyContactId));
-        if (!Boolean.TRUE.equals(contact.getActive())) {
-            throw new BadRequestException("Emergency contact is not active");
-        }
+        emergencyContactService.findActiveEmergencyContactById(emergencyContactId);
         return emergencyContactId;
     }
 
@@ -194,7 +182,8 @@ public class TeacherServiceImpl implements TeacherService {
         return findActiveTeacherById(teacherId);
     }
 
-    private Teacher findActiveTeacherById(UUID id) {
+    @Override
+    public Teacher findActiveTeacherById(UUID id) {
         return teacherRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + id));
     }

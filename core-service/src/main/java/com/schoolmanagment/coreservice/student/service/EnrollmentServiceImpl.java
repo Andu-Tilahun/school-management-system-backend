@@ -15,6 +15,7 @@ import com.schoolmanagment.coreservice.student.dto.EnrollmentTermDto;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.entity.Student;
+import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
 import com.schoolmanagment.coreservice.student.mapper.EnrollmentMapper;
 import com.schoolmanagment.coreservice.student.mapper.EnrollmentTermMapper;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -140,6 +142,29 @@ public class EnrollmentServiceImpl implements EnrollmentService {
 
         return enrollmentTermMapper.toDto(
                 enrollmentTermRepository.save(newRegistration));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<UUID> findActiveClassSectionIdByStudentId(UUID studentId) {
+        return enrollmentRepository.findActiveClassSectionIdByStudentId(studentId, EnrollmentStatus.ACTIVE);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<EnrollmentTerm> findActiveEnrollmentTermsByStudentIdAndSchoolId(UUID studentId, UUID schoolId) {
+        return enrollmentTermRepository.findActiveByStudentIdAndSchoolId(
+                studentId,
+                schoolId,
+                EnrollmentStatus.ACTIVE,
+                EnrollmentTermStatus.ACTIVE);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public EnrollmentTerm findEnrollmentTermById(UUID id) {
+        return enrollmentTermRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("EnrollmentTerm not found"));
     }
 
     @Transactional

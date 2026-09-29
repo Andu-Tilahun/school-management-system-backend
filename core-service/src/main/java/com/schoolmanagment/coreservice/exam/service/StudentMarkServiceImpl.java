@@ -15,13 +15,12 @@ import com.schoolmanagment.coreservice.exam.repository.StudentMarkRepository;
 import com.schoolmanagment.coreservice.exam.specification.StudentMarkSpecification;
 import com.schoolmanagment.coreservice.exam.repository.SubjectTotalRepository;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
-import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
-import com.schoolmanagment.coreservice.student.repository.EnrollmentTermRepository;
+import com.schoolmanagment.coreservice.student.service.EnrollmentService;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
-import com.schoolmanagment.coreservice.subject.repository.SubjectRepository;
+import com.schoolmanagment.coreservice.subject.service.SubjectService;
 import com.schoolmanagment.coreservice.teacher.entity.Teacher;
-import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
+import com.schoolmanagment.coreservice.teacher.service.TeacherService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,9 +37,9 @@ public class StudentMarkServiceImpl implements StudentMarkService {
 
     private final StudentMarkRepository studentMarkRepository;
     private final SubjectTotalRepository subjectTotalRepository;
-    private final SubjectRepository subjectRepository;
-    private final EnrollmentTermRepository enrollmentTermRepository;
-    private final TeacherRepository teacherRepository;
+    private final SubjectService subjectService;
+    private final EnrollmentService enrollmentService;
+    private final TeacherService teacherService;
     private final StudentMarkMapper studentMarkMapper;
 
     @Override
@@ -54,8 +53,7 @@ public class StudentMarkServiceImpl implements StudentMarkService {
                     "Cannot register a mark for a non-active term registration");
         }
 
-        Subject subject = subjectRepository.findById(request.getSubjectId())
-                .orElseThrow(() -> new ResourceNotFoundException("Subject not found"));
+        Subject subject = subjectService.findActiveSubjectById(request.getSubjectId());
 
         studentMarkRepository
                 .findByEnrollmentTermIdAndSubjectIdAndType(
@@ -102,11 +100,8 @@ public class StudentMarkServiceImpl implements StudentMarkService {
     }
 
     private EnrollmentTerm resolveActiveEnrollmentTerm(UUID studentId) {
-        List<EnrollmentTerm> enrollmentTerms = enrollmentTermRepository.findActiveByStudentIdAndSchoolId(
-                studentId,
-                currentSchoolId(),
-                EnrollmentStatus.ACTIVE,
-                EnrollmentTermStatus.ACTIVE);
+        List<EnrollmentTerm> enrollmentTerms = enrollmentService
+                .findActiveEnrollmentTermsByStudentIdAndSchoolId(studentId, currentSchoolId());
         if (enrollmentTerms.isEmpty()) {
             throw new ResourceNotFoundException("Active enrollment term not found for student: " + studentId);
         }
@@ -119,8 +114,7 @@ public class StudentMarkServiceImpl implements StudentMarkService {
     private Teacher currentTeacher() {
         UUID teacherId = UserContext.current().getCurrentExternalId()
                 .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
-        return teacherRepository.findByIdAndActiveTrue(teacherId)
-                .orElseThrow(() -> new ResourceNotFoundException("Teacher not found with id: " + teacherId));
+        return teacherService.findActiveTeacherById(teacherId);
     }
 
     private UUID currentSchoolId() {
@@ -135,11 +129,9 @@ public class StudentMarkServiceImpl implements StudentMarkService {
     @Transactional
     public SubjectTotal recalculate(UUID enrollmentTermId, UUID subjectId) {
 
-        Subject subject = subjectRepository.findById(subjectId)
-                .orElseThrow(() -> new ResourceNotFoundException("Subject not found"));
+        Subject subject = subjectService.findActiveSubjectById(subjectId);
 
-        EnrollmentTerm enrollmentTerm = enrollmentTermRepository.findById(enrollmentTermId)
-                .orElseThrow(() -> new ResourceNotFoundException("EnrollmentTerm not found"));
+        EnrollmentTerm enrollmentTerm = enrollmentService.findEnrollmentTermById(enrollmentTermId);
 
         List<StudentMark> gradedMarks = studentMarkRepository
                 .findByEnrollmentTermIdAndSubjectIdAndStatusAndActiveTrue(

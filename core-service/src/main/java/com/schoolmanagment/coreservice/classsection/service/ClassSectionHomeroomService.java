@@ -14,4 +14,6 @@ public interface ClassSectionHomeroomService {
     List<ClassSectionHomeroomDto> getHistory(UUID classSectionId);
 
     List<ClassSectionHomeroomDto> getByTeacher(UUID teacherId);
+
+    List<UUID> findActiveClassSectionIdsByTeacherId(UUID teacherId);
 }

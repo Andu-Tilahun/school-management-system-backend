@@ -2,6 +2,7 @@ package com.schoolmanagment.coreservice.student.service;
 
 import com.schoolmanagment.coreservice.student.dto.EmergencyContactDto;
 import com.schoolmanagment.coreservice.student.dto.EmergencyContactRequest;
+import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,4 +19,8 @@ public interface EmergencyContactService {
     void removeEmergencyContactFromStudent(UUID studentId, UUID emergencyContactId);
 
     EmergencyContactDto updateEmergencyContact(UUID emergencyContactId, EmergencyContactRequest request);
+
+    EmergencyContact findActiveEmergencyContactById(UUID id);
+
+    boolean isStudentLinkedToEmergencyContact(UUID studentId, UUID emergencyContactId);
 }

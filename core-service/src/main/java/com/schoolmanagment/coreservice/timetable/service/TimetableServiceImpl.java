@@ -8,6 +8,7 @@ import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.classsection.mapper.ClassSectionMapper;
 import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
+import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
 import com.schoolmanagment.coreservice.teacher.service.TeacherService;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableDto;
@@ -133,6 +134,18 @@ public class TimetableServiceImpl implements TimetableService {
     private UUID currentTeacherId() {
         return UserContext.current().getCurrentExternalId()
                 .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Subject> findActiveSubjectsByClassSectionId(UUID classSectionId) {
+        return timetableRepository.findActiveSubjectsByClassSectionId(classSectionId, SubjectStatus.ACTIVE);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<UUID> findActiveClassSectionIdsByTeacherId(UUID teacherId) {
+        return timetableRepository.findActiveClassSectionIdsByTeacherId(teacherId);
     }
 
     @Override

@@ -97,6 +97,24 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
         return EmergencyContactDto.fromEntity(saved);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public EmergencyContact findActiveEmergencyContactById(UUID id) {
+        EmergencyContact contact = emergencyContactRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Emergency contact not found with id: " + id));
+        if (!Boolean.TRUE.equals(contact.getActive())) {
+            throw new BadRequestException("Emergency contact is not active");
+        }
+        return contact;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public boolean isStudentLinkedToEmergencyContact(UUID studentId, UUID emergencyContactId) {
+        return studentEmergencyContactRepository
+                .existsByStudent_IdAndEmergencyContact_IdAndActiveTrue(studentId, emergencyContactId);
+    }
+
     private EmergencyContact resolveContact(UUID schoolId, EmergencyContactRequest request) {
         return emergencyContactRepository
                 .findBySchoolIdAndEmail(schoolId, request.getEmail())

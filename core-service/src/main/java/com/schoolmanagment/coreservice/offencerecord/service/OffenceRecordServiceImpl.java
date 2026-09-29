@@ -15,13 +15,13 @@ import com.schoolmanagment.coreservice.penalty.entity.Penalty;
 import com.schoolmanagment.coreservice.penalty.entity.PenaltyRule;
 import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import com.schoolmanagment.coreservice.penalty.repository.PenaltyRepository;
-import com.schoolmanagment.coreservice.penalty.repository.PenaltyRuleRepository;
+import com.schoolmanagment.coreservice.penalty.service.PenaltyRuleService;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.student.entity.Enrollment;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
-import com.schoolmanagment.coreservice.student.repository.EnrollmentTermRepository;
+import com.schoolmanagment.coreservice.student.service.EnrollmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -38,9 +38,9 @@ import java.util.UUID;
 public class OffenceRecordServiceImpl implements OffenceRecordService {
 
     private final OffenceRecordRepository offenceRecordRepository;
-    private final EnrollmentTermRepository enrollmentTermRepository;
+    private final EnrollmentService enrollmentService;
     private final OffenceRecordMapper offenceRecordMapper;
-    private final PenaltyRuleRepository penaltyRuleRepository;
+    private final PenaltyRuleService penaltyRuleService;
     private final PenaltyRepository penaltyRepository;
     private final PenaltySourceOffenceRecordRepository sourceRepository;
 
@@ -123,11 +123,8 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
     }
 
     private EnrollmentTerm resolveActiveEnrollmentTerm(UUID studentId) {
-        List<EnrollmentTerm> enrollmentTerms = enrollmentTermRepository.findActiveByStudentIdAndSchoolId(
-                studentId,
-                currentSchoolId(),
-                EnrollmentStatus.ACTIVE,
-                EnrollmentTermStatus.ACTIVE);
+        List<EnrollmentTerm> enrollmentTerms = enrollmentService
+                .findActiveEnrollmentTermsByStudentIdAndSchoolId(studentId, currentSchoolId());
         if (enrollmentTerms.isEmpty()) {
             throw new ResourceNotFoundException("Active enrollment term not found for student: " + studentId);
         }
@@ -162,7 +159,7 @@ public class OffenceRecordServiceImpl implements OffenceRecordService {
 
         int currentCount = activeRecords.size();
 
-        List<PenaltyRule> rules = penaltyRuleRepository.findActiveByTrigger(trigger);
+        List<PenaltyRule> rules = penaltyRuleService.findActiveByTrigger(trigger);
 
         for (PenaltyRule rule : rules) {
             Optional<Penalty> existing =

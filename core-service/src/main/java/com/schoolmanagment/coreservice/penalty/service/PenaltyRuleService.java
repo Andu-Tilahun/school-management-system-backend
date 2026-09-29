@@ -4,6 +4,8 @@ import com.schoolmanagment.coreservice.penalty.dto.PenaltyRuleDto;
 import com.schoolmanagment.coreservice.penalty.dto.PenaltyRuleFilterRequest;
 import com.schoolmanagment.coreservice.penalty.dto.PenaltyRuleRequest;
 import com.schoolmanagment.coreservice.penalty.dto.PenaltyTriggerDto;
+import com.schoolmanagment.coreservice.penalty.entity.PenaltyRule;
+import com.schoolmanagment.coreservice.penalty.enums.PenaltyTrigger;
 import com.schoolmanagment.coreservice.penalty.enums.SourceModule;
 import org.springframework.data.domain.Page;
 
@@ -25,4 +27,6 @@ public interface PenaltyRuleService {
     PenaltyRuleDto updatePenaltyRule(UUID id, PenaltyRuleRequest request);
 
     void deletePenaltyRule(UUID id);
+
+    List<PenaltyRule> findActiveByTrigger(PenaltyTrigger trigger);
 }

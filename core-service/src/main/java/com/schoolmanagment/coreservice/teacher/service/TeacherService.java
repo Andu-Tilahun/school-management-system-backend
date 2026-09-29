@@ -4,6 +4,7 @@ import com.schoolmanagment.coreservice.teacher.dto.TeacherDto;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherFilterRequest;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherRequest;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
+import com.schoolmanagment.coreservice.teacher.entity.Teacher;
 import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
 import org.springframework.data.domain.Page;
 
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface TeacherService {
+
+    Teacher findActiveTeacherById(UUID id);
 
     TeacherSubjectAssignment findActiveTeacherSubjectAssignmentById(UUID id);
 

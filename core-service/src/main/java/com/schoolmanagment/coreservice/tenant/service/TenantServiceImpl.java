@@ -2,13 +2,19 @@ package com.schoolmanagment.coreservice.tenant.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.coreservice.tenant.dto.TenantDto;
+import com.schoolmanagment.coreservice.tenant.dto.TenantFilterRequest;
 import com.schoolmanagment.coreservice.tenant.dto.TenantRequest;
 import com.schoolmanagment.coreservice.tenant.entity.Tenant;
 import com.schoolmanagment.coreservice.tenant.mapper.TenantMapper;
 import com.schoolmanagment.coreservice.tenant.repository.TenantRepository;
+import com.schoolmanagment.coreservice.tenant.specification.TenantSpecification;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
@@ -47,6 +53,14 @@ public class TenantServiceImpl implements TenantService {
         return tenantRepository.findAll().stream()
                 .map(tenantMapper::toDto)
                 .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TenantDto> filterTenants(TenantFilterRequest request) {
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        return tenantRepository.findAll(new TenantSpecification(request), pageable)
+                .map(tenantMapper::toDto);
     }
 
     @Override

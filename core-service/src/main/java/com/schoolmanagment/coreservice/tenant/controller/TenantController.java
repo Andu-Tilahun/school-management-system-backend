@@ -3,10 +3,12 @@ package com.schoolmanagment.coreservice.tenant.controller;
 import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.commonsecurity.checker.RequiresPermission;
 import com.schoolmanagment.coreservice.tenant.dto.TenantDto;
+import com.schoolmanagment.coreservice.tenant.dto.TenantFilterRequest;
 import com.schoolmanagment.coreservice.tenant.dto.TenantRequest;
 import com.schoolmanagment.coreservice.tenant.service.TenantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,17 @@ public class TenantController {
     @RequiresPermission(resource = "TENANTS", scope = "READ")
     public ResponseEntity<ApiResponse<List<TenantDto>>> getAllTenants() {
         List<TenantDto> tenants = tenantService.getAllTenants();
+        return ResponseEntity.ok(
+                ApiResponse.success(tenants, "Tenants retrieved successfully")
+        );
+    }
+
+    @PostMapping("/filter")
+    @RequiresPermission(resource = "TENANTS", scope = "READ")
+    public ResponseEntity<ApiResponse<Page<TenantDto>>> filterTenants(
+            @Valid @RequestBody TenantFilterRequest request
+    ) {
+        Page<TenantDto> tenants = tenantService.filterTenants(request);
         return ResponseEntity.ok(
                 ApiResponse.success(tenants, "Tenants retrieved successfully")
         );

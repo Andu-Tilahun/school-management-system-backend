@@ -11,7 +11,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
-import java.util.UUID;
 
 @RequiredArgsConstructor
 public class SchoolSpecification implements Specification<School> {
@@ -23,14 +22,8 @@ public class SchoolSpecification implements Specification<School> {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
         if (UserContext.current().hasTenantManager()) {
-            UUID tenantId = UserContext.current().getCurrentExternalId().orElse(null);
-            if (tenantId != null) {
-                predicates.add(cb.equal(root.get("tenant").get("id"), tenantId));
-            } else {
-                predicates.add(cb.disjunction());
-            }
-        } else if (filterRequest.getTenantId() != null) {
-            predicates.add(cb.equal(root.get("tenant").get("id"), filterRequest.getTenantId()));
+            UserContext.current().getCurrentExternalId()
+                    .ifPresent(externalId -> predicates.add(cb.equal(root.get("tenant").get("id"), externalId)));
         }
 
         return cb.and(predicates.toArray(new Predicate[0]));

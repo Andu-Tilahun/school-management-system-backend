@@ -87,7 +87,7 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        notifierEventProducer.sendWelcomeMessageByEmail(savedUser);
+//        notifierEventProducer.sendWelcomeMessageByEmail(savedUser);
 
         return userMapper.toDto(savedUser);
     }

@@ -17,6 +17,7 @@ public class AcademicYearFilterRequest {
 
     private String searchText;
 
+    @Builder.Default
     private Boolean active = true;
 
     private String sortBy;

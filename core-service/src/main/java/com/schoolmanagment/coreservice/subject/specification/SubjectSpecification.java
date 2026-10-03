@@ -3,6 +3,7 @@ package com.schoolmanagment.coreservice.subject.specification;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.subject.dto.SubjectFilterRequest;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
+import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
 import jakarta.persistence.criteria.Predicate;
@@ -38,6 +39,9 @@ public class SubjectSpecification implements Specification<Subject> {
 
         if (filterRequest.getStatus() != null) {
             predicates.add(cb.equal(root.get("status"), filterRequest.getStatus()));
+        } else if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("status"),
+                    Boolean.TRUE.equals(filterRequest.getActive()) ? SubjectStatus.ACTIVE : SubjectStatus.INACTIVE));
         }
 
         if (filterRequest.getSearchText() != null && !filterRequest.getSearchText().isBlank()) {

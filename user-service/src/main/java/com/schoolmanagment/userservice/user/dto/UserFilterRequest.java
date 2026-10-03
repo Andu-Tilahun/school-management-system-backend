@@ -34,4 +34,6 @@ public class UserFilterRequest {
     private int page = 0;
 
     private int size = 10;
+
+    private Boolean active;
 }

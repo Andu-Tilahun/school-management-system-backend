@@ -9,6 +9,7 @@ import com.schoolmanagment.coreservice.academicyear.dto.AcademicYearRequest;
 import com.schoolmanagment.coreservice.academicyear.entity.AcademicYear;
 import com.schoolmanagment.coreservice.academicyear.mapper.AcademicYearMapper;
 import com.schoolmanagment.coreservice.academicyear.repository.AcademicYearRepository;
+import com.schoolmanagment.coreservice.academicyear.repository.TermRepository;
 import com.schoolmanagment.coreservice.academicyear.specification.AcademicYearSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -26,6 +27,7 @@ import java.util.UUID;
 public class AcademicYearServiceImpl implements AcademicYearService {
 
     private final AcademicYearRepository academicYearRepository;
+    private final TermRepository termRepository;
     private final AcademicYearMapper academicYearMapper;
 
     @Override
@@ -54,6 +56,7 @@ public class AcademicYearServiceImpl implements AcademicYearService {
     @Transactional
     public AcademicYearDto createAcademicYear(AcademicYearRequest request) {
         UUID schoolId = currentSchoolId();
+        validateNoActiveTerm(schoolId);
         validateYearNotTaken(schoolId, request.getAcYear(), null);
 
         AcademicYear academicYear = academicYearMapper.toEntity(request);
@@ -94,6 +97,12 @@ public class AcademicYearServiceImpl implements AcademicYearService {
     public AcademicYear findActiveAcademicYearById(UUID id) {
         return academicYearRepository.findByIdAndActiveTrue(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Academic year not found with id: " + id));
+    }
+
+    private void validateNoActiveTerm(UUID schoolId) {
+        if (termRepository.existsBySchoolIdAndActiveTrue(schoolId)) {
+            throw new BadRequestException("End the current term before creating another academic year");
+        }
     }
 
     private void validateYearNotTaken(UUID schoolId, String acYear, UUID excludeId) {

@@ -23,7 +23,7 @@ public class StudentMapper {
                 .subCity(request.getSubCity())
                 .kebele(request.getKebele())
                 .houseNumber(request.getHouseNumber())
-                .mobileNumber(request.getMobileNumber())
+                .mobileNumber(blankToNull(request.getMobileNumber()))
                 .active(true)
                 .build();
     }
@@ -38,6 +38,13 @@ public class StudentMapper {
         student.setSubCity(request.getSubCity());
         student.setKebele(request.getKebele());
         student.setHouseNumber(request.getHouseNumber());
-        student.setMobileNumber(request.getMobileNumber());
+        student.setMobileNumber(blankToNull(request.getMobileNumber()));
+    }
+
+    private static String blankToNull(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim();
     }
 }

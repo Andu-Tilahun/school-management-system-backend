@@ -23,7 +23,10 @@ public class EnrollmentSpecification implements Specification<Enrollment> {
     public Predicate toPredicate(Root<Enrollment> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.isTrue(root.get("active")));
+        Boolean active = filterRequest == null ? Boolean.TRUE : filterRequest.getActive();
+        if (active != null) {
+            predicates.add(cb.equal(root.get("active"), active));
+        }
         predicates.add(cb.equal(root.get("student").get("id"), studentId));
 
         if (UserContext.current().hasSchoolAdminPolicy()) {

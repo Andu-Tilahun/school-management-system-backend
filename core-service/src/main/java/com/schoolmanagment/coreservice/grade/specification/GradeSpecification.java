@@ -29,7 +29,9 @@ public class GradeSpecification implements Specification<Grade> {
     public Predicate toPredicate(Root<Grade> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.isTrue(root.get("active")));
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        }
 
 
         UserContext.current().getCurrentExternalId()

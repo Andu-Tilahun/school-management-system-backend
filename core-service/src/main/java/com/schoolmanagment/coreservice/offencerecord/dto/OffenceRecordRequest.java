@@ -23,7 +23,6 @@ public class OffenceRecordRequest {
     @PastOrPresent(message = "Date occurred must be in the past or present")
     private LocalDate dateOccurred;
 
-    @NotNull(message = "Status is required")
     private OffenceRecordStatus status;
 
     @Size(max = 500, message = "Remark must be at most 500 characters")

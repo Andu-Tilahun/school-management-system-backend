@@ -84,6 +84,10 @@ public class UserSpecification implements Specification<User> {
             }
         }
 
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("enabled"), filterRequest.getActive()));
+        }
+
         if (filterRequest.getSearchText() != null && !filterRequest.getSearchText().isBlank()) {
             String searchText = "%" + filterRequest.getSearchText().toLowerCase(Locale.ROOT) + "%";
             List<Predicate> searchPredicates = new ArrayList<>();

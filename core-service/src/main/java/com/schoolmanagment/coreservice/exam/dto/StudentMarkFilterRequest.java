@@ -17,6 +17,8 @@ public class StudentMarkFilterRequest {
 
     private UUID studentId;
 
+    private UUID classSectionId;
+
     private UUID subjectId;
 
     private MarkType type;
@@ -30,4 +32,7 @@ public class StudentMarkFilterRequest {
     private int page = 0;
 
     private int size = 10;
+
+    @Builder.Default
+    private Boolean active = true;
 }

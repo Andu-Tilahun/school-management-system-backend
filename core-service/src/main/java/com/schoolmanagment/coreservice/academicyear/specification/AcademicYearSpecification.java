@@ -31,7 +31,9 @@ public class AcademicYearSpecification implements Specification<AcademicYear> {
     public Predicate toPredicate(Root<AcademicYear> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        }
 
         UserContext.current().getCurrentExternalId()
                 .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));

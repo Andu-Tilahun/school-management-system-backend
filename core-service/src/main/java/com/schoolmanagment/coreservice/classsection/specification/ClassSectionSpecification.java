@@ -26,7 +26,9 @@ public class ClassSectionSpecification implements Specification<ClassSection> {
     public Predicate toPredicate(Root<ClassSection> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.isTrue(root.get("active")));
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        }
 
         UserContext.current().getCurrentExternalId()
                 .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));

@@ -58,7 +58,7 @@ public class RoomSectionServiceImpl implements RoomSectionService {
     public RoomSectionDto createRoomSection(RoomSectionRequest request) {
         ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
         ClassRoom room = classRoomService.findActiveClassRoomById(request.getRoomId());
-        validateAssignmentNotTaken(classSection.getSchoolId(), classSection.getId(), room.getId(), null);
+        validateAvailable(classSection.getId(), room.getId(), null);
         return roomSectionMapper.toDto(
                 roomSectionRepository.save(roomSectionMapper.toEntity(request, classSection, room)));
     }
@@ -69,7 +69,7 @@ public class RoomSectionServiceImpl implements RoomSectionService {
         RoomSection roomSection = findActiveRoomSectionById(id);
         ClassSection classSection = classSectionService.findActiveClassSectionById(request.getClassSectionId());
         ClassRoom room = classRoomService.findActiveClassRoomById(request.getRoomId());
-        validateAssignmentNotTaken(roomSection.getSchoolId(), classSection.getId(), room.getId(), id);
+        validateAvailable(classSection.getId(), room.getId(), id);
         roomSectionMapper.updateEntity(roomSection, classSection, room);
         return roomSectionMapper.toDto(roomSectionRepository.save(roomSection));
     }
@@ -87,13 +87,18 @@ public class RoomSectionServiceImpl implements RoomSectionService {
                 .orElseThrow(() -> new ResourceNotFoundException("Room section not found with id: " + id));
     }
 
-    private void validateAssignmentNotTaken(UUID schoolId, UUID classSectionId, UUID roomId, UUID excludeId) {
-        boolean taken = excludeId == null
-                ? roomSectionRepository.existsBySchoolIdAndClassSection_IdAndRoom_Id(schoolId, classSectionId, roomId)
-                : roomSectionRepository.existsBySchoolIdAndClassSection_IdAndRoom_IdAndIdNot(
-                        schoolId, classSectionId, roomId, excludeId);
-        if (taken) {
-            throw new BadRequestException("Room is already assigned to this class section in this school");
+    private void validateAvailable(UUID classSectionId, UUID roomId, UUID excludeId) {
+        boolean sectionTaken = excludeId == null
+                ? roomSectionRepository.existsByClassSection_IdAndActiveTrue(classSectionId)
+                : roomSectionRepository.existsByClassSection_IdAndActiveTrueAndIdNot(classSectionId, excludeId);
+        if (sectionTaken) {
+            throw new BadRequestException("This class section already has an active room assignment");
+        }
+        boolean roomTaken = excludeId == null
+                ? roomSectionRepository.existsByRoom_IdAndActiveTrue(roomId)
+                : roomSectionRepository.existsByRoom_IdAndActiveTrueAndIdNot(roomId, excludeId);
+        if (roomTaken) {
+            throw new BadRequestException("This room already has an active class section assignment");
         }
     }
 }

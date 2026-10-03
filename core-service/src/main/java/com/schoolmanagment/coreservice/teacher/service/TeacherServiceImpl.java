@@ -28,6 +28,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -69,6 +70,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Override
     @Transactional
     public TeacherDto createTeacher(TeacherRequest request) {
+        validateMinimumAge(request.getBirthDate());
         validateMobileNumberNotTaken(request.getMobileNumber(), null);
         List<Subject> subjects = resolveSubjects(request.getSubjectIds());
         Teacher saved = teacherRepository.save(teacherMapper.toEntity(request));
@@ -80,6 +82,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Transactional
     public TeacherDto updateTeacher(UUID id, TeacherRequest request) {
         Teacher teacher = findActiveTeacherById(id);
+        validateMinimumAge(request.getBirthDate());
         validateMobileNumberNotTaken(request.getMobileNumber(), id);
         List<Subject> subjects = resolveSubjects(request.getSubjectIds());
         teacherMapper.updateEntity(teacher, request);
@@ -105,6 +108,16 @@ public class TeacherServiceImpl implements TeacherService {
         Teacher teacher = findActiveTeacherById(currentLoggedInUserId());
         return teacherMapper.toAssignmentDtos(
                 assignmentRepository.findActiveByTeacherIdWithSubject(teacher.getId(), SubjectStatus.ACTIVE));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherDto> getTeachersBySubject(UUID subjectId) {
+        UUID schoolId = UserContext.current().getCurrentExternalId().orElse(null);
+        return assignmentRepository.findActiveBySubjectIdWithTeacher(subjectId, SubjectStatus.ACTIVE).stream()
+                .filter(assignment -> schoolId == null || schoolId.equals(assignment.getSchoolId()))
+                .map(assignment -> teacherMapper.toDto(assignment.getTeacher(), List.of(assignment)))
+                .toList();
     }
 
     @Override
@@ -166,8 +179,7 @@ public class TeacherServiceImpl implements TeacherService {
     }
 
     private UUID currentLoggedInUserId() {
-        return UserContext.current().getCurrentExternalId()
-                .orElseThrow(() -> new BadRequestException("Logged-in user has no external id"));
+        return UserContext.current().getCurrentUserId();
     }
 
     @Override
@@ -216,6 +228,12 @@ public class TeacherServiceImpl implements TeacherService {
             }
         }
         assignmentRepository.saveAll(toSave);
+    }
+
+    private void validateMinimumAge(LocalDate birthDate) {
+        if (birthDate != null && birthDate.isAfter(LocalDate.now().minusYears(21))) {
+            throw new BadRequestException("Teacher must be at least 21 years old");
+        }
     }
 
     private void validateMobileNumberNotTaken(String mobileNumber, UUID excludeId) {

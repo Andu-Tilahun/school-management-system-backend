@@ -4,10 +4,12 @@ import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentTermStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -58,6 +60,19 @@ public interface EnrollmentTermRepository extends JpaRepository<EnrollmentTerm, 
             @Param("schoolId") UUID schoolId,
             @Param("enrollmentStatus") EnrollmentStatus enrollmentStatus,
             @Param("status") EnrollmentTermStatus status);
+
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            UPDATE EnrollmentTerm et
+            SET et.status = :completed
+            WHERE et.term.id IN :termIds
+              AND et.status = :activeStatus
+              AND et.active = true
+            """)
+    int completeActiveByTermIds(
+            @Param("termIds") Collection<UUID> termIds,
+            @Param("completed") EnrollmentTermStatus completed,
+            @Param("activeStatus") EnrollmentTermStatus activeStatus);
 
     @Query("""
             SELECT et FROM EnrollmentTerm et

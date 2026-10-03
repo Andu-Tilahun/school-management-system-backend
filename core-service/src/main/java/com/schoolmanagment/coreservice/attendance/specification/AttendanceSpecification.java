@@ -36,7 +36,9 @@ public class AttendanceSpecification implements Specification<Attendance> {
     public Predicate toPredicate(Root<Attendance> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.isTrue(root.get("active")));
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        }
 
         UserContext.current().getCurrentExternalId()
                 .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));

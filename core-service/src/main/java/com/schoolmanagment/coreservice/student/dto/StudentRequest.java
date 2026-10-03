@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -39,7 +40,7 @@ public class StudentRequest {
 
     private String houseNumber;
 
-    @NotBlank(message = "Mobile number is required")
+    @Size(max = 20, message = "Mobile number must be at most 20 characters")
     private String mobileNumber;
 
     @NotEmpty(message = "At least one emergency contact is required")

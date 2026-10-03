@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -20,6 +21,8 @@ public interface TermRepository extends JpaRepository<Term, UUID> {
     Page<Term> findByAcademicYearIdAndActiveTrue(UUID academicYearId, Pageable pageable);
 
     Optional<Term> findByIdAndActiveTrue(UUID id);
+
+    boolean existsBySchoolIdAndActiveTrue(UUID schoolId);
 
     Optional<Term> findByAcademicYearIdAndSemester(UUID academicYearId, Semester semester);
 
@@ -44,4 +47,19 @@ public interface TermRepository extends JpaRepository<Term, UUID> {
     Optional<Term> findCurrentTerm(
             @Param("academicYearId") UUID academicYearId,
             @Param("today") LocalDate today);
+
+    @Query("""
+            SELECT t FROM Term t
+            WHERE t.active = true
+              AND t.endDate IS NOT NULL
+              AND t.endDate < :today
+            """)
+    List<Term> findActiveWithEndDateBefore(@Param("today") LocalDate today);
+
+    @Query("""
+            SELECT t FROM Term t
+            WHERE t.active = true
+              AND t.academicYear.id IN :academicYearIds
+            """)
+    List<Term> findActiveByAcademicYearIds(@Param("academicYearIds") Collection<UUID> academicYearIds);
 }

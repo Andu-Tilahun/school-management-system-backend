@@ -25,7 +25,9 @@ public class RoomSectionSpecification implements Specification<RoomSection> {
     public Predicate toPredicate(Root<RoomSection> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.isTrue(root.get("active")));
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        }
 
         UserContext.current().getCurrentExternalId()
                 .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));

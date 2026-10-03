@@ -30,7 +30,9 @@ public class ClassRoomSpecification implements Specification<ClassRoom> {
     public Predicate toPredicate(Root<ClassRoom> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.isTrue(root.get("active")));
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        }
 
         UserContext.current().getCurrentExternalId()
                 .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));

@@ -19,6 +19,8 @@ public interface TeacherService {
 
     List<TeacherSubjectAssignmentDto> getAssignedSubjects();
 
+    List<TeacherDto> getTeachersBySubject(UUID subjectId);
+
     List<TeacherSubjectAssignmentDto> getSubjectsForCurrentStudent();
 
     List<TeacherSubjectAssignmentDto> getSubjectsByStudentId(UUID studentId);

@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.exam.specification;
 
-import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.exam.dto.StudentMarkFilterRequest;
 import com.schoolmanagment.coreservice.exam.entity.StudentMark;
@@ -8,7 +7,8 @@ import com.schoolmanagment.coreservice.student.entity.StudentEmergencyContact;
 import com.schoolmanagment.coreservice.timetable.entity.Timetable;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
-import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -37,15 +38,27 @@ public class StudentMarkSpecification implements Specification<StudentMark> {
     public Predicate toPredicate(Root<StudentMark> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.isTrue(root.get("active")));
+        Join<Object, Object> enrollment = root.join("enrollmentTerm", JoinType.INNER)
+                .join("enrollment", JoinType.INNER);
+        Join<Object, Object> student = enrollment.join("student", JoinType.INNER);
+
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        }
 
         UserContext.current().getCurrentExternalId()
-                .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
+                .ifPresent(schoolId -> predicates.add(cb.equal(root.get("schoolId"), schoolId)));
 
-        applyPolicyScope(root, query, cb, predicates);
+        applyPolicyScope(root, enrollment, student, query, cb, predicates);
 
         if (filterRequest.getStudentId() != null) {
-            predicates.add(cb.equal(studentId(root), filterRequest.getStudentId()));
+            predicates.add(cb.equal(student.get("id"), filterRequest.getStudentId()));
+        }
+
+        if (filterRequest.getClassSectionId() != null) {
+            predicates.add(cb.equal(
+                    enrollment.get("classSection").get("id"),
+                    filterRequest.getClassSectionId()));
         }
 
         if (filterRequest.getSubjectId() != null) {
@@ -69,37 +82,47 @@ public class StudentMarkSpecification implements Specification<StudentMark> {
 
     private void applyPolicyScope(
             Root<StudentMark> root,
+            Join<Object, Object> enrollment,
+            Join<Object, Object> student,
             CriteriaQuery<?> query,
             CriteriaBuilder cb,
             ArrayList<Predicate> predicates
     ) {
         UserContext context = UserContext.current();
         if (context.hasStudentPolicy()) {
-            context.getCurrentExternalId().ifPresentOrElse(
-                    studentId -> predicates.add(cb.equal(studentId(root), studentId)),
+            currentPersonId().ifPresentOrElse(
+                    studentId -> predicates.add(cb.equal(student.get("id"), studentId)),
                     () -> predicates.add(cb.disjunction()));
             return;
         }
         if (context.hasEmergencyContactPolicy()) {
-            context.getCurrentExternalId().ifPresentOrElse(
-                    contactId -> predicates.add(linkedToEmergencyContact(root, query, cb, contactId)),
+            currentPersonId().ifPresentOrElse(
+                    contactId -> predicates.add(linkedToEmergencyContact(student, query, cb, contactId)),
                     () -> predicates.add(cb.disjunction()));
             return;
         }
         if (context.hasTeacherPolicy()) {
-            context.getCurrentExternalId().ifPresentOrElse(
-                    teacherId -> predicates.add(taughtByTeacher(root, query, cb, teacherId)),
+            currentPersonId().ifPresentOrElse(
+                    teacherId -> predicates.add(taughtByTeacher(root, enrollment, query, cb, teacherId)),
                     () -> predicates.add(cb.disjunction()));
-            return;
         }
-        if (context.hasSchoolAdminPolicy()) {
-            context.getCurrentExternalId().ifPresent(
-                    schoolId -> predicates.add(cb.equal(root.get("schoolId"), schoolId)));
+    }
+
+    /**
+     * Teacher, student, and emergency-contact records use the login user id.
+     * {@code externalId} on those accounts is the school id.
+     */
+    private Optional<UUID> currentPersonId() {
+        try {
+            return Optional.ofNullable(UserContext.current().getCurrentUserId());
+        } catch (RuntimeException ex) {
+            return Optional.empty();
         }
     }
 
     private Predicate taughtByTeacher(
             Root<StudentMark> root,
+            Join<Object, Object> enrollment,
             CriteriaQuery<?> query,
             CriteriaBuilder cb,
             UUID teacherId
@@ -109,10 +132,12 @@ public class StudentMarkSpecification implements Specification<StudentMark> {
         subquery.select(timetable.get("id"));
         subquery.where(
                 cb.equal(
-                        timetable.get("classSection"),
-                        root.get("enrollmentTerm").get("enrollment").get("classSection")),
+                        timetable.get("classSection").get("id"),
+                        enrollment.get("classSection").get("id")),
                 cb.equal(timetable.get("teacherSubjectAssignment").get("teacher").get("id"), teacherId),
-                cb.equal(timetable.get("teacherSubjectAssignment").get("subject"), root.get("subject")),
+                cb.equal(
+                        timetable.get("teacherSubjectAssignment").get("subject").get("id"),
+                        root.get("subject").get("id")),
                 cb.isTrue(timetable.get("active")),
                 cb.isTrue(timetable.get("teacherSubjectAssignment").get("active"))
         );
@@ -120,7 +145,7 @@ public class StudentMarkSpecification implements Specification<StudentMark> {
     }
 
     private Predicate linkedToEmergencyContact(
-            Root<StudentMark> root,
+            Join<Object, Object> student,
             CriteriaQuery<?> query,
             CriteriaBuilder cb,
             UUID emergencyContactId
@@ -129,16 +154,12 @@ public class StudentMarkSpecification implements Specification<StudentMark> {
         Root<StudentEmergencyContact> link = subquery.from(StudentEmergencyContact.class);
         subquery.select(link.get("id"));
         subquery.where(
-                cb.equal(link.get("student"), root.get("enrollmentTerm").get("enrollment").get("student")),
+                cb.equal(link.get("student").get("id"), student.get("id")),
                 cb.equal(link.get("emergencyContact").get("id"), emergencyContactId),
                 cb.isTrue(link.get("active")),
                 cb.isTrue(link.get("emergencyContact").get("active"))
         );
         return cb.exists(subquery);
-    }
-
-    private Path<UUID> studentId(Root<StudentMark> root) {
-        return root.get("enrollmentTerm").get("enrollment").get("student").get("id");
     }
 
     private void applySorting(Root<StudentMark> root, CriteriaQuery<?> query, CriteriaBuilder cb) {

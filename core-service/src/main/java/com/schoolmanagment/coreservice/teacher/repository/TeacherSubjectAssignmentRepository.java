@@ -31,5 +31,20 @@ public interface TeacherSubjectAssignmentRepository
 
     List<TeacherSubjectAssignment> findBySubjectIdAndActiveTrue(UUID subjectId);
 
+    @Query("""
+            SELECT a
+            FROM TeacherSubjectAssignment a
+            JOIN FETCH a.teacher t
+            JOIN FETCH a.subject s
+            WHERE s.id = :subjectId
+              AND a.active = true
+              AND t.active = true
+              AND s.status = :status
+            ORDER BY t.firstName ASC, t.lastName ASC
+            """)
+    List<TeacherSubjectAssignment> findActiveBySubjectIdWithTeacher(
+            @Param("subjectId") UUID subjectId,
+            @Param("status") SubjectStatus status);
+
     boolean existsByTeacherIdAndSubjectId(UUID teacherId, UUID subjectId);
 }

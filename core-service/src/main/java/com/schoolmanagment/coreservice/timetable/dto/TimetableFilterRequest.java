@@ -38,4 +38,7 @@ public class TimetableFilterRequest {
     private int page = 0;
 
     private int size = 10;
+
+    @Builder.Default
+    private Boolean active = true;
 }

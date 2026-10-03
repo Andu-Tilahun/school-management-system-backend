@@ -47,6 +47,7 @@ public class TermServiceImpl implements TermService {
     @Transactional
     public TermDto createTerm(TermRequest request) {
         AcademicYear academicYear = findAcademicYear(request.getAcademicYearId());
+        validateNoActiveTerm(academicYear.getSchoolId());
         validateSemesterNotTaken(academicYear.getId(), request.getSemester(), null);
         validateTermDates(academicYear, request);
 
@@ -81,6 +82,12 @@ public class TermServiceImpl implements TermService {
 
     private AcademicYear findAcademicYear(UUID academicYearId) {
         return academicYearService.findActiveAcademicYearById(academicYearId);
+    }
+
+    private void validateNoActiveTerm(UUID schoolId) {
+        if (schoolId != null && termRepository.existsBySchoolIdAndActiveTrue(schoolId)) {
+            throw new BadRequestException("End the current term before creating another one");
+        }
     }
 
     private void validateSemesterNotTaken(UUID academicYearId, Semester semester, UUID excludeId) {

@@ -18,4 +18,6 @@ public class SubjectFilterRequest {
     private SubjectStatus status;
     private String sortBy;
     private String sortDirection = "ASC";
+
+    private Boolean active;
 }

@@ -3,6 +3,7 @@ package com.schoolmanagment.coreservice.timetable.repository;
 import com.schoolmanagment.coreservice.classsection.entity.ClassSection;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
+import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
 import com.schoolmanagment.coreservice.timetable.entity.Timetable;
 import com.schoolmanagment.coreservice.timetable.enums.Day;
 import com.schoolmanagment.coreservice.timetable.enums.Period;
@@ -107,6 +108,22 @@ public interface TimetableRepository extends JpaRepository<Timetable, UUID>, Jpa
             ORDER BY s.subjectName ASC
             """)
     List<Subject> findActiveSubjectsByClassSectionId(
+            @Param("classSectionId") UUID classSectionId,
+            @Param("status") SubjectStatus status);
+
+    @Query("""
+            SELECT DISTINCT a
+            FROM Timetable t
+            JOIN t.teacherSubjectAssignment a
+            JOIN FETCH a.subject s
+            WHERE t.classSection.id = :classSectionId
+              AND a.teacher.id = :teacherId
+              AND t.active = true
+              AND a.active = true
+              AND s.status = :status
+            """)
+    List<TeacherSubjectAssignment> findActiveAssignmentsByTeacherIdAndClassSectionId(
+            @Param("teacherId") UUID teacherId,
             @Param("classSectionId") UUID classSectionId,
             @Param("status") SubjectStatus status);
 }

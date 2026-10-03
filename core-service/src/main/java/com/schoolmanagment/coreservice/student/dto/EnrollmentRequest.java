@@ -12,5 +12,5 @@ public class EnrollmentRequest {
     @NotNull(message = "Class section is required")
     private UUID classSectionId;
 
-    private EnrollmentStatus status = EnrollmentStatus.ACTIVE;
+    private EnrollmentStatus status;
 }

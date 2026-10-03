@@ -1,6 +1,5 @@
 package com.schoolmanagment.coreservice.timetable.specification;
 
-import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableFilterRequest;
 import com.schoolmanagment.coreservice.timetable.entity.Timetable;
@@ -11,7 +10,9 @@ import org.springframework.data.jpa.domain.Specification;
 
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 
 @RequiredArgsConstructor
 public class TimetableSpecification implements Specification<Timetable> {
@@ -29,7 +30,9 @@ public class TimetableSpecification implements Specification<Timetable> {
     public Predicate toPredicate(Root<Timetable> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.isTrue(root.get("active")));
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        }
 
         UserContext.current().getCurrentExternalId()
                 .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
@@ -96,11 +99,20 @@ public class TimetableSpecification implements Specification<Timetable> {
     private void applyCallerScope(Root<Timetable> root, CriteriaBuilder cb, ArrayList<Predicate> predicates) {
         UserContext context = UserContext.current();
         if (context.hasTeacherPolicy()) {
-            context.getCurrentExternalId().ifPresentOrElse(
+            currentTeacherId().ifPresentOrElse(
                     teacherId -> predicates.add(cb.equal(
                             root.get("teacherSubjectAssignment").get("teacher").get("id"),
                             teacherId)),
                     () -> predicates.add(cb.disjunction()));
+        }
+    }
+
+    /** Teacher rows are keyed by the login user id. externalId on that account is the school id. */
+    private Optional<UUID> currentTeacherId() {
+        try {
+            return Optional.ofNullable(UserContext.current().getCurrentUserId());
+        } catch (RuntimeException ex) {
+            return Optional.empty();
         }
     }
 

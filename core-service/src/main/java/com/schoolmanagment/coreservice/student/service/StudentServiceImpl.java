@@ -219,9 +219,13 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private void validateStudentMobileNumberNotTaken(String mobileNumber, UUID excludeId) {
-        studentRepository.findByMobileNumber(mobileNumber).ifPresent(existing -> {
+        if (mobileNumber == null || mobileNumber.isBlank()) {
+            return;
+        }
+        String normalized = mobileNumber.trim();
+        studentRepository.findByMobileNumber(normalized).ifPresent(existing -> {
             if (!existing.getId().equals(excludeId)) {
-                throw new BadRequestException("Student with mobile number '" + mobileNumber + "' already exists in this school");
+                throw new BadRequestException("Student with mobile number '" + normalized + "' already exists in this school");
             }
         });
     }

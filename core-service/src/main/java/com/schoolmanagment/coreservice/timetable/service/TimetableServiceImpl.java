@@ -9,7 +9,9 @@ import com.schoolmanagment.coreservice.classsection.mapper.ClassSectionMapper;
 import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
+import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
 import com.schoolmanagment.coreservice.teacher.entity.TeacherSubjectAssignment;
+import com.schoolmanagment.coreservice.teacher.mapper.TeacherMapper;
 import com.schoolmanagment.coreservice.teacher.service.TeacherService;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableDto;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableFilterRequest;
@@ -28,6 +30,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,6 +43,7 @@ public class TimetableServiceImpl implements TimetableService {
     private final ClassSectionMapper classSectionMapper;
     private final ClassSectionService classSectionService;
     private final TeacherService teacherService;
+    private final TeacherMapper teacherMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -131,9 +135,22 @@ public class TimetableServiceImpl implements TimetableService {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<TeacherSubjectAssignmentDto> getSubjectsForCurrentTeacherAndClassSection(UUID classSectionId) {
+        classSectionService.findActiveClassSectionById(classSectionId);
+        return teacherMapper
+                .toAssignmentDtos(timetableRepository.findActiveAssignmentsByTeacherIdAndClassSectionId(
+                        currentTeacherId(), classSectionId, SubjectStatus.ACTIVE))
+                .stream()
+                .sorted(Comparator.comparing(
+                        TeacherSubjectAssignmentDto::getSubjectName,
+                        Comparator.nullsLast(String.CASE_INSENSITIVE_ORDER)))
+                .toList();
+    }
+
     private UUID currentTeacherId() {
-        return UserContext.current().getCurrentExternalId()
-                .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
+        return UserContext.current().getCurrentUserId();
     }
 
     @Override

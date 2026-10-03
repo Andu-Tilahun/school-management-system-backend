@@ -52,7 +52,7 @@ public class Student extends SchoolAuditable {
     @Column(name = "house_number", length = 50)
     private String houseNumber;
 
-    @Column(name = "mobile_number", nullable = false, length = 20)
+    @Column(name = "mobile_number", length = 20)
     private String mobileNumber;
 
     @Column(nullable = false)

@@ -3,6 +3,7 @@ package com.schoolmanagment.coreservice.offencerecord.mapper;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordDto;
 import com.schoolmanagment.coreservice.offencerecord.dto.OffenceRecordRequest;
 import com.schoolmanagment.coreservice.offencerecord.entity.OffenceRecord;
+import com.schoolmanagment.coreservice.offencerecord.enums.OffenceRecordStatus;
 import com.schoolmanagment.coreservice.student.entity.EnrollmentTerm;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +19,7 @@ public class OffenceRecordMapper {
                 .enrollmentTerm(enrollmentTerm)
                 .penaltyTrigger(request.getPenaltyTrigger())
                 .dateOccurred(request.getDateOccurred())
-                .status(request.getStatus())
+                .status(request.getStatus() != null ? request.getStatus() : OffenceRecordStatus.CONFIRMED)
                 .remark(request.getRemark())
                 .active(true)
                 .build();
@@ -28,7 +29,9 @@ public class OffenceRecordMapper {
         offenceRecord.setEnrollmentTerm(enrollmentTerm);
         offenceRecord.setPenaltyTrigger(request.getPenaltyTrigger());
         offenceRecord.setDateOccurred(request.getDateOccurred());
-        offenceRecord.setStatus(request.getStatus());
+        if (request.getStatus() != null) {
+            offenceRecord.setStatus(request.getStatus());
+        }
         offenceRecord.setRemark(request.getRemark());
     }
 }

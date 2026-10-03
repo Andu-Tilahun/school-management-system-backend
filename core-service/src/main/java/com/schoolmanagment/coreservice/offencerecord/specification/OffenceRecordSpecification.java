@@ -34,7 +34,9 @@ public class OffenceRecordSpecification implements Specification<OffenceRecord> 
     public Predicate toPredicate(Root<OffenceRecord> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         ArrayList<Predicate> predicates = new ArrayList<>();
 
-        predicates.add(cb.isTrue(root.get("active")));
+        if (filterRequest.getActive() != null) {
+            predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
+        }
         applyCallerScope(root, query, cb, predicates);
 
 

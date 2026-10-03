@@ -49,6 +49,15 @@ public class TeacherController {
     }
 
 
+    @GetMapping("/subjects/{subjectId}/teachers")
+    @RequiresPermission(resource = "TEACHERS", scope = "READ")
+    public ResponseEntity<ApiResponse<List<TeacherDto>>> getTeachersBySubject(@PathVariable UUID subjectId) {
+        List<TeacherDto> teachers = teacherService.getTeachersBySubject(subjectId);
+        return ResponseEntity.ok(
+                ApiResponse.success(teachers, "Teachers retrieved successfully")
+        );
+    }
+
     @GetMapping("/{id}")
     @RequiresPermission(resource = "TEACHERS", scope = "READ")
     public ResponseEntity<ApiResponse<TeacherDto>> getTeacherById(@PathVariable UUID id) {

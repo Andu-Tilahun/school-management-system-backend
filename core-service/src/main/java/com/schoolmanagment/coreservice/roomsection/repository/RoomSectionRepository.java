@@ -18,9 +18,13 @@ public interface RoomSectionRepository extends JpaRepository<RoomSection, UUID>,
 
     Optional<RoomSection> findByIdAndActiveTrue(UUID id);
 
-    boolean existsBySchoolIdAndClassSection_IdAndRoom_Id(UUID schoolId, UUID classSectionId, UUID roomId);
+    boolean existsByClassSection_IdAndActiveTrue(UUID classSectionId);
 
-    boolean existsBySchoolIdAndClassSection_IdAndRoom_IdAndIdNot(UUID schoolId, UUID classSectionId, UUID roomId, UUID id);
+    boolean existsByClassSection_IdAndActiveTrueAndIdNot(UUID classSectionId, UUID id);
+
+    boolean existsByRoom_IdAndActiveTrue(UUID roomId);
+
+    boolean existsByRoom_IdAndActiveTrueAndIdNot(UUID roomId, UUID id);
 
     List<RoomSection> findByClassSection_IdAndActiveTrue(UUID classSectionId);
 

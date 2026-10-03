@@ -3,6 +3,7 @@ package com.schoolmanagment.coreservice.timetable.controller;
 import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.commonsecurity.checker.RequiresPermission;
 import com.schoolmanagment.coreservice.classsection.dto.ClassSectionDto;
+import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableDto;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableFilterRequest;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableRequest;
@@ -54,6 +55,18 @@ public class TimetableController {
         List<ClassSectionDto> sections = timetableService.getSectionsForCurrentTeacher();
         return ResponseEntity.ok(
                 ApiResponse.success(sections, "Class sections retrieved successfully")
+        );
+    }
+
+    @GetMapping("/sections/{classSectionId}/subjects")
+    @RequiresPermission(resource = "TIMETABLES", scope = "READ")
+    public ResponseEntity<ApiResponse<List<TeacherSubjectAssignmentDto>>> getSubjectsForCurrentTeacherAndClassSection(
+            @PathVariable UUID classSectionId
+    ) {
+        List<TeacherSubjectAssignmentDto> subjects =
+                timetableService.getSubjectsForCurrentTeacherAndClassSection(classSectionId);
+        return ResponseEntity.ok(
+                ApiResponse.success(subjects, "Subjects retrieved successfully")
         );
     }
 

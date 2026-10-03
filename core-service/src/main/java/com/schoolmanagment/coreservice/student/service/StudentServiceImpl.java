@@ -190,8 +190,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private UUID currentEmergencyContactId() {
-        UUID emergencyContactId = UserContext.current().getCurrentExternalId()
-                .orElseThrow(() -> new BadRequestException("Logged-in emergency contact has no external id"));
+        UUID emergencyContactId = UserContext.current().getCurrentUserId();
         EmergencyContact contact = emergencyContactRepository.findById(emergencyContactId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Emergency contact not found with id: " + emergencyContactId));

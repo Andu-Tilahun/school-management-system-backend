@@ -201,8 +201,7 @@ public class StudentServiceImpl implements StudentService {
     }
 
     private Teacher currentTeacher() {
-        UUID teacherId = UserContext.current().getCurrentExternalId()
-                .orElseThrow(() -> new BadRequestException("Logged-in teacher has no external id"));
+        UUID teacherId = UserContext.current().getCurrentUserId();
         return teacherService.findActiveTeacherById(teacherId);
     }
 

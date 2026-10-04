@@ -19,6 +19,8 @@ public class TimetableFilterRequest {
 
     private UUID classSectionId;
 
+    private UUID studentId;
+
     private UUID teacherSubjectAssignmentId;
 
     private UUID subjectId;

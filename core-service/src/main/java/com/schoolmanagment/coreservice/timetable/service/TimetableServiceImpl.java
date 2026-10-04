@@ -9,6 +9,7 @@ import com.schoolmanagment.coreservice.classsection.mapper.ClassSectionMapper;
 import com.schoolmanagment.coreservice.classsection.service.ClassSectionService;
 import com.schoolmanagment.coreservice.student.enums.EnrollmentStatus;
 import com.schoolmanagment.coreservice.student.repository.EnrollmentRepository;
+import com.schoolmanagment.coreservice.student.repository.StudentEmergencyContactRepository;
 import com.schoolmanagment.coreservice.subject.entity.Subject;
 import com.schoolmanagment.coreservice.subject.enums.SubjectStatus;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
@@ -52,6 +53,7 @@ public class TimetableServiceImpl implements TimetableService {
     private final TeacherService teacherService;
     private final TeacherMapper teacherMapper;
     private final EnrollmentRepository enrollmentRepository;
+    private final StudentEmergencyContactRepository studentEmergencyContactRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -65,8 +67,15 @@ public class TimetableServiceImpl implements TimetableService {
     @Transactional(readOnly = true)
     public Page<TimetableDto> filterTimetables(TimetableFilterRequest request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
-        if (UserContext.current().hasStudentPolicy()) {
+        UserContext context = UserContext.current();
+        if (context.hasStudentPolicy()) {
             Optional<UUID> sectionId = currentStudentClassSectionId();
+            if (sectionId.isEmpty()) {
+                return Page.empty(pageable);
+            }
+            request.setClassSectionId(sectionId.get());
+        } else if (context.hasEmergencyContactPolicy()) {
+            Optional<UUID> sectionId = classSectionForLinkedStudent(request.getStudentId());
             if (sectionId.isEmpty()) {
                 return Page.empty(pageable);
             }
@@ -196,6 +205,27 @@ public class TimetableServiceImpl implements TimetableService {
 
     private UUID currentTeacherId() {
         return UserContext.current().getCurrentUserId();
+    }
+
+    private Optional<UUID> classSectionForLinkedStudent(UUID studentId) {
+        if (studentId == null) {
+            return Optional.empty();
+        }
+        UUID contactId;
+        try {
+            contactId = UserContext.current().getCurrentUserId();
+        } catch (RuntimeException ex) {
+            return Optional.empty();
+        }
+        if (contactId == null
+                || !studentEmergencyContactRepository
+                .existsByStudent_IdAndEmergencyContact_IdAndActiveTrue(studentId, contactId)) {
+            return Optional.empty();
+        }
+        return enrollmentRepository
+                .findActiveClassSectionIdsByStudentId(studentId, EnrollmentStatus.ACTIVE)
+                .stream()
+                .findFirst();
     }
 
     private Optional<UUID> currentStudentClassSectionId() {

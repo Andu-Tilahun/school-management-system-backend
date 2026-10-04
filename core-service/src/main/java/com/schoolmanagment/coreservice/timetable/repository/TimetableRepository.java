@@ -126,4 +126,20 @@ public interface TimetableRepository extends JpaRepository<Timetable, UUID>, Jpa
             @Param("teacherId") UUID teacherId,
             @Param("classSectionId") UUID classSectionId,
             @Param("status") SubjectStatus status);
+
+    @Query("""
+            SELECT DISTINCT a
+            FROM Timetable t
+            JOIN t.teacherSubjectAssignment a
+            JOIN FETCH a.subject s
+            JOIN FETCH a.teacher teacher
+            WHERE t.classSection.id = :classSectionId
+              AND t.active = true
+              AND a.active = true
+              AND teacher.active = true
+              AND s.status = :status
+            """)
+    List<TeacherSubjectAssignment> findActiveAssignmentsByClassSectionId(
+            @Param("classSectionId") UUID classSectionId,
+            @Param("status") SubjectStatus status);
 }

@@ -4,6 +4,7 @@ import com.schoolmanagment.commonapplication.api.ApiResponse;
 import com.schoolmanagment.commonsecurity.checker.RequiresPermission;
 import com.schoolmanagment.coreservice.classsection.dto.ClassSectionDto;
 import com.schoolmanagment.coreservice.teacher.dto.TeacherSubjectAssignmentDto;
+import com.schoolmanagment.coreservice.timetable.dto.StudentTimetableOptionsDto;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableDto;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableFilterRequest;
 import com.schoolmanagment.coreservice.timetable.dto.TimetableRequest;
@@ -78,6 +79,15 @@ public class TimetableController {
         List<ClassSectionDto> sections = timetableService.getSectionsForCurrentTeacherAndSubject(subjectId);
         return ResponseEntity.ok(
                 ApiResponse.success(sections, "Class sections retrieved successfully")
+        );
+    }
+
+    @GetMapping("/student/options")
+    @RequiresPermission(resource = "TIMETABLES", scope = "READ")
+    public ResponseEntity<ApiResponse<StudentTimetableOptionsDto>> getOptionsForCurrentStudent() {
+        StudentTimetableOptionsDto options = timetableService.getOptionsForCurrentStudent();
+        return ResponseEntity.ok(
+                ApiResponse.success(options, "Timetable options retrieved successfully")
         );
     }
 

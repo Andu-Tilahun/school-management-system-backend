@@ -78,6 +78,15 @@ public class TeacherController {
         );
     }
 
+    @PostMapping("/{id}/account")
+    @RequiresPermission(resource = "TEACHERS", scope = "CREATE")
+    public ResponseEntity<ApiResponse<TeacherDto>> createTeacherAccount(@PathVariable UUID id) {
+        TeacherDto teacher = teacherService.createTeacherAccount(id);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.success(teacher, "Teacher account created successfully")
+        );
+    }
+
     @PutMapping("/{id}")
     @RequiresPermission(resource = "TEACHERS", scope = "UPDATE")
     public ResponseEntity<ApiResponse<TeacherDto>> updateTeacher(

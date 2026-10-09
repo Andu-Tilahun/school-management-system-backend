@@ -31,6 +31,8 @@ public class TeacherDto {
     private Integer kebele;
     private String houseNumber;
     private String mobileNumber;
+    private String email;
+    private Boolean hasAccount;
     private List<TeacherSubjectAssignmentDto> subjectAssignments;
     private LocalDateTime createdAt;
     private String createdByName;
@@ -49,6 +51,8 @@ public class TeacherDto {
                 .kebele(teacher.getKebele())
                 .houseNumber(teacher.getHouseNumber())
                 .mobileNumber(teacher.getMobileNumber())
+                .email(teacher.getEmail())
+                .hasAccount(Boolean.TRUE.equals(teacher.getHasAccount()))
                 .createdAt(teacher.getCreatedAt())
                 .createdByName(teacher.getCreatedByName())
                 .updatedByName(teacher.getUpdatedByName())

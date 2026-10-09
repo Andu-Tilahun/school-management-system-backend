@@ -27,4 +27,7 @@ public class TeacherFilterRequest {
 
     @Builder.Default
     private Boolean active = true;
+
+    /** Null means both teachers with and without an account. */
+    private Boolean hasAccount;
 }

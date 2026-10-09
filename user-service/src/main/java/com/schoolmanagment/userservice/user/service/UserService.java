@@ -66,8 +66,13 @@ public class UserService {
             throw new BadRequestException("A policy is required when creating a user");
         }
         UUID externalId = applyHierarchyAndGroups(groups, policies, request.getExternalId(), null);
+        UUID userId = request.getId() != null ? request.getId() : UUID.randomUUID();
+        if (userRepository.existsById(userId)) {
+            throw new BadRequestException("User already exists");
+        }
 
         User user = User.builder()
+                .id(userId)
                 .username(request.getUsername())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .email(request.getEmail())

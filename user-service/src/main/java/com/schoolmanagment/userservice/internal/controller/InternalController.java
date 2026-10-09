@@ -40,6 +40,7 @@ public class InternalController {
         }
 
         UserRegisterRequest registerRequest = UserRegisterRequest.builder()
+                .id(request.getId())
                 .username(request.getUsername())
                 .firstName(request.getFirstName())
                 .middleName(request.getMiddleName())

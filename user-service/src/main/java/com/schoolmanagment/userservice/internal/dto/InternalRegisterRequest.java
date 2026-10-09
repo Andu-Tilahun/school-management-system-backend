@@ -10,8 +10,11 @@ import java.util.UUID;
 
 @Data
 public class InternalRegisterRequest {
+    /** When set, the new user keeps this id (the teacher id). */
+    private UUID id;
+
     @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
+    @Size(min = 3, max = 100, message = "Username must be between 3 and 100 characters")
     private String username;
 
     @NotBlank(message = "Password is required")

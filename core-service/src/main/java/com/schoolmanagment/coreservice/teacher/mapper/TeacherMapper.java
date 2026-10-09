@@ -25,6 +25,8 @@ public class TeacherMapper {
                 .kebele(teacher.getKebele())
                 .houseNumber(teacher.getHouseNumber())
                 .mobileNumber(teacher.getMobileNumber())
+                .email(teacher.getEmail())
+                .hasAccount(Boolean.TRUE.equals(teacher.getHasAccount()))
                 .subjectAssignments(toDto(assignments))
                 .createdAt(teacher.getCreatedAt())
                 .createdByName(teacher.getCreatedByName())
@@ -66,6 +68,7 @@ public class TeacherMapper {
                 .kebele(request.getKebele())
                 .houseNumber(request.getHouseNumber())
                 .mobileNumber(request.getMobileNumber())
+                .email(normalizeEmail(request.getEmail()))
                 .active(true)
                 .build();
     }
@@ -80,5 +83,10 @@ public class TeacherMapper {
         teacher.setKebele(request.getKebele());
         teacher.setHouseNumber(request.getHouseNumber());
         teacher.setMobileNumber(request.getMobileNumber());
+        teacher.setEmail(normalizeEmail(request.getEmail()));
+    }
+
+    private static String normalizeEmail(String email) {
+        return email == null ? null : email.trim().toLowerCase();
     }
 }

@@ -11,7 +11,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EntityScan(basePackages = "com.schoolmanagment")
 @EnableJpaRepositories(basePackages = "com.schoolmanagment")
 @EnableFeignClients(basePackages = {
-        "com.schoolmanagment.commonsecurity.client"
+        "com.schoolmanagment.commonsecurity.client",
+        "com.schoolmanagment.coreservice.client"
 })
 @EnableScheduling
 public class CoreServiceApplication {

@@ -1,8 +1,13 @@
 package com.schoolmanagment.coreservice.teacher.service;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.util.UserContext;
+import com.schoolmanagment.coreservice.client.InternalUserRegisterRequest;
+import com.schoolmanagment.coreservice.client.UserInternalClient;
 import com.schoolmanagment.coreservice.student.service.EmergencyContactService;
 import com.schoolmanagment.coreservice.student.service.EnrollmentService;
 import com.schoolmanagment.coreservice.student.service.StudentService;
@@ -20,6 +25,7 @@ import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
 import com.schoolmanagment.coreservice.teacher.repository.TeacherSubjectAssignmentRepository;
 import com.schoolmanagment.coreservice.teacher.specification.TeacherSpecification;
 import com.schoolmanagment.coreservice.timetable.service.TimetableService;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
@@ -35,6 +41,8 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TeacherServiceImpl implements TeacherService {
 
+    private static final String DEFAULT_TEACHER_PASSWORD = "ChangeMe123!";
+
     private final TeacherRepository teacherRepository;
     private final TeacherSubjectAssignmentRepository assignmentRepository;
     private final SubjectService subjectService;
@@ -44,6 +52,8 @@ public class TeacherServiceImpl implements TeacherService {
     @Lazy
     private final TimetableService timetableService;
     private final EmergencyContactService emergencyContactService;
+    private final UserInternalClient userInternalClient;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional(readOnly = true)
@@ -72,6 +82,7 @@ public class TeacherServiceImpl implements TeacherService {
     public TeacherDto createTeacher(TeacherRequest request) {
         validateMinimumAge(request.getBirthDate());
         validateMobileNumberNotTaken(request.getMobileNumber(), null);
+        validateEmailNotTaken(request.getEmail(), null);
         List<Subject> subjects = resolveSubjects(request.getSubjectIds());
         Teacher saved = teacherRepository.save(teacherMapper.toEntity(request));
         assignSubjectsToTeacher(saved, subjects);
@@ -80,10 +91,49 @@ public class TeacherServiceImpl implements TeacherService {
 
     @Override
     @Transactional
+    public TeacherDto createTeacherAccount(UUID id) {
+        Teacher teacher = findActiveTeacherById(id);
+        if (Boolean.TRUE.equals(teacher.getHasAccount())) {
+            throw new BadRequestException("Teacher already has an account");
+        }
+        if (teacher.getSchoolId() == null) {
+            throw new BadRequestException("Teacher is not assigned to a school");
+        }
+        String email = teacher.getEmail() == null ? "" : teacher.getEmail().trim().toLowerCase();
+        if (email.isBlank()) {
+            throw new BadRequestException("Teacher email is required to create an account");
+        }
+
+        InternalUserRegisterRequest registerRequest = InternalUserRegisterRequest.builder()
+                .id(teacher.getId())
+                .username(email)
+                .password(DEFAULT_TEACHER_PASSWORD)
+                .email(email)
+                .firstName(teacher.getFirstName())
+                .middleName(teacher.getMiddleName())
+                .lastName(teacher.getLastName())
+                .gender(teacher.getGender().name())
+                .policyNames(List.of(PolicyNames.TEACHER_POLICY))
+                .externalId(teacher.getSchoolId())
+                .build();
+
+        try {
+            userInternalClient.register(registerRequest);
+        } catch (FeignException ex) {
+            throw new BadRequestException(userServiceMessage(ex));
+        }
+
+        teacher.setHasAccount(true);
+        return toDto(teacherRepository.save(teacher));
+    }
+
+    @Override
+    @Transactional
     public TeacherDto updateTeacher(UUID id, TeacherRequest request) {
         Teacher teacher = findActiveTeacherById(id);
         validateMinimumAge(request.getBirthDate());
         validateMobileNumberNotTaken(request.getMobileNumber(), id);
+        validateEmailNotTaken(request.getEmail(), id);
         List<Subject> subjects = resolveSubjects(request.getSubjectIds());
         teacherMapper.updateEntity(teacher, request);
         Teacher saved = teacherRepository.save(teacher);
@@ -234,6 +284,32 @@ public class TeacherServiceImpl implements TeacherService {
         if (birthDate != null && birthDate.isAfter(LocalDate.now().minusYears(21))) {
             throw new BadRequestException("Teacher must be at least 21 years old");
         }
+    }
+
+    private String userServiceMessage(FeignException ex) {
+        String body = ex.contentUTF8();
+        if (body != null && !body.isBlank()) {
+            try {
+                JsonNode message = objectMapper.readTree(body).path("message");
+                if (message.isTextual() && !message.asText().isBlank()) {
+                    return message.asText();
+                }
+            } catch (Exception ignored) {
+                // Fall through to the generic message.
+            }
+        }
+        return "Could not create the teacher account";
+    }
+
+    private void validateEmailNotTaken(String email, UUID excludeId) {
+        if (email == null || email.isBlank()) {
+            return;
+        }
+        teacherRepository.findByEmail(email.trim().toLowerCase()).ifPresent(existing -> {
+            if (!existing.getId().equals(excludeId)) {
+                throw new BadRequestException("Teacher with email '" + email.trim() + "' already exists");
+            }
+        });
     }
 
     private void validateMobileNumberNotTaken(String mobileNumber, UUID excludeId) {

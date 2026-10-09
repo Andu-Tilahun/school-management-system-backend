@@ -34,6 +34,10 @@ public class TeacherSpecification implements Specification<Teacher> {
             predicates.add(cb.equal(root.get("active"), filterRequest.getActive()));
         }
 
+        if (filterRequest.getHasAccount() != null) {
+            predicates.add(cb.equal(root.get("hasAccount"), filterRequest.getHasAccount()));
+        }
+
         UserContext.current().getCurrentExternalId()
                 .ifPresent(externalId -> predicates.add(cb.equal(root.get("schoolId"), externalId)));
 

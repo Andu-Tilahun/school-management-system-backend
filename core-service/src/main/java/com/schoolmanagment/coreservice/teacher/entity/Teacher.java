@@ -55,7 +55,14 @@ public class Teacher extends SchoolAuditable {
     @Column(name = "mobile_number", nullable = false, length = 20)
     private String mobileNumber;
 
+    @Column(length = 100)
+    private String email;
+
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @Column(name = "has_account", nullable = false)
+    @Builder.Default
+    private Boolean hasAccount = false;
 }

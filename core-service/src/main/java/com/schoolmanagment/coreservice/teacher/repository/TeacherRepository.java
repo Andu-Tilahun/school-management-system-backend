@@ -18,4 +18,6 @@ public interface TeacherRepository extends JpaRepository<Teacher, UUID>, JpaSpec
     Optional<Teacher> findByIdAndActiveTrue(UUID id);
 
     Optional<Teacher> findByMobileNumber(String mobileNumber);
+
+    Optional<Teacher> findByEmail(String email);
 }

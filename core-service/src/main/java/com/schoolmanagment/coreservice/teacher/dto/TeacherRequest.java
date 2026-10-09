@@ -1,10 +1,12 @@
 package com.schoolmanagment.coreservice.teacher.dto;
 
 import com.schoolmanagment.coreservice.student.enums.Gender;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Past;
+import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.time.LocalDate;
@@ -38,6 +40,11 @@ public class TeacherRequest {
 
     @NotBlank(message = "Mobile number is required")
     private String mobileNumber;
+
+    @NotBlank(message = "Email is required")
+    @Email(message = "Email should be valid")
+    @Size(max = 100, message = "Email must be at most 100 characters")
+    private String email;
 
     @NotEmpty(message = "At least one subject is required")
     private List<UUID> subjectIds;

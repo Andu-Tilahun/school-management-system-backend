@@ -33,6 +33,8 @@ public interface TeacherService {
 
     TeacherDto createTeacher(TeacherRequest request);
 
+    TeacherDto createTeacherAccount(UUID id);
+
     TeacherDto updateTeacher(UUID id, TeacherRequest request);
 
     void deleteTeacher(UUID id);

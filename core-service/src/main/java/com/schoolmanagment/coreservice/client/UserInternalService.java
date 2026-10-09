@@ -24,19 +24,23 @@ public class UserInternalService {
         return userInternalClient.getUserById(userId).getData();
     }
 
-    public UserDto createUser(InternalUserRegisterRequest userRegisterRequest) {
+    public void createUser(InternalUserRegisterRequest userRegisterRequest) {
 
         if (defaultPassword == null || defaultPassword.isBlank()) {
             throw new BadRequestException("Default password is not configured");
         }
 
-        userRegisterRequest.setPassword(defaultPassword);
+        userRegisterRequest.setPassword(setDefaultPassword());
 
         try {
-            return userInternalClient.register(userRegisterRequest).getData();
+            userInternalClient.register(userRegisterRequest);
         } catch (FeignException ex) {
             throw new BadRequestException(userServiceMessage(ex));
         }
+    }
+
+    private String setDefaultPassword() {
+        return defaultPassword;
     }
 
     private String userServiceMessage(FeignException ex) {

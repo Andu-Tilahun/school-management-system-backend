@@ -1,13 +1,11 @@
 package com.schoolmanagment.coreservice.teacher.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
 import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.util.UserContext;
 import com.schoolmanagment.coreservice.client.InternalUserRegisterRequest;
-import com.schoolmanagment.coreservice.client.UserInternalClient;
+import com.schoolmanagment.coreservice.client.UserInternalService;
 import com.schoolmanagment.coreservice.student.service.EmergencyContactService;
 import com.schoolmanagment.coreservice.student.service.EnrollmentService;
 import com.schoolmanagment.coreservice.student.service.StudentService;
@@ -25,9 +23,7 @@ import com.schoolmanagment.coreservice.teacher.repository.TeacherRepository;
 import com.schoolmanagment.coreservice.teacher.repository.TeacherSubjectAssignmentRepository;
 import com.schoolmanagment.coreservice.teacher.specification.TeacherSpecification;
 import com.schoolmanagment.coreservice.timetable.service.TimetableService;
-import feign.FeignException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -42,9 +38,6 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TeacherServiceImpl implements TeacherService {
 
-    @Value("${teacher.default-password:ChangeMe123!}")
-    private String defaultTeacherPassword;
-
     private final TeacherRepository teacherRepository;
     private final TeacherSubjectAssignmentRepository assignmentRepository;
     private final SubjectService subjectService;
@@ -54,8 +47,7 @@ public class TeacherServiceImpl implements TeacherService {
     @Lazy
     private final TimetableService timetableService;
     private final EmergencyContactService emergencyContactService;
-    private final UserInternalClient userInternalClient;
-    private final ObjectMapper objectMapper;
+    private final UserInternalService userInternalService;
 
     @Override
     @Transactional(readOnly = true)
@@ -105,14 +97,10 @@ public class TeacherServiceImpl implements TeacherService {
         if (email.isBlank()) {
             throw new BadRequestException("Teacher email is required to create an account");
         }
-        if (defaultTeacherPassword == null || defaultTeacherPassword.isBlank()) {
-            throw new BadRequestException("Teacher default password is not configured");
-        }
 
-        InternalUserRegisterRequest registerRequest = InternalUserRegisterRequest.builder()
+        InternalUserRegisterRequest request = InternalUserRegisterRequest.builder()
                 .id(teacher.getId())
                 .username(email)
-                .password(defaultTeacherPassword)
                 .email(email)
                 .firstName(teacher.getFirstName())
                 .middleName(teacher.getMiddleName())
@@ -122,12 +110,7 @@ public class TeacherServiceImpl implements TeacherService {
                 .externalId(teacher.getSchoolId())
                 .build();
 
-        try {
-            userInternalClient.register(registerRequest);
-        } catch (FeignException ex) {
-            throw new BadRequestException(userServiceMessage(ex));
-        }
-
+        userInternalService.createUser(request);
         teacher.setHasAccount(true);
         return toDto(teacherRepository.save(teacher));
     }
@@ -289,21 +272,6 @@ public class TeacherServiceImpl implements TeacherService {
         if (birthDate != null && birthDate.isAfter(LocalDate.now().minusYears(21))) {
             throw new BadRequestException("Teacher must be at least 21 years old");
         }
-    }
-
-    private String userServiceMessage(FeignException ex) {
-        String body = ex.contentUTF8();
-        if (body != null && !body.isBlank()) {
-            try {
-                JsonNode message = objectMapper.readTree(body).path("message");
-                if (message.isTextual() && !message.asText().isBlank()) {
-                    return message.asText();
-                }
-            } catch (Exception ignored) {
-                // Fall through to the generic message.
-            }
-        }
-        return "Could not create the teacher account";
     }
 
     private void validateEmailNotTaken(String email, UUID excludeId) {

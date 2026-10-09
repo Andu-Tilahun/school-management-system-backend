@@ -84,5 +84,5 @@ management:
 user-service:
   url: http://localhost:8081
 
-teacher:
-  default-password: "${TEACHER_DEFAULT_PASSWORD:ChangeMe123!}"
+sms:
+  default-password: "${DEFAULT_PASSWORD:ChangeMe123!}"

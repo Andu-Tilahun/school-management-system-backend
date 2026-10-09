@@ -27,6 +27,7 @@ import com.schoolmanagment.coreservice.teacher.specification.TeacherSpecificatio
 import com.schoolmanagment.coreservice.timetable.service.TimetableService;
 import feign.FeignException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -41,7 +42,8 @@ import java.util.*;
 @RequiredArgsConstructor
 public class TeacherServiceImpl implements TeacherService {
 
-    private static final String DEFAULT_TEACHER_PASSWORD = "ChangeMe123!";
+    @Value("${teacher.default-password:ChangeMe123!}")
+    private String defaultTeacherPassword;
 
     private final TeacherRepository teacherRepository;
     private final TeacherSubjectAssignmentRepository assignmentRepository;
@@ -103,11 +105,14 @@ public class TeacherServiceImpl implements TeacherService {
         if (email.isBlank()) {
             throw new BadRequestException("Teacher email is required to create an account");
         }
+        if (defaultTeacherPassword == null || defaultTeacherPassword.isBlank()) {
+            throw new BadRequestException("Teacher default password is not configured");
+        }
 
         InternalUserRegisterRequest registerRequest = InternalUserRegisterRequest.builder()
                 .id(teacher.getId())
                 .username(email)
-                .password(DEFAULT_TEACHER_PASSWORD)
+                .password(defaultTeacherPassword)
                 .email(email)
                 .firstName(teacher.getFirstName())
                 .middleName(teacher.getMiddleName())

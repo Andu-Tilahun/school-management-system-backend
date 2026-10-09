@@ -20,7 +20,6 @@ public class EmergencyContactDto {
 
 
     private UUID linkId;
-
     private UUID id;
     private String firstName;
     private String middleName;
@@ -55,11 +54,11 @@ public class EmergencyContactDto {
                 .build();
     }
 
-    public static EmergencyContactDto fromStudentEmergencyContact(StudentEmergencyContact link) {
-        EmergencyContactDto dto = fromEntity(link.getEmergencyContact());
-        dto.setLinkId(link.getId());
-        dto.setRelationship(link.getRelationship());
-        dto.setIsPrimary(link.getIsPrimary());
+    public static EmergencyContactDto fromStudentEmergencyContact(StudentEmergencyContact studentEmergencyContact) {
+        EmergencyContactDto dto = fromEntity(studentEmergencyContact.getEmergencyContact());
+        dto.setLinkId(studentEmergencyContact.getId());
+        dto.setRelationship(studentEmergencyContact.getRelationship());
+        dto.setIsPrimary(studentEmergencyContact.getIsPrimary());
         return dto;
     }
 }

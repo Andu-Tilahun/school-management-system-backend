@@ -50,7 +50,7 @@ public class EmergencyContactController {
 
     @PostMapping("/emergency-contacts/{emergencyContactId}/account")
     @RequiresPermission(resource = "STUDENTS", scope = "CREATE")
-    public ResponseEntity<ApiResponse<EmergencyContactDto>> createPrimaryAccount(
+    public ResponseEntity<ApiResponse<EmergencyContactDto>> createPrimaryEmergencyAccount(
             @PathVariable UUID emergencyContactId
     ) {
         EmergencyContactDto contact = emergencyContactService.createPrimaryAccount(emergencyContactId);

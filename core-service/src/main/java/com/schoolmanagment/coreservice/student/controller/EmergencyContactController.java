@@ -48,6 +48,17 @@ public class EmergencyContactController {
         );
     }
 
+    @PostMapping("/emergency-contacts/{emergencyContactId}/account")
+    @RequiresPermission(resource = "STUDENTS", scope = "CREATE")
+    public ResponseEntity<ApiResponse<EmergencyContactDto>> createPrimaryAccount(
+            @PathVariable UUID emergencyContactId
+    ) {
+        EmergencyContactDto contact = emergencyContactService.createPrimaryAccount(emergencyContactId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(
+                ApiResponse.success(contact, "Emergency contact account created successfully")
+        );
+    }
+
     @PostMapping("/{studentId}/emergency-contacts")
     @RequiresPermission(resource = "STUDENTS", scope = "CREATE")
     public ResponseEntity<ApiResponse<EmergencyContactDto>> createEmergencyContact(

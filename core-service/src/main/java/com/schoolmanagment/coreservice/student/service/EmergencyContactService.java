@@ -14,6 +14,8 @@ public interface EmergencyContactService {
 
     EmergencyContactDto registerEmergencyContact(UUID studentId, EmergencyContactRequest request);
 
+    EmergencyContactDto createPrimaryAccount(UUID emergencyContactId);
+
     List<EmergencyContactDto> getEmergencyContactsForStudent(UUID studentId);
 
     void removeEmergencyContactFromStudent(UUID studentId, UUID emergencyContactId);

@@ -35,6 +35,7 @@ public class EmergencyContactDto {
     private String email;
     private ContactRelationship relationship;
     private Boolean isPrimary;
+    private Boolean hasAccount;
 
     public static EmergencyContactDto fromEntity(EmergencyContact contact) {
         return EmergencyContactDto.builder()
@@ -50,6 +51,7 @@ public class EmergencyContactDto {
                 .houseNumber(contact.getHouseNumber())
                 .mobileNumber(contact.getMobileNumber())
                 .email(contact.getEmail())
+                .hasAccount(contact.getHasAccount())
                 .build();
     }
 

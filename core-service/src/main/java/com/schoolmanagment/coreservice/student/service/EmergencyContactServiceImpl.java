@@ -2,7 +2,10 @@ package com.schoolmanagment.coreservice.student.service;
 
 import com.schoolmanagment.commonapplication.exception.BadRequestException;
 import com.schoolmanagment.commonapplication.exception.ResourceNotFoundException;
+import com.schoolmanagment.commonsecurity.PolicyNames;
 import com.schoolmanagment.commonsecurity.util.UserContext;
+import com.schoolmanagment.coreservice.client.InternalUserRegisterRequest;
+import com.schoolmanagment.coreservice.client.UserInternalService;
 import com.schoolmanagment.coreservice.student.dto.EmergencyContactDto;
 import com.schoolmanagment.coreservice.student.dto.EmergencyContactRequest;
 import com.schoolmanagment.coreservice.student.entity.EmergencyContact;
@@ -31,6 +34,7 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
     private final StudentEmergencyContactRepository studentEmergencyContactRepository;
     private final EmergencyContactMapper emergencyContactMapper;
     private final UserContext userContext;
+    private final UserInternalService userInternalService;
 
     @Override
     @Transactional(readOnly = true)
@@ -65,6 +69,42 @@ public class EmergencyContactServiceImpl implements EmergencyContactService {
 
         studentEmergencyContactRepository.save(studentEmergencyContact);
 
+        return EmergencyContactDto.fromStudentEmergencyContact(studentEmergencyContact);
+    }
+
+    @Override
+    @Transactional
+    public EmergencyContactDto createPrimaryAccount(UUID emergencyContactId) {
+        EmergencyContact contact = findActiveEmergencyContactById(emergencyContactId);
+        StudentEmergencyContact studentEmergencyContact = studentEmergencyContactRepository
+                .findFirstByEmergencyContact_IdAndActiveTrueAndIsPrimaryTrue(emergencyContactId)
+                .orElseThrow(() -> new BadRequestException("Emergency contact is not a primary contact"));
+        if (Boolean.TRUE.equals(contact.getHasAccount())) {
+            throw new BadRequestException("Emergency contact already has an account");
+        }
+        if (contact.getSchoolId() == null) {
+            throw new BadRequestException("Emergency contact is not assigned to a school");
+        }
+        String email = contact.getEmail() == null ? "" : contact.getEmail().trim().toLowerCase();
+        if (email.isBlank()) {
+            throw new BadRequestException("Emergency contact email is required to create an account");
+        }
+
+        InternalUserRegisterRequest request = InternalUserRegisterRequest.builder()
+                .id(contact.getId())
+                .username(email)
+                .email(email)
+                .firstName(contact.getFirstName())
+                .middleName(contact.getMiddleName())
+                .lastName(contact.getLastName())
+                .gender(contact.getGender().name())
+                .policyNames(List.of(PolicyNames.EMERGENCY_CONTACT_POLICY))
+                .externalId(contact.getSchoolId())
+                .build();
+
+        userInternalService.createUser(request);
+        contact.setHasAccount(true);
+        emergencyContactRepository.save(contact);
         return EmergencyContactDto.fromStudentEmergencyContact(studentEmergencyContact);
     }
 

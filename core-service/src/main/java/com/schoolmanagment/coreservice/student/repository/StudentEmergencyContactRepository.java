@@ -18,6 +18,8 @@ public interface StudentEmergencyContactRepository extends JpaRepository<Student
 
     Optional<StudentEmergencyContact> findByStudent_IdAndEmergencyContact_Id(UUID studentId, UUID emergencyContactId);
 
+    Optional<StudentEmergencyContact> findFirstByEmergencyContact_IdAndActiveTrueAndIsPrimaryTrue(UUID emergencyContactId);
+
     boolean existsByStudent_IdAndEmergencyContact_IdAndActiveTrue(UUID studentId, UUID emergencyContactId);
 
     @Query("""

@@ -62,6 +62,10 @@ public class EmergencyContact extends SchoolAuditable {
     @Builder.Default
     private Boolean active = true;
 
+    @Column(name = "has_account", nullable = false)
+    @Builder.Default
+    private Boolean hasAccount = false;
+
     @OneToMany(mappedBy = "emergencyContact")
     @Builder.Default
     @ToString.Exclude

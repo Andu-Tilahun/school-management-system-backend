@@ -1,0 +1,2 @@
+ALTER TABLE tbl_emergency_contacts
+    ADD COLUMN IF NOT EXISTS has_account BOOLEAN NOT NULL DEFAULT FALSE;
